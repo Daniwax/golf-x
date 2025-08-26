@@ -1,14 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in GitHub Secrets')
-  console.warn('Using placeholder Supabase configuration. Authentication will not work.')
+// Check if environment variables are properly configured
+export const isConfigured = !!(supabaseUrl && supabaseKey)
+
+if (!isConfigured) {
+  console.error('⚠️ Supabase environment variables are not configured!')
+  console.error('Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+// Only create client if properly configured
+// If not configured, we'll handle this in the app to show an error page
+export const supabase = isConfigured 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null as any // We'll check for null in components and show error page
 
 export interface Profile {
   id: string

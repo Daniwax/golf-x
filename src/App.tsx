@@ -28,6 +28,10 @@ import Signup from './pages/Signup';
 import Debug from './pages/Debug';
 import Templates from './pages/debug/Templates';
 import IonicShowcase from './pages/debug/templates/IonicShowcase';
+import ConfigError from './pages/ConfigError';
+
+// Import Supabase config check
+import { isConfigured } from './lib/supabase';
 
 // Import authentication hook
 import { useAuth } from './lib/useAuth';
@@ -37,6 +41,11 @@ setupIonicReact({
 });
 
 function App() {
+  // Check if Supabase is configured first
+  if (!isConfigured) {
+    return <ConfigError />;
+  }
+
   const { user, loading } = useAuth();
 
   if (loading) {
