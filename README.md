@@ -127,41 +127,6 @@ The app uses Google OAuth exclusively for authentication:
 3. Returns to app with authentication token
 4. Supabase manages session persistence
 
-## Design Principles
-
-- **Minimalist**: Clean, focused interface
-- **iOS-Native**: Follows Apple HIG strictly
-- **Responsive**: Works beautifully on all screen sizes
-- **Dark Mode**: Automatic theme switching based on system preference
-
-## Development Workflow
-
-### Branch Strategy
-- `main` - Production branch (protected)
-- `develop` - Integration branch for staging
-- `feature/*` - Feature branches
-
-### Workflow
-1. Create feature branch from `develop`
-2. Make changes and test locally
-3. Create PR to `develop` (requires approval)
-4. Automatic deployment to staging
-5. After testing, create PR from `develop` to `main`
-6. Merge triggers production deployment
-
-### Important Notes
-- **NEVER** push directly to `main` or `develop`
-- All changes require Pull Request review
-- TypeScript strict mode is enforced
-- All builds must pass `npm run typecheck` and `npm run lint`
-
-## Contributing
-
-Please ensure all contributions:
-- Follow the design guidelines in [DESIGN_GUIDELINES.md](./DESIGN_GUIDELINES.md)
-- Pass TypeScript type checking
-- Follow the established code patterns
-- Include proper error handling
 
 ## License
 

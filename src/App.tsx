@@ -29,6 +29,8 @@ import Debug from './pages/Debug';
 import Templates from './pages/debug/Templates';
 import IonicShowcase from './pages/debug/templates/IonicShowcase';
 import ConfigError from './pages/ConfigError';
+import Friends from './pages/Friends';
+import FriendProfile from './pages/FriendProfile';
 
 // Import Supabase config check
 import { isConfigured } from './lib/supabase';
@@ -80,6 +82,8 @@ function App() {
             <Route exact path="/profile" component={Profile} />
             <Route exact path="/stats" component={Stats} />
             <Route exact path="/tournaments" component={Tournaments} />
+            <Route exact path="/friends" component={Friends} />
+            <Route exact path="/friend/:id" component={FriendProfile} />
             <Route exact path="/debug" component={Debug} />
             <Route exact path="/debug/templates" component={Templates} />
             <Route exact path="/debug/templates/ionic-showcase" component={IonicShowcase} />

@@ -86,7 +86,14 @@ claude.md
 
 # Deployment
 .fly
+
+# Development documentation (local only)
 GUIDELINES/
+DEPLOYMENT.md
+DESIGN_GUIDELINES.md
+
+# Testing tools
+.playwright-mcp/
 
 # IDE specific
 *.sublime-project
