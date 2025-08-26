@@ -36,7 +36,8 @@ import {
   notificationsOutline,
   moonOutline,
   helpCircleOutline,
-  shieldCheckmarkOutline
+  shieldCheckmarkOutline,
+  peopleOutline
 } from 'ionicons/icons';
 import { useAuth } from '../lib/useAuth';
 import { useHistory } from 'react-router-dom';
@@ -296,6 +297,19 @@ const Profile: React.FC = () => {
                   </IonItem>
                 </>
               )}
+            </IonCardContent>
+          </IonCard>
+
+          {/* Friends Section */}
+          <IonCard>
+            <IonCardContent>
+              <IonItem button onClick={() => history.push('/friends')}>
+                <IonIcon icon={peopleOutline} slot="start" color="primary" />
+                <IonLabel>
+                  <h2>Friends</h2>
+                  <p>Manage your golf buddies</p>
+                </IonLabel>
+              </IonItem>
             </IonCardContent>
           </IonCard>
 
