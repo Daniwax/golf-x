@@ -17,8 +17,7 @@ import {
   colorPaletteOutline,
   constructOutline,
   documentTextOutline,
-  layersOutline,
-  chevronForwardOutline 
+  layersOutline
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 

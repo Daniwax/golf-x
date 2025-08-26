@@ -57,7 +57,7 @@ const Signup: React.FC = () => {
       return;
     }
 
-    const { data, error } = await signUp(email, password, fullName);
+    const { error } = await signUp(email, password, fullName);
     
     if (error) {
       setToastMessage(error.message);

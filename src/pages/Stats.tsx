@@ -158,7 +158,7 @@ const Stats: React.FC = () => {
               </div>
               <IonProgressBar 
                 value={skill.percentage / 100} 
-                color={skill.color as any}
+                color={skill.color as 'primary' | 'secondary' | 'tertiary' | 'success' | 'warning' | 'danger' | 'light' | 'medium' | 'dark'}
               />
             </div>
           ))}

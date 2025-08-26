@@ -34,8 +34,6 @@ import {
   addOutline,
   ribbonOutline,
   medalOutline,
-  starOutline,
-  searchOutline
 } from 'ionicons/icons';
 
 const Tournaments: React.FC = () => {

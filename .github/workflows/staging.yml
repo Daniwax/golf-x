@@ -8,7 +8,9 @@ on:
       - main  # Deploy to staging for PR preview
 
 env:
-  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_STAGING }}
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
 jobs:
   deploy:
@@ -23,31 +25,32 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 'node'  # Uses latest stable version
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run type check
-        run: npm run typecheck || true
-        continue-on-error: true
+        run: npm run typecheck
 
       - name: Run linter
-        run: npm run lint || true
-        continue-on-error: true
+        run: npm run lint
 
-      - name: Build application
-        run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      - name: Debug environment variables
+        run: |
+          echo "FLY_API_TOKEN_STAGING exists: ${{ secrets.FLY_API_TOKEN_STAGING != '' }}"
+          echo "VITE_SUPABASE_URL exists: ${{ secrets.VITE_SUPABASE_URL != '' }}"
+          echo "VITE_SUPABASE_ANON_KEY exists: ${{ secrets.VITE_SUPABASE_ANON_KEY != '' }}"
 
       - name: Setup Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Staging
-        run: flyctl deploy --remote-only --app golf-x-staging
+        run: |
+          flyctl deploy --remote-only --config fly.staging.toml \
+            --build-arg VITE_SUPABASE_URL="${VITE_SUPABASE_URL}" \
+            --build-arg VITE_SUPABASE_ANON_KEY="${VITE_SUPABASE_ANON_KEY}"
         
       - name: Show deployment URL
         run: echo "Golf X staging has been deployed to https://golf-x-staging.fly.dev"

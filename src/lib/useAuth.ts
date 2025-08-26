@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import type { User, Session, AuthError } from '@supabase/supabase-js'
-import { supabase } from './supabase'
+import type { User, Session, AuthError, AuthChangeEvent } from '@supabase/supabase-js'
+import { supabase, isConfigured } from './supabase'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -8,15 +8,21 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Skip auth if not configured
+    if (!isConfigured || !supabase) {
+      setLoading(false)
+      return
+    }
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }: { data: { session: Session | null }, error: AuthError | null }) => {
       if (error && import.meta.env.DEV) {
         console.error('Auth session error:', error);
       }
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
-    }).catch(err => {
+    }).catch((err: Error) => {
       if (import.meta.env.DEV) {
         console.error('Auth session error:', err);
       }
@@ -25,7 +31,7 @@ export function useAuth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (_event: AuthChangeEvent, session: Session | null) => {
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
@@ -36,6 +42,9 @@ export function useAuth() {
   }, [])
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    if (!supabase) {
+      return { data: null, error: { message: 'Supabase not configured' } as AuthError }
+    }
     setLoading(true)
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -58,6 +67,9 @@ export function useAuth() {
   }
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { data: null, error: { message: 'Supabase not configured' } as AuthError }
+    }
     setLoading(true)
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -75,6 +87,9 @@ export function useAuth() {
   }
 
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      return { data: null, error: { message: 'Supabase not configured' } as AuthError }
+    }
     setLoading(true)
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -94,6 +109,9 @@ export function useAuth() {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      return { error: { message: 'Supabase not configured' } as AuthError }
+    }
     setLoading(true)
     try {
       const { error } = await supabase.auth.signOut()
@@ -108,6 +126,7 @@ export function useAuth() {
 
   const resetPassword = async (email: string) => {
     try {
+      if (!supabase) throw new Error('Supabase not configured')
       const { data, error } = await supabase.auth.resetPasswordForEmail(email)
       if (error) throw error
       return { data, error: null }

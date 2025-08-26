@@ -34,11 +34,11 @@ import {
   IonBadge,
   IonNote,
   IonThumbnail,
-  IonImg,
   IonSkeletonText,
   IonRefresher,
   IonRefresherContent
 } from '@ionic/react';
+import type { RefresherEventDetail } from '@ionic/react';
 import {
   heartOutline,
   heart,
@@ -61,7 +61,7 @@ const IonicShowcase: React.FC = () => {
   const [rangeValue, setRangeValue] = useState(50);
   const [toggleValue, setToggleValue] = useState(false);
 
-  const handleRefresh = (event: CustomEvent<any>) => {
+  const handleRefresh = (event: CustomEvent<RefresherEventDetail>) => {
     setTimeout(() => {
       event.detail.complete();
     }, 2000);
