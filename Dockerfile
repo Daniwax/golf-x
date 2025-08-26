@@ -2,6 +2,14 @@ FROM node:lts-alpine
 
 WORKDIR /app
 
+# Accept build arguments for Vite environment variables
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# Set environment variables for the build
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Copy package files
 COPY package*.json ./
 
@@ -11,7 +19,7 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the Vite application
+# Build the Vite application with environment variables
 RUN npm run build
 
 # Install serve to serve the static files
