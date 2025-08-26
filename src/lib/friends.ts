@@ -13,17 +13,22 @@ export interface FriendProfile {
   friendship_id: string;
   friend_id: string;
   full_name: string | null;
-  email: string;
+  email: string | null;
   avatar_url: string | null;
+  handicap: number | null;
   created_at: string;
 }
 
 export interface UserProfile {
   id: string;
   full_name: string | null;
-  email: string;
+  email: string | null;
   avatar_url: string | null;
+  handicap: number | null;
+  home_course: string | null;
+  bio: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 // Add a friend by their user ID (creates mutual friendship)
@@ -93,9 +98,9 @@ export async function getFriendProfile(friendId: string) {
       return { data: null, error: 'Not friends with this user' };
     }
 
-    // Get friend's profile from user_profiles view
+    // Get friend's profile from profiles table
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('*')
       .eq('id', friendId)
       .single();
