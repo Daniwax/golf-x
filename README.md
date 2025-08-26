@@ -1,6 +1,20 @@
 # Golf X - Track Your Game
 
-A modern golf tracking application built with React, TypeScript, and Ionic Framework following iOS design principles.
+A modern golf tracking Progressive Web App (PWA) built with React, TypeScript, and Ionic Framework following iOS design principles.
+
+## 🚀 Live Deployments
+
+- **Production**: [https://golf-x.fly.dev](https://golf-x.fly.dev)
+- **Staging**: [https://golf-x-staging.fly.dev](https://golf-x-staging.fly.dev)
+
+## ✅ Current Status
+
+**Project is production-ready and deployed!** All core features are working:
+- Google OAuth authentication ✅
+- Environment configuration ✅
+- CI/CD pipelines ✅
+- TypeScript strict mode ✅
+- Mobile-responsive design ✅
 
 ## Design Philosophy
 
@@ -19,24 +33,29 @@ This app strictly follows **Apple's Human Interface Guidelines** to ensure a nat
 
 ## Tech Stack
 
-- **Frontend**: React 18 + TypeScript
-- **UI Framework**: Ionic React (iOS mode)
+- **Frontend**: React 19 + TypeScript
+- **UI Framework**: Ionic 8 React (iOS mode)
+- **Router**: React Router v5 (Required by Ionic)
 - **Backend**: Supabase (PostgreSQL + Auth)
 - **Build Tool**: Vite
+- **Deployment**: Fly.io with Docker
+- **CI/CD**: GitHub Actions
 - **Styling**: CSS Variables + Ionic Theming
 
 ## Prerequisites
 
-- Node.js
+- Node.js 20.19+ or 22.12+
 - npm or yarn
 - Supabase account (for backend)
+- Fly.io account (for deployment)
 
-## Setup
+## Development Setup
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/golf-x.git
+git clone https://github.com/Daniwax/golf-x.git
 cd golf-x
+git checkout develop  # Always work from develop branch
 ```
 
 2. **Install dependencies**
@@ -51,11 +70,15 @@ VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-4. **Enable Google OAuth in Supabase**
+4. **Configure Supabase Authentication**
 - Go to your Supabase dashboard
 - Navigate to Authentication > Providers
-- Enable Google provider
-- Add redirect URL: http://localhost:5173 (for development)
+- Enable Google provider with your Google OAuth credentials
+- Navigate to Authentication > URL Configuration
+- Add these redirect URLs:
+  - `http://localhost:5173` (development)
+  - `https://golf-x.fly.dev` (production)
+  - `https://golf-x-staging.fly.dev` (staging)
 
 5. **Run the development server**
 ```bash
@@ -82,10 +105,19 @@ golf-x/
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
+### Development
+- `npm run dev` - Start development server on port 5173
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
+- `npm run typecheck` - Check TypeScript types
+
+### Code Quality
+- `npm run check:deps` - Check for unused dependencies
+- `npm run check:updates` - Check for package updates
+- `npm run check:security` - Run security audit
+- `npm run check:all` - Run all checks
+- `npm run fix:audit` - Auto-fix security vulnerabilities
 
 ## Authentication Flow
 
@@ -102,9 +134,34 @@ The app uses Google OAuth exclusively for authentication:
 - **Responsive**: Works beautifully on all screen sizes
 - **Dark Mode**: Automatic theme switching based on system preference
 
+## Development Workflow
+
+### Branch Strategy
+- `main` - Production branch (protected)
+- `develop` - Integration branch for staging
+- `feature/*` - Feature branches
+
+### Workflow
+1. Create feature branch from `develop`
+2. Make changes and test locally
+3. Create PR to `develop` (requires approval)
+4. Automatic deployment to staging
+5. After testing, create PR from `develop` to `main`
+6. Merge triggers production deployment
+
+### Important Notes
+- **NEVER** push directly to `main` or `develop`
+- All changes require Pull Request review
+- TypeScript strict mode is enforced
+- All builds must pass `npm run typecheck` and `npm run lint`
+
 ## Contributing
 
-Please ensure all contributions follow the design guidelines in [DESIGN_GUIDELINES.md](./DESIGN_GUIDELINES.md).
+Please ensure all contributions:
+- Follow the design guidelines in [DESIGN_GUIDELINES.md](./DESIGN_GUIDELINES.md)
+- Pass TypeScript type checking
+- Follow the established code patterns
+- Include proper error handling
 
 ## License
 
