@@ -41,12 +41,15 @@ setupIonicReact({
 });
 
 function App() {
+  // Must call hooks before any conditional returns
+  const authResult = isConfigured ? useAuth() : null;
+
   // Check if Supabase is configured first
   if (!isConfigured) {
     return <ConfigError />;
   }
 
-  const { user, loading } = useAuth();
+  const { user, loading } = authResult!;
 
   if (loading) {
     return null; // Or a loading spinner

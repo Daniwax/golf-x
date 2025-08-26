@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -13,9 +13,9 @@ if (!isConfigured) {
 
 // Only create client if properly configured
 // If not configured, we'll handle this in the app to show an error page
-export const supabase = isConfigured 
+export const supabase: SupabaseClient | null = isConfigured 
   ? createClient(supabaseUrl, supabaseKey)
-  : null as any // We'll check for null in components and show error page
+  : null // We'll check for null in components and show error page
 
 export interface Profile {
   id: string

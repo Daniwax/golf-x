@@ -86,6 +86,7 @@ claude.md
 
 # Deployment
 .fly
+DEPLOYMENT_GUIDELINES/
 
 # IDE specific
 *.sublime-project

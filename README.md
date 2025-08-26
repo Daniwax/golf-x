@@ -27,7 +27,7 @@ This app strictly follows **Apple's Human Interface Guidelines** to ensure a nat
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js
 - npm or yarn
 - Supabase account (for backend)
 
