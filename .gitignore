@@ -33,6 +33,7 @@ keys.txt
 *.cert
 credentials.json
 secrets.json
+GITHUB_SECRETS.md
 
 # Editor directories and files
 .vscode/*
