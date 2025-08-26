@@ -92,28 +92,36 @@ export function useAuth() {
     }
     setLoading(true)
     try {
-      // Ensure we use the correct redirect URL based on environment
-      const redirectTo = (() => {
-        const origin = window.location.origin
-        // If we're on localhost but not on port 5173 (Vite default), use the current origin
-        if (origin.includes('localhost') && !origin.includes(':5173')) {
-          return 'http://localhost:5173'
-        }
-        // Otherwise use the current origin (production/staging URLs)
-        return origin
-      })()
+      // Get the current origin
+      const currentOrigin = window.location.origin
+      
+      // Determine the correct redirect URL
+      let redirectTo = currentOrigin
+      
+      // Special handling for localhost - always use Vite's port
+      if (currentOrigin.includes('localhost')) {
+        redirectTo = 'http://localhost:5173'
+      }
+      
+      // Log for debugging
+      console.log('Current origin:', currentOrigin)
+      console.log('Redirect URL:', redirectTo)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTo
+          redirectTo: redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       })
 
       if (error) throw error
-      console.log('OAuth redirect URL:', redirectTo) // Debug log
       return { data, error: null }
     } catch (error) {
+      console.error('OAuth error:', error)
       return { data: null, error: error as AuthError }
     } finally {
       setLoading(false)
