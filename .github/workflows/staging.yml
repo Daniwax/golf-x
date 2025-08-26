@@ -3,9 +3,6 @@ on:
   push:
     branches:
       - develop  # Deploy to staging when pushing to develop
-  pull_request:
-    branches:
-      - main  # Deploy to staging for PR preview
 
 env:
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_STAGING }}
