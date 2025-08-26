@@ -129,11 +129,11 @@ CREATE TABLE IF NOT EXISTS tee_boxes (
     bogey_rating DECIMAL(4,1),
     
     -- Nine-hole ratings
-    front_nine_rating DECIMAL(4,1),
-    front_nine_slope INTEGER,
+    front_nine_rating DECIMAL(4,1),  -- Vc (Course Value) for front nine
+    front_nine_slope INTEGER,        -- Vs (Slope) for front nine
     front_nine_bogey DECIMAL(4,1),
-    back_nine_rating DECIMAL(4,1),
-    back_nine_slope INTEGER,
+    back_nine_rating DECIMAL(4,1),   -- Vc (Course Value) for back nine
+    back_nine_slope INTEGER,         -- Vs (Slope) for back nine
     back_nine_bogey DECIMAL(4,1),
     
     -- Order
