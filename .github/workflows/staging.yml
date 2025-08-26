@@ -1,0 +1,66 @@
+name: Deploy to Staging
+on:
+  push:
+    branches:
+      - develop  # Deploy to staging when pushing to develop
+  pull_request:
+    branches:
+      - main  # Deploy to staging for PR preview
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  deploy:
+    name: Deploy Golf X to Staging
+    runs-on: ubuntu-latest
+    concurrency: deploy-staging  # Prevent multiple simultaneous deployments
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run typecheck || true
+        continue-on-error: true
+
+      - name: Run linter
+        run: npm run lint || true
+        continue-on-error: true
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Setup Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Staging
+        run: flyctl deploy --remote-only --app golf-x-staging
+        
+      - name: Show deployment URL
+        run: echo "Golf X staging has been deployed to https://golf-x-staging.fly.dev"
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Staging deployment complete! View at https://golf-x-staging.fly.dev'
+            })

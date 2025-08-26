@@ -1,0 +1,111 @@
+import { 
+  IonApp, 
+  IonRouterOutlet, 
+  IonTabBar, 
+  IonTabButton, 
+  IonTabs, 
+  IonLabel, 
+  IonIcon,
+  setupIonicReact 
+} from '@ionic/react';
+import { IonReactRouter } from '@ionic/react-router';
+import { Redirect, Route } from 'react-router-dom';
+import { 
+  homeOutline, 
+  personOutline, 
+  statsChartOutline, 
+  trophyOutline,
+  bugOutline 
+} from 'ionicons/icons';
+
+// Import pages
+import Home from './pages/Home';
+import Profile from './pages/Profile';
+import Stats from './pages/Stats';
+import Tournaments from './pages/Tournaments';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Debug from './pages/Debug';
+import Templates from './pages/debug/Templates';
+import IonicShowcase from './pages/debug/templates/IonicShowcase';
+
+// Import authentication hook
+import { useAuth } from './lib/useAuth';
+
+setupIonicReact({
+  mode: 'ios'
+});
+
+function App() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return null; // Or a loading spinner
+  }
+
+  if (!user) {
+    return (
+      <IonApp>
+        <IonReactRouter>
+          <IonRouterOutlet>
+            <Route exact path="/login" component={Login} />
+            <Route exact path="/signup" component={Signup} />
+            <Route exact path="/">
+              <Redirect to="/login" />
+            </Route>
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </IonApp>
+    );
+  }
+
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonTabs>
+          <IonRouterOutlet>
+            <Route exact path="/home" component={Home} />
+            <Route exact path="/profile" component={Profile} />
+            <Route exact path="/stats" component={Stats} />
+            <Route exact path="/tournaments" component={Tournaments} />
+            <Route exact path="/debug" component={Debug} />
+            <Route exact path="/debug/templates" component={Templates} />
+            <Route exact path="/debug/templates/ionic-showcase" component={IonicShowcase} />
+            <Route exact path="/">
+              <Redirect to="/home" />
+            </Route>
+          </IonRouterOutlet>
+          
+          <IonTabBar slot="bottom">
+            <IonTabButton tab="home" href="/home">
+              <IonIcon icon={homeOutline} />
+              <IonLabel>Home</IonLabel>
+            </IonTabButton>
+            
+            <IonTabButton tab="stats" href="/stats">
+              <IonIcon icon={statsChartOutline} />
+              <IonLabel>Stats</IonLabel>
+            </IonTabButton>
+            
+            <IonTabButton tab="tournaments" href="/tournaments">
+              <IonIcon icon={trophyOutline} />
+              <IonLabel>Tournaments</IonLabel>
+            </IonTabButton>
+            
+            <IonTabButton tab="profile" href="/profile">
+              <IonIcon icon={personOutline} />
+              <IonLabel>Profile</IonLabel>
+            </IonTabButton>
+            
+            <IonTabButton tab="debug" href="/debug">
+              <IonIcon icon={bugOutline} />
+              <IonLabel>Debug</IonLabel>
+            </IonTabButton>
+          </IonTabBar>
+        </IonTabs>
+      </IonReactRouter>
+    </IonApp>
+  );
+}
+
+export default App;
