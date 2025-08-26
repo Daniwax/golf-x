@@ -34,7 +34,6 @@ import {
   IonBadge,
   IonNote,
   IonThumbnail,
-  IonImg,
   IonSkeletonText,
   IonRefresher,
   IonRefresherContent
