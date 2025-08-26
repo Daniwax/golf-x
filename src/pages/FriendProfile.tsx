@@ -19,7 +19,8 @@ import {
   IonBackButton,
   IonButtons,
   IonNote,
-  IonActionSheet
+  IonActionSheet,
+  IonAlert
 } from '@ionic/react';
 import { 
   golfOutline,
@@ -42,6 +43,7 @@ const FriendProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [friend, setFriend] = useState<UserProfile | null>(null);
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const [showRemoveAlert, setShowRemoveAlert] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
@@ -71,17 +73,22 @@ const FriendProfile: React.FC = () => {
 
   const handleRemoveFriend = async () => {
     if (!friend) return;
-
-    setLoading(true);
-    const { error } = await removeFriend(friend.id);
     
-    if (error) {
-      showMessage('Failed to remove friend', 'danger');
-    } else {
-      showMessage('Friend removed', 'success');
-      setTimeout(() => history.push('/friends'), 1500);
-    }
-    setLoading(false);
+    // Use replace instead of push to prevent going back to deleted friend
+    history.replace('/friends');
+    
+    // Show a toast message on the friends page
+    showMessage('Friend removed. Changes may take a moment to appear.', 'success');
+    
+    // Remove the friend in the background
+    removeFriend(friend.id).catch(error => {
+      console.error('Failed to remove friend:', error);
+    });
+  };
+
+  const handleRemoveClick = () => {
+    setShowActionSheet(false);
+    setShowRemoveAlert(true);
   };
 
   const showMessage = (message: string, color: 'success' | 'danger') => {
@@ -157,7 +164,7 @@ const FriendProfile: React.FC = () => {
           </IonButtons>
           <IonTitle>Friend Profile</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={() => setShowActionSheet(true)}>
+            <IonButton onClick={() => setShowActionSheet(true)} disabled={loading}>
               <IonIcon icon={ellipsisHorizontalOutline} />
             </IonButton>
           </IonButtons>
@@ -291,11 +298,32 @@ const FriendProfile: React.FC = () => {
               text: 'Remove Friend',
               role: 'destructive',
               icon: personRemoveOutline,
-              handler: handleRemoveFriend
+              handler: handleRemoveClick
             },
             {
               text: 'Cancel',
               role: 'cancel'
+            }
+          ]}
+        />
+
+        <IonAlert
+          isOpen={showRemoveAlert}
+          onDidDismiss={() => setShowRemoveAlert(false)}
+          header="Remove Friend?"
+          message={`Are you sure you want to remove ${friend?.full_name || 'this friend'}? You won't be able to share profiles or enter competitions together anymore. They may take a moment to disappear from your friends list.`}
+          buttons={[
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              cssClass: 'secondary'
+            },
+            {
+              text: 'Remove',
+              cssClass: 'danger',
+              handler: () => {
+                handleRemoveFriend();
+              }
             }
           ]}
         />

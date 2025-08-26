@@ -21,7 +21,8 @@ import {
   IonBackButton,
   IonButtons,
   IonNote,
-  IonText
+  IonText,
+  useIonViewWillEnter
 } from '@ionic/react';
 import { 
   personAddOutline,
@@ -45,6 +46,12 @@ const Friends: React.FC = () => {
     loadUserIdAndFriends();
   }, []);
 
+  // Reload friends list every time the page is viewed
+  useIonViewWillEnter(() => {
+    // Simply reload the friends list each time we view the page
+    loadFriends();
+  });
+
   const loadUserIdAndFriends = async () => {
     setLoading(true);
     try {
@@ -64,6 +71,14 @@ const Friends: React.FC = () => {
       showMessage('Error loading data', 'danger');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFriends = async () => {
+    // Just refresh the friends list without showing loading state
+    const { data, error } = await getFriends();
+    if (!error && data) {
+      setFriends(data);
     }
   };
 
