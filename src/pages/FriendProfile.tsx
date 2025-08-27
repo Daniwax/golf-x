@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -50,9 +50,9 @@ const FriendProfile: React.FC = () => {
 
   useEffect(() => {
     loadFriendProfile();
-  }, [id]);
+  }, [loadFriendProfile]);
 
-  const loadFriendProfile = async () => {
+  const loadFriendProfile = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await getFriendProfile(id);
@@ -69,7 +69,7 @@ const FriendProfile: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showMessage, history]);
 
   const handleRemoveFriend = async () => {
     if (!friend) return;
@@ -91,11 +91,11 @@ const FriendProfile: React.FC = () => {
     setShowRemoveAlert(true);
   };
 
-  const showMessage = (message: string, color: 'success' | 'danger') => {
+  const showMessage = useCallback((message: string, color: 'success' | 'danger') => {
     setToastMessage(message);
     setToastColor(color);
     setShowToast(true);
-  };
+  }, []);
 
   // Mock golf stats - in future these would come from database
   const golfingStats = [
