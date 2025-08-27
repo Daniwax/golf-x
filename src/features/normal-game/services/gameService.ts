@@ -147,7 +147,20 @@ class GameService {
       throw participantError;
     }
 
-    return game;
+    // Update game status to 'active' now that setup is complete
+    const { data: updatedGame, error: updateError } = await supabase
+      .from('games')
+      .update({ status: 'active' })
+      .eq('id', game.id)
+      .select()
+      .single();
+    
+    if (updateError) {
+      console.error('Error updating game status:', updateError);
+      return game; // Return game with setup status if update fails
+    }
+
+    return updatedGame || game;
   }
 
   // Calculate handicaps for a player with proper formulas
@@ -164,7 +177,7 @@ class GameService {
     
     const { data: teeBox } = await supabase
       .from('tee_boxes')
-      .select('slope, course_rating')
+      .select('slope_rating, course_rating')
       .eq('id', teeBoxId)
       .single();
     
@@ -175,7 +188,7 @@ class GameService {
     // Calculate course handicap using official formula
     const courseHandicap = calculateCourseHandicap(
       handicapIndex,
-      teeBox.slope,
+      teeBox.slope_rating,
       teeBox.course_rating,
       coursePar
     );
@@ -192,7 +205,7 @@ class GameService {
         
         const { data: pTeeBox } = await supabase
           .from('tee_boxes')
-          .select('slope, course_rating')
+          .select('slope_rating, course_rating')
           .eq('id', p.tee_box_id)
           .single();
         
@@ -200,7 +213,7 @@ class GameService {
         
         const pCourseHandicap = calculateCourseHandicap(
           p.handicap_index,
-          pTeeBox.slope,
+          pTeeBox.slope_rating,
           pTeeBox.course_rating,
           coursePar
         );
@@ -246,7 +259,18 @@ class GameService {
 
     const { data } = await supabase
       .from('games')
-      .select('*')
+      .select(`
+        id,
+        course_id,
+        creator_user_id,
+        game_description,
+        scoring_format,
+        weather_condition,
+        status,
+        created_at,
+        started_at,
+        completed_at
+      `)
       .in('status', ['setup', 'active'])
       .or(`creator_user_id.eq.${user.user.id},id.in.(
         select game_id from game_participants where user_id='${user.user.id}'
@@ -263,16 +287,75 @@ class GameService {
     if (!supabase) throw new Error('Supabase not configured');
     
     const [gameResult, participantsResult, scoresResult] = await Promise.all([
-      supabase.from('games').select('*').eq('id', gameId).single(),
-      supabase.from('game_participants').select('*').eq('game_id', gameId),
-      supabase.from('game_hole_scores').select('*').eq('game_id', gameId)
+      supabase.from('games')
+        .select(`
+          id,
+          course_id,
+          creator_user_id,
+          game_description,
+          scoring_format,
+          weather_condition,
+          status,
+          created_at,
+          started_at,
+          completed_at
+        `)
+        .eq('id', gameId)
+        .single(),
+      supabase.from('game_participants')
+        .select(`
+          id,
+          game_id,
+          user_id,
+          tee_box_id,
+          handicap_index,
+          course_handicap,
+          playing_handicap,
+          match_handicap
+        `)
+        .eq('game_id', gameId),
+      supabase.from('game_hole_scores')
+        .select(`
+          id,
+          game_id,
+          user_id,
+          hole_number,
+          strokes,
+          putts,
+          hole_par,
+          hole_handicap_strokes,
+          net_score,
+          score_vs_par,
+          updated_at
+        `)
+        .eq('game_id', gameId)
     ]);
 
     if (gameResult.error) throw gameResult.error;
+    if (participantsResult.error) throw participantsResult.error;
+    if (scoresResult.error) throw scoresResult.error;
+
+    // Get participant names separately
+    const participants = participantsResult.data || [];
+    const participantsWithNames = await Promise.all(
+      participants.map(async (participant) => {
+        if (!supabase) return { ...participant, full_name: 'Unknown' };
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', participant.user_id)
+          .single();
+        
+        return {
+          ...participant,
+          profiles: profile ? { full_name: profile.full_name } : null
+        };
+      })
+    );
     
     return {
       game: gameResult.data as Game,
-      participants: participantsResult.data as GameParticipant[],
+      participants: participantsWithNames as GameParticipant[],
       scores: scoresResult.data as GameHoleScore[]
     };
   }
@@ -400,13 +483,16 @@ class GameService {
     if (error) throw error;
   }
 
-  // Cancel a game
+  // Cancel a game - updates status to 'cancelled' (preserves data)
   async cancelGame(gameId: string): Promise<void> {
     if (!supabase) throw new Error('Supabase not configured');
     
     const { error } = await supabase
       .from('games')
-      .update({ status: 'cancelled' })
+      .update({ 
+        status: 'cancelled',
+        completed_at: new Date().toISOString() // Mark when cancelled
+      })
       .eq('id', gameId);
     
     if (error) throw error;
@@ -429,6 +515,40 @@ class GameService {
       .eq('id', gameId);
     
     if (error) throw error;
+  }
+
+  // Get active games for the current user
+  async getActiveGames(): Promise<Game[]> {
+    if (!supabase) throw new Error('Supabase not configured');
+    
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) throw new Error('User not authenticated');
+    
+    // Get games where user is a participant and status is 'active'
+    const { data, error } = await supabase
+      .from('games')
+      .select(`
+        id,
+        course_id,
+        creator_user_id,
+        game_description,
+        scoring_format,
+        weather_condition,
+        status,
+        created_at,
+        golf_courses!inner (
+          name
+        ),
+        game_participants!inner (
+          user_id
+        )
+      `)
+      .eq('status', 'active')
+      .eq('game_participants.user_id', user.user.id);
+    
+    if (error) throw error;
+    
+    return data || [];
   }
 }
 
