@@ -48,10 +48,14 @@ const FriendProfile: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
 
-  useEffect(() => {
-    loadFriendProfile();
-  }, [loadFriendProfile]);
+  // Define showMessage first as it's used by loadFriendProfile
+  const showMessage = useCallback((message: string, color: 'success' | 'danger') => {
+    setToastMessage(message);
+    setToastColor(color);
+    setShowToast(true);
+  }, []);
 
+  // Define loadFriendProfile before useEffect
   const loadFriendProfile = useCallback(async () => {
     setLoading(true);
     try {
@@ -70,6 +74,10 @@ const FriendProfile: React.FC = () => {
       setLoading(false);
     }
   }, [id, showMessage, history]);
+
+  useEffect(() => {
+    loadFriendProfile();
+  }, [loadFriendProfile]);
 
   const handleRemoveFriend = async () => {
     if (!friend) return;
@@ -90,12 +98,6 @@ const FriendProfile: React.FC = () => {
     setShowActionSheet(false);
     setShowRemoveAlert(true);
   };
-
-  const showMessage = useCallback((message: string, color: 'success' | 'danger') => {
-    setToastMessage(message);
-    setToastColor(color);
-    setShowToast(true);
-  }, []);
 
   // Mock golf stats - in future these would come from database
   const golfingStats = [
