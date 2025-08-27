@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -124,10 +124,14 @@ const CourseDetail: React.FC = () => {
   const [courseImage, setCourseImage] = useState<CourseImage | null>(null);
   const [showJsonModal, setShowJsonModal] = useState(false);
 
-  const fetchCourseData = async () => {
+  const fetchCourseData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
 
       // Fetch course with club info
       const { data: courseData, error: courseError } = await supabase
@@ -212,7 +216,7 @@ const CourseDetail: React.FC = () => {
             const hexMatches = hexString.match(/.{1,2}/g);
             if (hexMatches && hexMatches.length < 1000000) { // Prevent processing huge images
               try {
-                const bytes = new Uint8Array(hexMatches.map(byte => parseInt(byte, 16)));
+                const bytes = new Uint8Array(hexMatches.map((byte: string) => parseInt(byte, 16)));
                 // Process in chunks to avoid stack overflow
                 let binaryString = '';
                 const chunkSize = 8192;
@@ -257,11 +261,11 @@ const CourseDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchCourseData();
-  }, [id]);
+  }, [fetchCourseData]);
 
   const renderInfo = () => {
     if (!course) return null;
@@ -822,7 +826,7 @@ const CourseDetail: React.FC = () => {
           </div>
         ) : (
           <>
-            <IonSegment value={selectedSegment} onIonChange={(e) => setSelectedSegment(e.detail.value!)}>
+            <IonSegment value={selectedSegment} onIonChange={(e) => setSelectedSegment(e.detail.value as string)}>
               <IonSegmentButton value="info">
                 <IonLabel>Info</IonLabel>
               </IonSegmentButton>

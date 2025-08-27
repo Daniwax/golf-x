@@ -51,6 +51,10 @@ const CoursesList: React.FC = () => {
       setLoading(true);
       setError(null);
 
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+
       const { data, error } = await supabase
         .from('golf_courses')
         .select(`
@@ -73,8 +77,9 @@ const CoursesList: React.FC = () => {
         throw error;
       }
 
-      setCourses(data || []);
-      setFilteredCourses(data || []);
+      const typedData = data as CourseListItem[] | null;
+      setCourses(typedData || []);
+      setFilteredCourses(typedData || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch courses';
       setError(errorMessage);
