@@ -28,11 +28,15 @@ import Signup from './pages/Signup';
 import Debug from './pages/Debug';
 import Templates from './pages/debug/Templates';
 import IonicShowcase from './pages/debug/templates/IonicShowcase';
-import CoursesList from './pages/debug/CoursesList';
-import CourseDetail from './pages/debug/CourseDetail';
 import ConfigError from './pages/ConfigError';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
+
+// Import Normal Game components
+import CreateGame from './features/normal-game/components/CreateGame';
+import AddParticipants from './features/normal-game/components/AddParticipants';
+import PlayerConfiguration from './features/normal-game/components/PlayerConfiguration';
+import GameSummary from './features/normal-game/components/GameSummary';
 
 // Import Supabase config check
 import { isConfigured } from './lib/supabase';
@@ -86,11 +90,18 @@ function App() {
             <Route exact path="/tournaments" component={Tournaments} />
             <Route exact path="/friends" component={Friends} />
             <Route exact path="/friend/:id" component={FriendProfile} />
+            
+            {/* Normal Game Routes */}
+            <Route exact path="/game/create" component={CreateGame} />
+            <Route exact path="/game/add-participants" component={AddParticipants} />
+            <Route exact path="/game/configure-players" component={PlayerConfiguration} />
+            <Route exact path="/game/summary" component={GameSummary} />
+            
+            {/* Debug Routes */}
             <Route exact path="/debug" component={Debug} />
             <Route exact path="/debug/templates" component={Templates} />
             <Route exact path="/debug/templates/ionic-showcase" component={IonicShowcase} />
-            <Route exact path="/debug/courses" component={CoursesList} />
-            <Route exact path="/debug/courses/:id" component={CourseDetail} />
+            
             <Route exact path="/">
               <Redirect to="/home" />
             </Route>
