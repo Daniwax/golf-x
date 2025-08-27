@@ -115,9 +115,9 @@ const ScoringFormatModal: React.FC<ScoringFormatModalProps> = ({
                     </blockquote>
                   ),
                   hr: () => <hr className="md-hr" />,
-                  code: ({children}: {children: React.ReactNode}) => 
+                  code: ({children}: {children?: React.ReactNode}) => 
                       <code className="md-code-inline">{children}</code>,
-                  pre: ({children}: {children: React.ReactNode}) => 
+                  pre: ({children}: {children?: React.ReactNode}) => 
                       <pre className="md-code-block">{children}</pre>
                 }}
               >

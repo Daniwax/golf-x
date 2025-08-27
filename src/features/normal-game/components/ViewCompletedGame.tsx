@@ -102,9 +102,9 @@ const ViewCompletedGame: React.FC = () => {
             setGameData({
               ...data,
               participants: participantsWithMatchPlay
-            } as GameData);
+            } as unknown as GameData);
           } else {
-            setGameData(data as GameData);
+            setGameData(data as unknown as GameData);
           }
         } else {
           // Navigate back if game not found
