@@ -86,7 +86,7 @@ export const profileGameService = {
 
       // Find most played course
       const courseFrequency = participations.reduce((acc, p) => {
-        const games: any = Array.isArray(p.games) ? p.games[0] : p.games;
+        const games = Array.isArray(p.games) ? p.games[0] : p.games;
         const courseName = Array.isArray(games?.golf_courses) 
           ? games?.golf_courses[0]?.name 
           : games?.golf_courses?.name;
@@ -242,7 +242,7 @@ export const profileGameService = {
             position,
             totalPlayers,
             winner,
-            coursePar: courseData?.par || 72 || 72
+            coursePar: courseData?.par || 72
           };
         })
       );
