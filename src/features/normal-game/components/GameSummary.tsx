@@ -146,15 +146,16 @@ const GameSummary: React.FC = () => {
       
       // Navigate to live game
       history.replace(`/game/live/${game.id}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating game:', error);
       
       // Create detailed debug info
+      const errorObj = error as { message?: string; code?: string; details?: string; hint?: string };
       const debugInfo = {
-        errorMessage: error?.message || 'Unknown error',
-        errorCode: error?.code || 'No code',
-        errorDetails: error?.details || 'No details',
-        errorHint: error?.hint || 'No hint',
+        errorMessage: errorObj?.message || 'Unknown error',
+        errorCode: errorObj?.code || 'No code',
+        errorDetails: errorObj?.details || 'No details',
+        errorHint: errorObj?.hint || 'No hint',
         browser: navigator.userAgent,
         timestamp: new Date().toISOString()
       };

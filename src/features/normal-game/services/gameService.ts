@@ -91,14 +91,14 @@ class GameService {
     let userId: string | null = null;
     
     // Method 1: getUser (recommended)
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
     if (userData?.user) {
       userId = userData.user.id;
     }
     
     // Method 2: getSession (fallback for cookie issues)
     if (!userId) {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData?.session?.user) {
         userId = sessionData.session.user.id;
       }
