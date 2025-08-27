@@ -31,9 +31,11 @@
     "@ionic/react": "^8.7.3",
     "@ionic/react-router": "^8.7.3",
     "@supabase/supabase-js": "^2.56.0",
+    "date-fns": "^4.1.0",
     "ionicons": "^8.0.13",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^5.3.4",
     "vite-plugin-pwa": "^1.0.3",
     "workbox-window": "^7.3.0"

@@ -9,6 +9,7 @@ interface HandicapInputProps {
   max?: number;
   step?: number;
   disabled?: boolean;
+  showLabel?: boolean;
 }
 
 const HandicapInput: React.FC<HandicapInputProps> = ({
@@ -17,7 +18,8 @@ const HandicapInput: React.FC<HandicapInputProps> = ({
   min = 0,
   max = 54,
   step = 0.1,
-  disabled = false
+  disabled = false,
+  showLabel = false
 }) => {
   const handleDecrease = () => {
     const newValue = Math.max(min, value - step);
@@ -64,11 +66,29 @@ const HandicapInput: React.FC<HandicapInputProps> = ({
       <div style={{
         minWidth: '60px',
         textAlign: 'center',
-        fontSize: '18px',
-        fontWeight: '600',
-        fontFamily: 'monospace'
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}>
-        {formatHandicap(value)}
+        {showLabel && (
+          <div style={{
+            fontSize: '8px',
+            color: 'var(--ion-color-medium)',
+            marginBottom: '2px',
+            lineHeight: '1'
+          }}>
+            Adjust handicap
+          </div>
+        )}
+        <div style={{
+          fontSize: '18px',
+          fontWeight: '600',
+          fontFamily: 'monospace',
+          lineHeight: '1'
+        }}>
+          {formatHandicap(value)}
+        </div>
       </div>
       
       <IonButton

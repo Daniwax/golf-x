@@ -20,7 +20,6 @@ import {
   IonRefresher,
   IonRefresherContent
 } from '@ionic/react';
-import type { RefresherEventDetail } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
@@ -110,13 +109,14 @@ const CoursesList: React.FC = () => {
     }
   }, [searchText, courses]);
 
-  const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
+  const handleRefresh = async (event: CustomEvent) => {
     await fetchCourses();
-    event.detail.complete();
+    const target = event.target as HTMLIonRefresherElement;
+    target.complete();
   };
 
   const navigateToCourse = (courseId: number) => {
-    history.push(`/debug/courses/${courseId}`);
+    history.push(`/debug/course/${courseId}`);
   };
 
   const getCourseTypeColor = (type: string) => {

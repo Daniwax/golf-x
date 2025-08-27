@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -41,6 +41,8 @@ import {
 } from 'ionicons/icons';
 import { useAuth } from '../lib/useAuth';
 import { useHistory } from 'react-router-dom';
+import { profileGameService, type GameStats } from '../features/normal-game/services/profileGameService';
+import CompletedMatches from '../features/normal-game/components/CompletedMatches';
 
 const Profile: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -50,15 +52,51 @@ const Profile: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [gameStats, setGameStats] = useState<GameStats>({
+    totalGamesPlayed: 0,
+    bestScore: null,
+    averageScore: null,
+    recentHandicap: null,
+    preferredCourse: null
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
   
   // Profile state
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
   const [email] = useState(user?.email || '');
   const [handicap, setHandicap] = useState(12.5);
-  const [homeCourse, setHomeCourse] = useState('Pebble Beach Golf Links');
+  const [preferredCourse, setPreferredCourse] = useState('-');
   const [bio, setBio] = useState('Passionate golfer working to improve my game. Love playing different courses and meeting new people on the course.');
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const loadGameStats = async () => {
+      if (!user?.id) return;
+      setStatsLoading(true);
+      try {
+        const stats = await profileGameService.getUserGameStats(user.id);
+        setGameStats(stats);
+        // Update handicap from recent game if available
+        if (stats.recentHandicap !== null) {
+          setHandicap(stats.recentHandicap);
+        }
+        // Update preferred course from stats
+        if (stats.preferredCourse !== null) {
+          setPreferredCourse(stats.preferredCourse);
+        }
+      } catch (error) {
+        console.error('Error loading game stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    
+    if (user?.id) {
+      loadGameStats();
+    }
+  }, [user?.id]);
+
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -83,10 +121,30 @@ const Profile: React.FC = () => {
   };
 
   const golfingStats = [
-    { label: 'Rounds Played', value: '42', icon: golfOutline, color: 'primary' },
-    { label: 'Best Score', value: '78', icon: trophyOutline, color: 'success' },
-    { label: 'Average Score', value: '85.2', icon: statsChartOutline, color: 'secondary' },
-    { label: 'Handicap Index', value: handicap.toString(), icon: golfOutline, color: 'warning' }
+    { 
+      label: 'Rounds Played', 
+      value: statsLoading ? '...' : (gameStats.totalGamesPlayed || 0).toString(), 
+      icon: golfOutline, 
+      color: 'primary' 
+    },
+    { 
+      label: 'Best Score', 
+      value: statsLoading ? '...' : (gameStats.bestScore !== null ? gameStats.bestScore.toString() : '-'), 
+      icon: trophyOutline, 
+      color: 'success' 
+    },
+    { 
+      label: 'Average Score', 
+      value: statsLoading ? '...' : (gameStats.averageScore !== null ? gameStats.averageScore.toString() : '-'), 
+      icon: statsChartOutline, 
+      color: 'secondary' 
+    },
+    { 
+      label: 'Handicap Index', 
+      value: handicap.toFixed(1), 
+      icon: golfOutline, 
+      color: 'warning' 
+    }
   ];
 
   return (
@@ -271,11 +329,11 @@ const Profile: React.FC = () => {
                   </IonItem>
                   <IonItem>
                     <IonIcon icon={locationOutline} slot="start" />
-                    <IonLabel position="stacked">Home Course</IonLabel>
+                    <IonLabel position="stacked">Preferred Course</IonLabel>
                     <IonInput
-                      value={homeCourse}
-                      placeholder="Enter your home course"
-                      onIonInput={(e) => setHomeCourse(e.detail.value!)}
+                      value={preferredCourse}
+                      placeholder="Enter your preferred course"
+                      onIonInput={(e) => setPreferredCourse(e.detail.value!)}
                     />
                   </IonItem>
                 </>
@@ -291,8 +349,8 @@ const Profile: React.FC = () => {
                   <IonItem>
                     <IonIcon icon={locationOutline} slot="start" />
                     <IonLabel>
-                      <h3>Home Course</h3>
-                      <p>{homeCourse}</p>
+                      <h3>Preferred Course</h3>
+                      <p>{preferredCourse}</p>
                     </IonLabel>
                   </IonItem>
                 </>
@@ -312,6 +370,9 @@ const Profile: React.FC = () => {
               </IonItem>
             </IonCardContent>
           </IonCard>
+
+          {/* Completed Matches Section */}
+          {user?.id && <CompletedMatches userId={user.id} />}
 
           {/* Settings */}
           <IonList>
