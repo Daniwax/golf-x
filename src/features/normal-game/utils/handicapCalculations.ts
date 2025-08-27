@@ -207,6 +207,30 @@ export function getStrokesOnHole(holeStrokeIndex: number, playerHandicap: number
 }
 
 /**
+ * Calculate hole difficulty ranking based on handicap index
+ * Lower handicap index means harder hole (gets strokes first)
+ * 
+ * @param holes - Array of holes with handicap_index
+ * @param targetHoleNumber - The hole number to get ranking for
+ * @returns The difficulty ranking (1 = hardest, 18 = easiest)
+ */
+export function getHoleDifficultyRanking(
+  holes: Array<{ hole_number: number; handicap_index: number }>,
+  targetHoleNumber: number
+): number {
+  if (!holes || holes.length === 0) return 1;
+  
+  // Sort holes by handicap_index (ascending - lower index = harder hole)
+  const sortedByDifficulty = [...holes].sort((a, b) => a.handicap_index - b.handicap_index);
+  
+  // Find position of target hole in sorted array
+  const rankIndex = sortedByDifficulty.findIndex(h => h.hole_number === targetHoleNumber);
+  
+  // Return rank (1-based index), default to 1 if not found
+  return rankIndex !== -1 ? rankIndex + 1 : 1;
+}
+
+/**
  * Calculate match play results (for completed games)
  * This is a placeholder for ViewCompletedGame component
  */

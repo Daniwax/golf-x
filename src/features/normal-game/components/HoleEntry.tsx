@@ -9,7 +9,6 @@ import {
   IonNote,
   IonLabel,
   IonSpinner,
-  IonChip,
   IonToast
 } from '@ionic/react';
 import { 
@@ -17,7 +16,9 @@ import {
   removeOutline,
   chevronBackOutline,
   chevronForwardOutline,
-  checkmarkOutline
+  checkmarkOutline,
+  statsChartOutline,
+  closeOutline
 } from 'ionicons/icons';
 import { supabase } from '../../../lib/supabase';
 import { gameService } from '../services/gameService';
@@ -62,29 +63,39 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
   const [saving, setSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
     loadHoleData();
-    initializeScores();
-  }, [currentHole, participants, scores]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentHole]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // Initialize scores when holeInfo changes or participants/scores change
+  useEffect(() => {
+    if (holeInfo) {
+      initializeScores();
+    }
+  }, [holeInfo, participants, scores, currentHole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadHoleData = async () => {
     try {
       if (!supabase) return;
       
-      const { data: game } = await supabase
+      const { data: game, error: gameError } = await supabase
         .from('games')
         .select('course_id')
         .eq('id', gameId)
         .single();
         
-      if (!game) return;
-      
+      if (gameError || !game) {
+        console.error('Error loading game:', gameError);
+        return;
+      }
+
       // First get the hole info with a join to hole_distances
       const firstParticipant = participants[0];
       
       // Try to get hole with distance data using left join
-      const { data: hole, error: holeError } = await supabase
+      const { data: hole } = await supabase
         .from('holes')
         .select(`
           id,
@@ -101,18 +112,9 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
         .eq('hole_number', currentHole)
         .single();
       
-      console.log('=== HOLE DATA DEBUG ===');
-      console.log('Course ID:', game.course_id);
-      console.log('Hole Number:', currentHole);
-      console.log('Query Result:', hole);
-      console.log('Query Error:', holeError);
-      
       if (hole) {
         // Find the distance for the participant's tee box
         let meters = undefined;
-        
-        console.log('Hole Distances:', hole.hole_distances);
-        console.log('First Participant Tee Box:', firstParticipant?.tee_box_id);
         
         if (hole.hole_distances && Array.isArray(hole.hole_distances) && hole.hole_distances.length > 0) {
           // Try to find exact match for participant's tee box
@@ -120,19 +122,13 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
             d => d.tee_box_id === firstParticipant?.tee_box_id
           );
           
-          console.log('Found distance for tee box:', distance);
-          
           if (distance) {
             meters = distance.meters;
           } else {
             // Fallback: use the first available distance
             meters = hole.hole_distances[0]?.meters;
-            console.log('Using fallback distance from first available tee box:', meters);
           }
         }
-        
-        console.log('Final meters value:', meters);
-        console.log('======================');
         
         setHoleInfo({
           hole_number: hole.hole_number,
@@ -198,8 +194,12 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
       return {
         participantId: p.id,
         userId: p.user_id,
-        strokes: existingScore?.strokes || playerPar,  // Default to player's personal par
-        putts: existingScore?.putts || 0                // Default to 0 (optional field)
+        strokes: existingScore?.strokes !== undefined && existingScore.strokes > 0 
+          ? existingScore.strokes 
+          : playerPar,  // Default to player's personal par if no score exists
+        putts: existingScore?.putts !== undefined 
+          ? existingScore.putts 
+          : 0  // Default to 0 (optional field)
       };
     });
     
@@ -207,16 +207,41 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
   };
 
   const updatePlayerScore = (userId: string, field: 'strokes' | 'putts', value: number) => {
-    setPlayerScores(prev => prev.map(score => 
-      score.userId === userId 
-        ? { ...score, [field]: Math.max(0, Math.min(value, field === 'strokes' ? 15 : 10)) }
-        : score
-    ));
+    setPlayerScores(prev => prev.map(score => {
+      if (score.userId !== userId) return score;
+      
+      if (field === 'strokes') {
+        // When updating strokes, ensure putts don't exceed the new stroke value
+        const newStrokes = Math.max(1, Math.min(value, 15));
+        const adjustedPutts = Math.min(score.putts, newStrokes);
+        return { ...score, strokes: newStrokes, putts: adjustedPutts };
+      } else {
+        // When updating putts, ensure it doesn't exceed strokes
+        const newPutts = Math.max(0, Math.min(value, score.strokes));
+        return { ...score, putts: newPutts };
+      }
+    }));
   };
 
   const handleSaveScores = async () => {
     setSaving(true);
     try {
+      // Debug: Check critical values
+      console.log('=== SAVE DEBUG ===');
+      console.log('supabase client exists?', !!supabase);
+      console.log('gameId:', gameId);
+      console.log('currentHole:', currentHole);
+      console.log('playerScores:', playerScores);
+      console.log('participants:', participants);
+      
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+      
+      if (!gameId) {
+        throw new Error('Game ID is missing');
+      }
+      
       // Save all scores for this hole
       await Promise.all(
         playerScores.map(score => 
@@ -311,8 +336,128 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
   
   const currentGradient = gradients[(currentHole - 1) % gradients.length];
 
+
   return (
-    <div style={{ padding: '0', paddingBottom: '70px' }}>
+    <div style={{ padding: '0', paddingBottom: '70px', position: 'relative' }}>
+      {/* Stats Panel - Slide Down */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '100vh',
+        backgroundColor: 'var(--ion-background-color)',
+        zIndex: 999,
+        transform: showStats ? 'translateY(0)' : 'translateY(-100%)',
+        transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        boxShadow: showStats ? '0 4px 20px rgba(0,0,0,0.15)' : 'none',
+        overflowY: 'auto'
+      }}>
+        {/* Stats Header */}
+        <div style={{
+          background: currentGradient,
+          padding: '16px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <h2 style={{ 
+              margin: 0, 
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: '600'
+            }}>
+              Hole {currentHole} Stats
+            </h2>
+            <IonButton
+              fill="clear"
+              onClick={() => setShowStats(false)}
+              style={{
+                '--color': 'white',
+                minHeight: '32px'
+              }}
+            >
+              <IonIcon icon={closeOutline} slot="icon-only" />
+            </IonButton>
+          </div>
+        </div>
+        
+        {/* Stats Content - Placeholder */}
+        <div style={{ padding: '20px' }}>
+          <div style={{
+            backgroundColor: 'var(--ion-color-light)',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '16px',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ 
+              fontSize: '16px',
+              fontWeight: '600',
+              marginBottom: '8px',
+              color: 'var(--ion-text-color)'
+            }}>
+              Historical Performance
+            </h3>
+            <p style={{ 
+              fontSize: '14px', 
+              color: 'var(--ion-color-medium)',
+              margin: 0
+            }}>
+              Player statistics for this hole will appear here
+            </p>
+          </div>
+          
+          {/* Player Stats Cards - Placeholder */}
+          {participants.map((participant, index) => (
+            <IonCard key={participant.id} style={{ marginBottom: '12px' }}>
+              <IonCardHeader>
+                <IonCardTitle style={{ fontSize: '16px' }}>
+                  {participant.profiles?.full_name || `Player ${index + 1}`}
+                </IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-around',
+                  textAlign: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ion-color-medium)' }}>
+                      Avg Score
+                    </div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                      --
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ion-color-medium)' }}>
+                      Best
+                    </div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--ion-color-success)' }}>
+                      --
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ion-color-medium)' }}>
+                      Times Played
+                    </div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                      --
+                    </div>
+                  </div>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          ))}
+        </div>
+      </div>
+
       {/* Professional Hole Header - iOS Style */}
       <div style={{
         background: currentGradient,
@@ -489,6 +634,29 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
         </div>
       </div>
 
+      {/* Stats Button - Full Width Below Header */}
+      <IonButton
+        expand="block"
+        fill="solid"
+        onClick={() => setShowStats(true)}
+        style={{
+          margin: 0,
+          borderRadius: 0,
+          height: '48px',
+          '--background': 'var(--ion-color-primary)',
+          '--background-hover': 'var(--ion-color-primary-shade)',
+          '--background-activated': 'var(--ion-color-primary-tint)',
+          fontSize: '14px',
+          fontWeight: '600',
+          letterSpacing: '0.5px',
+          borderTop: '1px solid #e0e0e0',
+          '--border-radius': '0'
+        }}
+      >
+        <IonIcon icon={statsChartOutline} slot="start" />
+        View Hole Statistics
+      </IonButton>
+
       {/* Player Scores - More Compact */}
       {playerScores.map((playerScore, index) => {
         const participant = participants.find(p => p.user_id === playerScore.userId);
@@ -661,7 +829,7 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
                       fill="outline"
                       shape="round"
                       onClick={() => updatePlayerScore(playerScore.userId, 'putts', playerScore.putts + 1)}
-                      disabled={playerScore.putts >= 10}
+                      disabled={playerScore.putts >= playerScore.strokes}
                       style={{ 
                         '--padding-start': '0',
                         '--padding-end': '0',

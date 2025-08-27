@@ -386,14 +386,25 @@ class GameService {
     strokes: number,
     putts?: number
   ): Promise<void> {
+    console.log('=== updateHoleScore DEBUG ===');
+    console.log('gameId:', gameId);
+    console.log('userId:', userId);
+    console.log('holeNumber:', holeNumber);
+    console.log('strokes:', strokes);
+    console.log('putts:', putts);
+    console.log('supabase exists?', !!supabase);
+    
     if (!supabase) throw new Error('Supabase not configured');
     
     // Get game and hole data
-    const { data: gameData } = await supabase
+    const { data: gameData, error: gameError } = await supabase
       .from('games')
       .select('course_id')
       .eq('id', gameId)
       .single();
+    
+    console.log('Game data:', gameData);
+    console.log('Game error:', gameError);
     
     if (!gameData) throw new Error('Game not found');
 
@@ -423,21 +434,37 @@ class GameService {
       participant.match_handicap
     );
 
+    // Prepare the score data
+    const scoreData = {
+      game_id: gameId,
+      user_id: userId,
+      hole_number: holeNumber,
+      strokes,
+      putts,
+      hole_par: holeData.par,
+      hole_handicap_strokes: handicapStrokes,
+      updated_at: new Date().toISOString()
+    };
+    
+    console.log('Score data to upsert:', scoreData);
+    
+    // Check auth session before upsert
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('Current session:', session?.user?.id);
+    
+    if (!session) {
+      console.error('No active session!');
+      throw new Error('Authentication session expired. Please refresh the page and sign in again.');
+    }
+    
     // Upsert the score with calculated handicap strokes
     const { error } = await supabase
       .from('game_hole_scores')
-      .upsert({
-        game_id: gameId,
-        user_id: userId,
-        hole_number: holeNumber,
-        strokes,
-        putts,
-        hole_par: holeData.par,
-        hole_handicap_strokes: handicapStrokes,
-        updated_at: new Date().toISOString()
-      }, {
+      .upsert(scoreData, {
         onConflict: 'game_id,user_id,hole_number'
       });
+    
+    console.log('Upsert error:', error);
     
     if (error) throw error;
     
