@@ -28,6 +28,8 @@ import Signup from './pages/Signup';
 import Debug from './pages/Debug';
 import Templates from './pages/debug/Templates';
 import IonicShowcase from './pages/debug/templates/IonicShowcase';
+import CoursesList from './pages/debug/CoursesList';
+import CourseDetail from './pages/debug/CourseDetail';
 import ConfigError from './pages/ConfigError';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
@@ -87,6 +89,8 @@ function App() {
             <Route exact path="/debug" component={Debug} />
             <Route exact path="/debug/templates" component={Templates} />
             <Route exact path="/debug/templates/ionic-showcase" component={IonicShowcase} />
+            <Route exact path="/debug/courses" component={CoursesList} />
+            <Route exact path="/debug/courses/:id" component={CourseDetail} />
             <Route exact path="/">
               <Redirect to="/home" />
             </Route>
