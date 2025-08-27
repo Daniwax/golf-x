@@ -86,7 +86,7 @@ export const profileGameService = {
 
       // Find most played course
       const courseFrequency = participations.reduce((acc, p) => {
-        const games = Array.isArray(p.games) ? p.games[0] : p.games;
+        const games: any = Array.isArray(p.games) ? p.games[0] : p.games;
         const courseName = Array.isArray(games?.golf_courses) 
           ? games?.golf_courses[0]?.name 
           : games?.golf_courses?.name;
@@ -168,8 +168,8 @@ export const profileGameService = {
 
       // Sort games by completed_at in descending order
       const sortedGames = games.sort((a, b) => {
-        const gameA = Array.isArray(a.games) ? a.games[0] : a.games;
-        const gameB = Array.isArray(b.games) ? b.games[0] : b.games;
+        const gameA: any = Array.isArray(a.games) ? a.games[0] : a.games;
+        const gameB: any = Array.isArray(b.games) ? b.games[0] : b.games;
         const dateA = gameA?.completed_at ? new Date(gameA.completed_at).getTime() : 0;
         const dateB = gameB?.completed_at ? new Date(gameB.completed_at).getTime() : 0;
         return dateB - dateA; // Descending order (most recent first)
@@ -225,8 +225,8 @@ export const profileGameService = {
             }
           }
 
-          const gameData = Array.isArray(game.games) ? game.games[0] : game.games;
-          const courseData = Array.isArray(gameData?.golf_courses) ? gameData.golf_courses[0] : gameData?.golf_courses;
+          const gameData: any = Array.isArray(game.games) ? game.games[0] : game.games;
+          const courseData: any = Array.isArray(gameData?.golf_courses) ? gameData.golf_courses[0] : gameData?.golf_courses;
           const clubData = Array.isArray(courseData?.golf_clubs) ? courseData.golf_clubs[0] : courseData?.golf_clubs;
           
           return {
