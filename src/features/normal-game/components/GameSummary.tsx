@@ -123,6 +123,9 @@ const GameSummary: React.FC = () => {
     setCreating(true);
     try {
       // Debug: Check authentication first
+      if (!supabase) {
+        throw new Error('Supabase is not configured. Please check your environment variables.');
+      }
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('No authenticated user found. Please log in again.');
