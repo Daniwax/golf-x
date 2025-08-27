@@ -15,7 +15,8 @@ import {
   IonCard,
   IonCardContent,
   IonCardHeader,
-  IonCardTitle
+  IonCardTitle,
+  IonAvatar
 } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { checkmark, trophy } from 'ionicons/icons';
@@ -33,6 +34,7 @@ interface LocationState {
   players: Array<{
     userId: string;
     fullName: string;
+    avatarUrl?: string | null;
     handicapIndex: number;
     teeBoxId: number;
     teeBox?: TeeBox;
@@ -237,11 +239,16 @@ Time: ${debugInfo.timestamp}
       
       <IonContent>
         {/* Game Info Card */}
-        <IonCard>
-          <IonCardHeader>
+        <IonCard style={{ 
+          margin: '0',
+          borderRadius: '0',
+          boxShadow: 'none',
+          borderBottom: '1px solid var(--ion-color-light-shade)'
+        }}>
+          <IonCardHeader style={{ padding: '16px' }}>
             <IonCardTitle>{courseName}</IonCardTitle>
           </IonCardHeader>
-          <IonCardContent>
+          <IonCardContent style={{ padding: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <div>
                 <IonNote>Format</IonNote>
@@ -268,14 +275,19 @@ Time: ${debugInfo.timestamp}
         </IonCard>
         
         {/* Players Summary */}
-        <div style={{ padding: '0 16px', marginTop: '16px' }}>
+        <div style={{ padding: '16px 16px 8px 16px', backgroundColor: 'var(--ion-color-light)' }}>
           <IonLabel style={{ fontWeight: 'bold', fontSize: '16px' }}>
             Players & Handicaps
           </IonLabel>
         </div>
         
-        <IonCard>
-          <IonCardContent>
+        <IonCard style={{ 
+          margin: '0',
+          borderRadius: '0',
+          boxShadow: 'none',
+          borderBottom: '1px solid var(--ion-color-light-shade)'
+        }}>
+          <IonCardContent style={{ padding: '16px' }}>
             {players.map((player, index) => {
               // Get tee box values safely
               const getTeeBoxValues = (teeBox?: TeeBox) => {
@@ -287,31 +299,59 @@ Time: ${debugInfo.timestamp}
               
               const teeValues = getTeeBoxValues(player.teeBox);
               
+              // Find best (lowest match HC) and worst (highest match HC) players
+              const lowestMatchHC = Math.min(...players.map(p => p.matchHandicap));
+              const highestMatchHC = Math.max(...players.map(p => p.matchHandicap));
+              
+              // Determine background color
+              let backgroundColor = 'transparent';
+              if (player.matchHandicap === lowestMatchHC) {
+                backgroundColor = 'rgb(45 212 191 / 18%)'; // Light turquoise/teal
+              } else if (player.matchHandicap === highestMatchHC) {
+                backgroundColor = 'rgba(128, 128, 128, 0.1)'; // Light gray
+              }
+              
               return (
                 <div 
                   key={player.userId} 
                   style={{ 
-                    padding: '12px 0',
-                    borderBottom: index < players.length - 1 ? '1px solid var(--ion-color-light-shade)' : 'none'
+                    padding: '12px 16px',
+                    borderBottom: index < players.length - 1 ? '1px solid var(--ion-color-light-shade)' : 'none',
+                    backgroundColor,
+                    marginLeft: '-16px',
+                    marginRight: '-16px',
+                    marginBottom: '0'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <IonAvatar style={{ width: '40px', height: '40px' }}>
+                        {player.avatarUrl ? (
+                          <img src={player.avatarUrl} alt={player.fullName} />
+                        ) : (
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'var(--ion-color-primary)',
+                            color: 'white',
+                            fontSize: '18px',
+                            fontWeight: 'bold'
+                          }}>
+                            {player.fullName?.[0] || '?'}
+                          </div>
+                        )}
+                      </IonAvatar>
                       <IonLabel style={{ fontWeight: 'bold' }}>
                         {player.fullName}
                       </IonLabel>
-                      {player.playingHandicap === lowestHandicap && (
-                        <IonIcon 
-                          icon={trophy} 
-                          color="warning" 
-                          style={{ marginLeft: '8px', verticalAlign: 'middle' }}
-                        />
-                      )}
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <IonNote style={{ display: 'block', fontSize: '11px' }}>Match HC</IonNote>
                       <IonLabel style={{ 
-                        fontSize: '20px', 
+                        fontSize: '24px', 
                         fontWeight: 'bold',
                         color: player.matchHandicap === 0 ? 'var(--ion-color-success)' : 'var(--ion-color-primary)'
                       }}>
@@ -342,7 +382,7 @@ Time: ${debugInfo.timestamp}
                             fontWeight: '600',
                             textTransform: 'uppercase'
                           }}>
-                            Rating
+                            Course Rating
                           </div>
                           <div style={{ 
                             fontSize: '16px', 
@@ -359,7 +399,7 @@ Time: ${debugInfo.timestamp}
                             fontWeight: '600',
                             textTransform: 'uppercase'
                           }}>
-                            Slope
+                            Slope Rating
                           </div>
                           <div style={{ 
                             fontSize: '16px', 
@@ -392,7 +432,7 @@ Time: ${debugInfo.timestamp}
                         Course HC
                       </div>
                       <div style={{ 
-                        fontSize: '24px', 
+                        fontSize: '18px', 
                         fontWeight: 'bold',
                         color: 'var(--ion-color-secondary)'
                       }}>
@@ -420,7 +460,7 @@ Time: ${debugInfo.timestamp}
                         HCP Index
                       </div>
                       <div style={{ 
-                        fontSize: '24px', 
+                        fontSize: '18px', 
                         fontWeight: 'bold',
                         color: 'var(--ion-color-tertiary)'
                       }}>
@@ -437,7 +477,12 @@ Time: ${debugInfo.timestamp}
         {/* Stroke Distribution Table (Match Play Only) - Vertical Layout */}
         {gameData.format === 'match_play' && holes.length > 0 && (
           <>
-            <div style={{ padding: '16px', marginTop: '16px' }}>
+            <div style={{ 
+              padding: '16px', 
+              backgroundColor: 'var(--ion-color-light)', 
+              marginTop: '1px',
+              borderTop: '1px solid var(--ion-color-light-shade)'
+            }}>
               <IonLabel style={{ fontWeight: 'bold', fontSize: '16px' }}>
                 Stroke Distribution
               </IonLabel>
@@ -447,8 +492,16 @@ Time: ${debugInfo.timestamp}
             </div>
             
             {/* Front Nine */}
-            <IonCard>
-              <IonCardHeader>
+            <IonCard style={{
+              margin: '0',
+              borderRadius: '0',
+              boxShadow: 'none'
+            }}>
+              <IonCardHeader style={{ 
+                backgroundColor: 'var(--ion-color-light)',
+                padding: '12px 16px',
+                borderTop: '1px solid var(--ion-color-light-shade)'
+              }}>
                 <IonCardTitle style={{ fontSize: '14px' }}>Front Nine</IonCardTitle>
               </IonCardHeader>
               <IonCardContent style={{ padding: '0' }}>
@@ -517,8 +570,8 @@ Time: ${debugInfo.timestamp}
                     ))}
                     {/* Front Nine Total */}
                     <tr style={{ 
-                      borderTop: '2px solid var(--ion-color-medium)',
-                      backgroundColor: 'var(--ion-color-light-tint)',
+                      borderTop: '1px solid var(--ion-color-light-shade)',
+                      backgroundColor: 'rgba(var(--ion-color-light-rgb), 0.5)',
                       fontWeight: 'bold'
                     }}>
                       <td style={{ padding: '8px' }}>OUT</td>
@@ -547,8 +600,17 @@ Time: ${debugInfo.timestamp}
             </IonCard>
             
             {/* Back Nine */}
-            <IonCard>
-              <IonCardHeader>
+            <IonCard style={{ 
+              margin: '0',
+              marginTop: '1px',
+              borderRadius: '0',
+              boxShadow: 'none'
+            }}>
+              <IonCardHeader style={{ 
+                backgroundColor: 'var(--ion-color-light)',
+                padding: '12px 16px',
+                borderTop: '1px solid var(--ion-color-light-shade)'
+              }}>
                 <IonCardTitle style={{ fontSize: '14px' }}>Back Nine</IonCardTitle>
               </IonCardHeader>
               <IonCardContent style={{ padding: '0' }}>
@@ -617,8 +679,8 @@ Time: ${debugInfo.timestamp}
                     ))}
                     {/* Back Nine Total */}
                     <tr style={{ 
-                      borderTop: '2px solid var(--ion-color-medium)',
-                      backgroundColor: 'var(--ion-color-light-tint)',
+                      borderTop: '1px solid var(--ion-color-light-shade)',
+                      backgroundColor: 'rgba(var(--ion-color-light-rgb), 0.5)',
                       fontWeight: 'bold'
                     }}>
                       <td style={{ padding: '8px' }}>IN</td>
@@ -643,8 +705,8 @@ Time: ${debugInfo.timestamp}
                     </tr>
                     {/* Total Row */}
                     <tr style={{ 
-                      borderTop: '2px solid var(--ion-color-dark)',
-                      backgroundColor: 'var(--ion-color-medium-tint)',
+                      borderTop: '2px solid var(--ion-color-light-shade)',
+                      backgroundColor: 'var(--ion-color-light)',
                       fontWeight: 'bold'
                     }}>
                       <td style={{ padding: '8px', fontSize: '12px' }}>TOTAL</td>

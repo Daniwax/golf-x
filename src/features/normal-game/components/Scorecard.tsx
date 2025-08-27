@@ -8,6 +8,12 @@ import {
 import { refreshOutline } from 'ionicons/icons';
 import { supabase } from '../../../lib/supabase';
 import type { GameParticipant, GameHoleScore } from '../types';
+import { 
+  calculatePersonalPars, 
+  calculateTotalPersonalPar,
+  getPersonalParColor,
+  type HoleInfo as HoleInfoType
+} from '../utils/handicapCalculations';
 
 interface ScorecardProps {
   gameId: string;
@@ -18,10 +24,7 @@ interface ScorecardProps {
   onEditHole?: (holeNumber: number) => void;
 }
 
-interface HoleInfo {
-  hole_number: number;
-  par: number;
-  handicap_index: number;
+interface HoleInfo extends HoleInfoType {
   yards?: number;
 }
 
@@ -542,6 +545,202 @@ const Scorecard: React.FC<ScorecardProps> = ({
             Bogey+
           </span>
         </IonNote>
+      </div>
+
+      {/* Handicapped Course Par Section */}
+      <div style={{ marginTop: '16px' }}>
+        <div style={{ 
+          padding: '12px 16px',
+          backgroundColor: 'var(--ion-color-primary-tint)',
+          borderBottom: '1px solid var(--ion-color-primary-shade)'
+        }}>
+          <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--ion-color-primary-contrast)' }}>
+            Handicapped Course Par
+          </h4>
+          <IonNote style={{ fontSize: '11px', color: 'var(--ion-color-primary-contrast)' }}>
+            Personal par for each player based on their full playing handicap
+          </IonNote>
+        </div>
+        
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: 'collapse',
+            fontSize: '12px',
+            minWidth: '800px'
+          }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--ion-color-light-tint)' }}>
+                <th style={{ 
+                  padding: '8px', 
+                  textAlign: 'left',
+                  position: 'sticky',
+                  left: 0,
+                  backgroundColor: 'var(--ion-color-light-tint)',
+                  zIndex: 1,
+                  borderRight: '1px solid var(--ion-color-light-shade)',
+                  width: '120px'
+                }}>
+                  Player
+                </th>
+                <th style={{ 
+                  padding: '8px', 
+                  textAlign: 'center',
+                  width: '60px'
+                }}>
+                  Playing HC
+                </th>
+                {holes.map(hole => (
+                  <th 
+                    key={hole.hole_number}
+                    style={{ 
+                      padding: '6px 2px', 
+                      textAlign: 'center',
+                      width: '30px'
+                    }}
+                  >
+                    {hole.hole_number}
+                  </th>
+                ))}
+                <th style={{ 
+                  padding: '8px', 
+                  textAlign: 'center',
+                  backgroundColor: 'var(--ion-color-medium-tint)',
+                  fontWeight: 'bold',
+                  width: '50px'
+                }}>
+                  Total
+                </th>
+              </tr>
+              <tr style={{ backgroundColor: 'var(--ion-color-light)' }}>
+                <td style={{ 
+                  padding: '6px 8px',
+                  position: 'sticky',
+                  left: 0,
+                  backgroundColor: 'var(--ion-color-light)',
+                  zIndex: 1,
+                  borderRight: '1px solid var(--ion-color-light-shade)'
+                }}>
+                  <IonNote>Course Par</IonNote>
+                </td>
+                <td style={{ padding: '6px', textAlign: 'center' }}>
+                  <IonNote>-</IonNote>
+                </td>
+                {holes.map(hole => (
+                  <td key={hole.hole_number} style={{ padding: '4px 2px', textAlign: 'center' }}>
+                    <IonNote>{hole.par}</IonNote>
+                  </td>
+                ))}
+                <td style={{ 
+                  padding: '6px', 
+                  textAlign: 'center',
+                  backgroundColor: 'var(--ion-color-light-shade)',
+                  fontWeight: '600'
+                }}>
+                  {calculateParTotal(1, 18)}
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              {participants.map((participant, idx) => {
+                // Calculate strokes allocation for this player
+                // Use playing_handicap (full handicap) NOT match_handicap (reduced for match play)
+                const playingHandicap = participant.playing_handicap || 0;
+                
+                // Use utility functions for calculations
+                const personalPars = calculatePersonalPars(holes, playingHandicap);
+                const totalPersonalPar = calculateTotalPersonalPar(holes, playingHandicap);
+                
+                return (
+                  <tr key={participant.id} style={{ 
+                    borderTop: '1px solid var(--ion-color-light-shade)',
+                    backgroundColor: idx % 2 === 0 ? 'white' : 'var(--ion-color-light-tint)'
+                  }}>
+                    <td style={{ 
+                      padding: '8px',
+                      fontWeight: '600',
+                      fontSize: '12px',
+                      position: 'sticky',
+                      left: 0,
+                      backgroundColor: idx % 2 === 0 ? 'white' : 'var(--ion-color-light-tint)',
+                      zIndex: 1,
+                      borderRight: '1px solid var(--ion-color-light-shade)'
+                    }}>
+                      {participant.profiles?.full_name || `Player ${idx + 1}`}
+                    </td>
+                    <td style={{ 
+                      padding: '8px', 
+                      textAlign: 'center',
+                      fontWeight: '600'
+                    }}>
+                      {playingHandicap}
+                    </td>
+                    {personalPars.map(pp => {
+                      const colorMode = getPersonalParColor(pp.strokesReceived);
+                      return (
+                        <td 
+                          key={pp.holeNumber}
+                          style={{ 
+                            padding: '4px 2px', 
+                            textAlign: 'center',
+                            fontWeight: pp.strokesReceived > 0 ? '600' : 'normal',
+                            fontSize: '12px',
+                            backgroundColor: colorMode === 'warning' ? 'var(--ion-color-warning-tint)' : 
+                                           colorMode === 'primary' ? 'var(--ion-color-primary-tint)' : 
+                                           'transparent'
+                          }}
+                        >
+                          {pp.personalPar}
+                        </td>
+                      );
+                    })}
+                    <td style={{ 
+                      padding: '8px', 
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      backgroundColor: 'var(--ion-color-primary-tint)'
+                    }}>
+                      {totalPersonalPar}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Legend for Handicapped Par */}
+        <div style={{ 
+          padding: '8px 16px',
+          backgroundColor: 'var(--ion-color-light)',
+          fontSize: '10px'
+        }}>
+          <IonNote>
+            <span style={{ marginRight: '12px' }}>
+              <span style={{ 
+                display: 'inline-block', 
+                width: '10px', 
+                height: '10px',
+                backgroundColor: 'var(--ion-color-primary-tint)',
+                border: '1px solid var(--ion-color-primary-shade)',
+                marginRight: '4px'
+              }}></span>
+              +1 stroke
+            </span>
+            <span style={{ marginRight: '12px' }}>
+              <span style={{ 
+                display: 'inline-block', 
+                width: '10px', 
+                height: '10px',
+                backgroundColor: 'var(--ion-color-warning-tint)',
+                border: '1px solid var(--ion-color-warning-shade)',
+                marginRight: '4px'
+              }}></span>
+              +2 strokes
+            </span>
+          </IonNote>
+        </div>
       </div>
     </div>
   );

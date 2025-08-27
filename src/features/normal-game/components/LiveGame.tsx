@@ -374,6 +374,7 @@ const LiveGame: React.FC = () => {
               scores={scores}
               format={game.scoring_format}
               currentHole={currentHole}
+              gameId={game.id}
             />
           )}
 

@@ -244,6 +244,7 @@ const PlayerConfiguration: React.FC = () => {
       players: players.map(p => ({
         userId: p.userId,
         fullName: p.fullName,
+        avatarUrl: p.avatarUrl,
         handicapIndex: p.handicapIndex,
         teeBoxId: p.teeBoxId!,
         teeBox: p.teeBox!,

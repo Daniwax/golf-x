@@ -10,6 +10,9 @@ import {
 } from '@ionic/react';
 import { supabase } from '../../../lib/supabase';
 import type { GameParticipant, GameHoleScore } from '../types';
+import { 
+  calculatePersonalPars
+} from '../utils/handicapCalculations';
 
 interface ScorecardProps {
   gameId: string;
@@ -372,54 +375,6 @@ const ScorecardMobile: React.FC<ScorecardProps> = ({
         </IonCardContent>
       </IonCard>
 
-      {/* Total Summary Card */}
-      <IonCard style={{ margin: '0', borderRadius: '0', borderTop: '1px solid var(--ion-color-light-shade)' }}>
-        <IonCardHeader style={{ padding: '12px 16px' }}>
-          <IonCardTitle style={{ fontSize: '14px' }}>Total</IonCardTitle>
-        </IonCardHeader>
-        <IonCardContent style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <IonNote>Course Par</IonNote>
-            <IonBadge color="dark">{parTotal}</IonBadge>
-          </div>
-          {playerTotals.map((pt, idx) => {
-            const totalDiff = pt.total - parTotal;
-            return (
-              <div key={pt.participant.id} style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '8px 0',
-                borderTop: '1px solid var(--ion-color-light-shade)'
-              }}>
-                <div style={{ fontWeight: '600', fontSize: '14px' }}>
-                  {pt.participant.profiles?.full_name || `Player ${idx + 1}`}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <IonNote style={{ fontSize: '12px' }}>
-                    {pt.front || '-'} / {pt.back || '-'}
-                  </IonNote>
-                  <IonBadge 
-                    color={
-                      !pt.total ? 'medium' :
-                      totalDiff === 0 ? 'dark' :
-                      totalDiff < 0 ? 'primary' : 'danger'
-                    }
-                    style={{ minWidth: '48px', fontSize: '14px', fontWeight: '700' }}
-                  >
-                    {pt.total || '-'}
-                    {pt.total > 0 && totalDiff !== 0 && (
-                      <span style={{ fontSize: '11px', marginLeft: '4px' }}>
-                        ({totalDiff > 0 ? '+' : ''}{totalDiff})
-                      </span>
-                    )}
-                  </IonBadge>
-                </div>
-              </div>
-            );
-          })}
-        </IonCardContent>
-      </IonCard>
     </div>
   );
 };
