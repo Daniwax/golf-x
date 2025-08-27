@@ -33,7 +33,6 @@ import CourseDetail from './pages/debug/CourseDetail';
 import ConfigError from './pages/ConfigError';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
-import CasualGame from './pages/CasualGame';
 
 // Import Supabase config check
 import { isConfigured } from './lib/supabase';
@@ -92,7 +91,6 @@ function App() {
             <Route exact path="/debug/templates/ionic-showcase" component={IonicShowcase} />
             <Route exact path="/debug/courses" component={CoursesList} />
             <Route exact path="/debug/courses/:id" component={CourseDetail} />
-            <Route exact path="/game/casual" component={CasualGame} />
             <Route exact path="/">
               <Redirect to="/home" />
             </Route>
