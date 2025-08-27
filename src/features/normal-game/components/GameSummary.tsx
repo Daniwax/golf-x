@@ -122,6 +122,12 @@ const GameSummary: React.FC = () => {
   const handleCreateGame = async () => {
     setCreating(true);
     try {
+      // Debug: Check authentication first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found. Please log in again.');
+      }
+      
       // Create the game with the configured players
       const gameConfig: CreateGameData = {
         description: gameData.description || undefined,
@@ -140,9 +146,35 @@ const GameSummary: React.FC = () => {
       
       // Navigate to live game
       history.replace(`/game/live/${game.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating game:', error);
-      alert('Failed to create game. Please try again.');
+      
+      // Create detailed debug info
+      const debugInfo = {
+        errorMessage: error?.message || 'Unknown error',
+        errorCode: error?.code || 'No code',
+        errorDetails: error?.details || 'No details',
+        errorHint: error?.hint || 'No hint',
+        browser: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Show detailed error in an alert for debugging
+      const detailedError = `
+DEBUG INFO (Please screenshot and share):
+
+Error: ${debugInfo.errorMessage}
+Code: ${debugInfo.errorCode}
+Details: ${debugInfo.errorDetails}
+Hint: ${debugInfo.errorHint}
+
+Browser Info:
+${debugInfo.browser.substring(0, 100)}...
+
+Time: ${debugInfo.timestamp}
+      `.trim();
+      
+      alert(detailedError);
       setCreating(false);
     }
   };

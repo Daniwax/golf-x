@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   IonContent,
   IonPage,
@@ -14,39 +14,6 @@ import LiveMatchCard from '../features/normal-game/components/LiveMatchCard';
 
 const Home: React.FC = () => {
   const history = useHistory();
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    // Update time every minute
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
-
-    // Cleanup timer on unmount
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatDate = (date: Date) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                   'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    const dayName = days[date.getDay()];
-    const monthName = months[date.getMonth()];
-    const dayNumber = date.getDate();
-    
-    return {
-      dayName,
-      dateString: `${monthName} ${dayNumber}`,
-      time: date.toLocaleTimeString('en-GB', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      })
-    };
-  };
-
-  const { dayName, dateString, time } = formatDate(currentTime);
 
   return (
     <IonPage>
@@ -57,33 +24,6 @@ const Home: React.FC = () => {
           flexDirection: 'column',
           padding: '16px'
         }}>
-          {/* Minimalistic Date/Time Top Bar */}
-          <div style={{ 
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingBottom: '16px',
-            borderBottom: '1px solid var(--ion-color-light-shade)',
-            marginBottom: '16px'
-          }}>
-            <div style={{
-              fontSize: '13px',
-              fontWeight: '500',
-              color: 'var(--ion-color-medium)',
-              letterSpacing: '0.3px'
-            }}>
-              {dayName}, {dateString}
-            </div>
-            <div style={{
-              fontSize: '13px',
-              fontWeight: '600',
-              color: 'var(--ion-color-dark)',
-              letterSpacing: '0.3px'
-            }}>
-              {time}
-            </div>
-          </div>
-
           {/* Live Games Section */}
           <div style={{ flexShrink: 0 }}>
             <LiveMatchCard />

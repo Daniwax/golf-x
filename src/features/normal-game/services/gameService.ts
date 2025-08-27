@@ -87,8 +87,26 @@ class GameService {
   async createGame(gameData: CreateGameData): Promise<Game> {
     if (!supabase) throw new Error('Supabase not configured');
     
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error('User not authenticated');
+    // Try multiple methods to get user for better browser compatibility
+    let userId: string | null = null;
+    
+    // Method 1: getUser (recommended)
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userData?.user) {
+      userId = userData.user.id;
+    }
+    
+    // Method 2: getSession (fallback for cookie issues)
+    if (!userId) {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionData?.session?.user) {
+        userId = sessionData.session.user.id;
+      }
+    }
+    
+    if (!userId) {
+      throw new Error('Authentication failed. Please sign out and sign in again. If the problem persists, try clearing your browser data.');
+    }
 
     // Get course par for handicap calculations
     const { data: course } = await supabase
@@ -104,7 +122,7 @@ class GameService {
       .from('games')
       .insert({
         course_id: gameData.course_id,
-        creator_user_id: user.user.id,
+        creator_user_id: userId,
         game_description: gameData.description,
         scoring_format: gameData.format,
         weather_condition: gameData.weather,

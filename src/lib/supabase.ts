@@ -14,7 +14,16 @@ if (!isConfigured) {
 // Only create client if properly configured
 // If not configured, we'll handle this in the app to show an error page
 export const supabase: SupabaseClient | null = isConfigured 
-  ? createClient(supabaseUrl, supabaseKey)
+  ? createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: true,
+        storageKey: 'golf-x-auth',
+        storage: window.localStorage, // Use localStorage instead of cookies
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce' // Use PKCE flow for better security
+      }
+    })
   : null // We'll check for null in components and show error page
 
 export interface Profile {
