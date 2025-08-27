@@ -20,7 +20,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
 
   useEffect(() => {
     loadCourses();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadCourses = async () => {
     try {

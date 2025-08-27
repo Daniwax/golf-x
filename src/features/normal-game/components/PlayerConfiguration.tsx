@@ -67,7 +67,7 @@ const PlayerConfiguration: React.FC = () => {
       return;
     }
     loadInitialData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadInitialData = async () => {
     try {

@@ -39,7 +39,7 @@ const TeeSelector: React.FC<TeeSelectorProps> = ({
     if (courseId) {
       loadTeeBoxes();
     }
-  }, [courseId]);
+  }, [courseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadTeeBoxes = async () => {
     try {

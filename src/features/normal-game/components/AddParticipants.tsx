@@ -49,7 +49,7 @@ const AddParticipants: React.FC = () => {
       return;
     }
     loadFriendsAndUser();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadFriendsAndUser = async () => {
     try {

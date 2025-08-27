@@ -21,7 +21,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { checkmark, trophy } from 'ionicons/icons';
 import { supabase } from '../../../lib/supabase';
 import { gameService } from '../services/gameService';
-import type { TeeBox } from '../types';
+import type { TeeBox, CreateGameData } from '../types';
 
 interface LocationState {
   gameData: {
@@ -59,12 +59,13 @@ const GameSummary: React.FC = () => {
   const [creating, setCreating] = useState(false);
   
   useEffect(() => {
-    if (!gameData || !players) {
+    if (!gameData || !players || players.length === 0) {
       history.replace('/game/create');
       return;
     }
+    
     loadCourseData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   const loadCourseData = async () => {
     try {
@@ -122,10 +123,10 @@ const GameSummary: React.FC = () => {
     setCreating(true);
     try {
       // Create the game with the configured players
-      const gameConfig = {
-        description: gameData.description,
+      const gameConfig: CreateGameData = {
+        description: gameData.description || undefined,
         course_id: gameData.courseId,
-        weather: gameData.weather,
+        weather: gameData.weather as 'sunny' | 'partly_cloudy' | 'rainy' | 'windy',
         format: gameData.format,
         participants: players.map(p => ({
           user_id: p.userId,
