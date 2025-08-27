@@ -77,7 +77,7 @@ const CoursesList: React.FC = () => {
         throw error;
       }
 
-      const typedData = data as CourseListItem[] | null;
+      const typedData = data as unknown as CourseListItem[] | null;
       setCourses(typedData || []);
       setFilteredCourses(typedData || []);
     } catch (err) {

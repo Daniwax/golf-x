@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -44,7 +44,7 @@ const Friends: React.FC = () => {
 
   useEffect(() => {
     loadUserIdAndFriends();
-  }, []);
+  }, [loadUserIdAndFriends]);
 
   // Reload friends list every time the page is viewed
   useIonViewWillEnter(() => {
@@ -52,7 +52,7 @@ const Friends: React.FC = () => {
     loadFriends();
   });
 
-  const loadUserIdAndFriends = async () => {
+  const loadUserIdAndFriends = useCallback(async () => {
     setLoading(true);
     try {
       // Get current user ID
@@ -72,7 +72,7 @@ const Friends: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showMessage]);
 
   const loadFriends = async () => {
     // Just refresh the friends list without showing loading state
@@ -121,11 +121,11 @@ const Friends: React.FC = () => {
     setLoading(false);
   };
 
-  const showMessage = (message: string, color: 'success' | 'danger') => {
+  const showMessage = useCallback((message: string, color: 'success' | 'danger') => {
     setToastMessage(message);
     setToastColor(color);
     setShowToast(true);
-  };
+  }, []);
 
   const navigateToFriendProfile = (friendId: string) => {
     history.push(`/friend/${friendId}`);
