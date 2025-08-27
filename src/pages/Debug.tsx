@@ -17,7 +17,8 @@ import {
   colorPaletteOutline,
   constructOutline,
   documentTextOutline,
-  layersOutline
+  layersOutline,
+  golfOutline
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
@@ -25,6 +26,17 @@ const Debug: React.FC = () => {
   const history = useHistory();
 
   const debugSections = [
+    {
+      title: 'Golf Course Data',
+      items: [
+        {
+          name: 'Golf Courses',
+          description: 'View all golf courses and their details',
+          icon: golfOutline,
+          path: '/debug/courses'
+        }
+      ]
+    },
     {
       title: 'UI Components',
       items: [
