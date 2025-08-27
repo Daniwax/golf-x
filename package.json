@@ -15,7 +15,12 @@
     "check:security": "npm audit",
     "check:all": "npm run check:security && npm run check:deps && npm run check:updates",
     "update:deps": "ncu -u && npm install",
-    "fix:audit": "npm audit fix"
+    "fix:audit": "npm audit fix",
+    "ci": "node scripts/pre-push-check.js",
+    "ci:check": "node scripts/pre-push-check.js",
+    "ci:strict": "node scripts/validate-ci-strict.js",
+    "ci:validate": "node scripts/pre-push-check.js",
+    "pre-push": "node scripts/pre-push-check.js"
   },
   "dependencies": {
     "@capacitor/app": "^7.0.2",
