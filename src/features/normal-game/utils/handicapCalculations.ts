@@ -282,3 +282,125 @@ export function formatScoreToPar(scoreToPar: number): string {
   if (scoreToPar > 0) return `+${scoreToPar}`;
   return scoreToPar.toString();
 }
+
+/**
+ * Calculate match play results for all players in a game
+ * Analyzes each hole to determine who won, lost, or halved
+ * 
+ * @param participants - Array of participants with their match handicaps
+ * @param scores - Array of all scores for the game
+ * @param holes - Array of hole information with handicap indexes
+ * @returns Array of participants with match play results added
+ */
+export function calculateMatchPlayResults(
+  participants: Array<{
+    user_id: string;
+    match_handicap?: number;
+    handicap_index: number;
+    course_handicap: number;
+    playing_handicap: number;
+    total_strokes: number | null;
+    net_score: number | null;
+    profiles?: {
+      full_name: string;
+    };
+    tee_boxes?: {
+      name: string;
+    };
+  }>,
+  scores: Array<{
+    user_id: string;
+    hole_number: number;
+    strokes: number | null;
+  }>,
+  holes: Array<{
+    hole_number: number;
+    handicap_index: number;
+    par: number;
+  }>
+) {
+  // Initialize results for each participant
+  const results = participants.map(p => ({
+    ...p,
+    holes_won: 0,
+    holes_halved: 0,
+    holes_lost: 0
+  }));
+
+  // Process each hole
+  for (const hole of holes) {
+    // Get scores for this hole
+    const holeScores = participants.map(participant => {
+      const score = scores.find(
+        s => s.user_id === participant.user_id && s.hole_number === hole.hole_number
+      );
+      
+      if (!score || score.strokes === null) {
+        return { user_id: participant.user_id, netScore: null, grossScore: null };
+      }
+
+      // Calculate net score (gross - handicap strokes)
+      const handicapStrokes = getStrokesOnHole(
+        hole.handicap_index,
+        participant.match_handicap || 0
+      );
+      const netScore = score.strokes - handicapStrokes;
+      
+      return { user_id: participant.user_id, netScore, grossScore: score.strokes };
+    });
+
+    // Skip holes where not all players have scores
+    const validScores = holeScores.filter(s => s.netScore !== null);
+    if (validScores.length !== participants.length) continue;
+
+    // For match play with 2+ players, we need to compare each player against each other
+    // In multi-player match play, each player's result is calculated against every other player
+    
+    if (participants.length === 2) {
+      // Simple 2-player match play
+      const player1Score = holeScores[0];
+      const player2Score = holeScores[1];
+      
+      if (player1Score.netScore === player2Score.netScore) {
+        // Hole is halved
+        results[0].holes_halved++;
+        results[1].holes_halved++;
+      } else if (player1Score.netScore! < player2Score.netScore!) {
+        // Player 1 wins
+        results[0].holes_won++;
+        results[1].holes_lost++;
+      } else {
+        // Player 2 wins
+        results[0].holes_lost++;
+        results[1].holes_won++;
+      }
+    } else {
+      // Multi-player match play: each player gets a result based on the best score
+      const bestScore = Math.min(...validScores.map(s => s.netScore!));
+      const winners = validScores.filter(s => s.netScore === bestScore);
+      
+      for (const participant of results) {
+        const playerScore = holeScores.find(s => s.user_id === participant.user_id);
+        if (!playerScore || playerScore.netScore === null) continue;
+
+        if (winners.length === participants.length) {
+          // Everyone has the same score - all halved
+          participant.holes_halved++;
+        } else if (playerScore.netScore === bestScore) {
+          if (winners.length === 1) {
+            // This player is the sole winner
+            participant.holes_won++;
+          } else {
+            // Multiple players tied for best score - halved among them
+            participant.holes_halved++;
+          }
+        } else {
+          // This player lost the hole
+          participant.holes_lost++;
+        }
+      }
+    }
+  }
+
+  return results;
+}

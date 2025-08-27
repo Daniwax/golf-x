@@ -14,7 +14,7 @@ import {
   IonLabel,
   IonIcon
 } from '@ionic/react';
-import { checkmarkCircleOutline } from 'ionicons/icons';
+import { checkmarkCircleOutline, chevronBackOutline, chevronForwardOutline } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import HandicapInput from './HandicapInput';
@@ -80,8 +80,13 @@ const PlayerConfiguration: React.FC = () => {
       // Load course data and tees in parallel
       const [courseResult, teesResult, profilesResult] = await Promise.all([
         supabase.from('golf_courses').select('par').eq('id', gameData.courseId).single(),
-        supabase.from('tee_boxes').select('*').eq('course_id', gameData.courseId).order('display_order'),
-        supabase.from('profiles').select('*').in('id', participants)
+        supabase.from('tee_boxes')
+          .select('id, course_id, name, color, slope_rating, course_rating, total_yards, total_meters, display_order')
+          .eq('course_id', gameData.courseId)
+          .order('display_order'),
+        supabase.from('profiles')
+          .select('id, full_name, email, avatar_url, handicap')
+          .in('id', participants)
       ]);
       
       if (courseResult.error || !courseResult.data) {
@@ -122,7 +127,10 @@ const PlayerConfiguration: React.FC = () => {
           avatarUrl: profile.avatar_url,
           handicapIndex,
           teeBoxId: defaultTee.id,
-          teeBox: defaultTee,
+          teeBox: {
+            ...defaultTee,
+            slope: defaultTee.slope_rating || 113
+          },
           courseHandicap,
           playingHandicap,
           matchHandicap: 0 // Will be calculated after all players are initialized
@@ -162,7 +170,7 @@ const PlayerConfiguration: React.FC = () => {
           courseRating,
           coursePar
         );
-        player.playingHandicap = calculatePlayingHandicap(player.courseHandicap, gameData.format);
+        player.playingHandicap = calculatePlayingHandicap(player.courseHandicap, gameData?.format || 'stroke_play');
       }
     });
     
@@ -173,7 +181,7 @@ const PlayerConfiguration: React.FC = () => {
     });
     
     return updatedPlayers;
-  }, [coursePar, gameData.format, getTeeBoxValues]);
+  }, [coursePar, gameData?.format, getTeeBoxValues]);
 
   const updatePlayerHandicap = (index: number, handicapIndex: number) => {
     const updatedPlayers = [...players];
@@ -266,7 +274,7 @@ const PlayerConfiguration: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || !gameData) {
     return (
       <IonPage>
         <IonHeader>
@@ -282,7 +290,9 @@ const PlayerConfiguration: React.FC = () => {
             padding: '20px',
             textAlign: 'center'
           }}>
-            <p style={{ color: 'var(--ion-color-danger)' }}>{error}</p>
+            <p style={{ color: 'var(--ion-color-danger)' }}>
+              {error || 'Game data not found. Please go back and try again.'}
+            </p>
             <IonButton onClick={() => history.goBack()}>Go Back</IonButton>
           </div>
         </IonContent>
@@ -310,8 +320,8 @@ const PlayerConfiguration: React.FC = () => {
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          padding: '16px',
-          gap: '8px'
+          padding: '12px',
+          gap: '6px'
         }}>
           {players.map((_, idx) => (
             <div
@@ -331,16 +341,16 @@ const PlayerConfiguration: React.FC = () => {
           ))}
         </div>
 
-        {/* Player Info */}
+        {/* Player Info with Handicap Adjustment */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          padding: '12px 16px',
+          padding: '10px 14px',
           backgroundColor: 'var(--ion-color-light)',
-          marginBottom: '16px',
-          gap: '12px'
+          marginBottom: '14px',
+          gap: '10px'
         }}>
-          <IonAvatar style={{ width: '40px', height: '40px' }}>
+          <IonAvatar style={{ width: '36px', height: '36px' }}>
             {currentPlayer.avatarUrl ? (
               <img src={currentPlayer.avatarUrl} alt={currentPlayer.fullName} />
             ) : (
@@ -352,7 +362,7 @@ const PlayerConfiguration: React.FC = () => {
                 justifyContent: 'center',
                 backgroundColor: 'var(--ion-color-primary)',
                 color: 'white',
-                fontSize: '18px',
+                fontSize: '16px',
                 fontWeight: 'bold'
               }}>
                 {currentPlayer.fullName[0]}
@@ -362,50 +372,39 @@ const PlayerConfiguration: React.FC = () => {
           <div style={{ flex: 1 }}>
             <h3 style={{ 
               margin: 0, 
-              fontSize: '18px', 
+              fontSize: '16px', 
               fontWeight: '600'
             }}>
               {currentPlayer.fullName}
             </h3>
             <p style={{ 
               margin: 0, 
-              fontSize: '12px',
+              fontSize: '11px',
               color: 'var(--ion-color-medium)'
             }}>
               Player {currentPlayerIndex + 1} of {players.length}
             </p>
           </div>
+          
+          {/* Handicap Adjustment in Top Right */}
+          <HandicapInput
+            value={currentPlayer.handicapIndex}
+            onChange={(value) => updatePlayerHandicap(currentPlayerIndex, value)}
+            showLabel={true}
+          />
         </div>
 
         {/* Configuration Section */}
-        <div style={{ padding: '0 16px' }}>
-          {/* Handicap Input */}
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{
-              fontSize: '13px',
-              fontWeight: '600',
-              color: 'var(--ion-color-medium)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              margin: '0 0 12px 0'
-            }}>
-              HANDICAP INDEX
-            </h3>
-            <HandicapInput
-              value={currentPlayer.handicapIndex}
-              onChange={(value) => updatePlayerHandicap(currentPlayerIndex, value)}
-            />
-          </div>
-
+        <div style={{ padding: '0 14px' }}>
           {/* Tee Selection */}
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <h3 style={{
-              fontSize: '13px',
+              fontSize: '12px',
               fontWeight: '600',
               color: 'var(--ion-color-medium)',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              margin: '0 0 12px 0'
+              letterSpacing: '0.4px',
+              margin: '0 0 10px 0'
             }}>
               SELECT TEE *
             </h3>
@@ -419,16 +418,16 @@ const PlayerConfiguration: React.FC = () => {
           {/* Calculated Handicaps */}
           <div style={{
             backgroundColor: 'var(--ion-background-color)',
-            borderRadius: '12px',
-            padding: '16px',
-            border: '2px solid var(--ion-color-light-shade)',
-            minHeight: '180px'
+            borderRadius: '10px',
+            padding: '12px',
+            border: '1px solid var(--ion-color-light-shade)',
+            minHeight: '140px'
           }}>
             <IonLabel style={{ 
-              fontSize: '14px', 
+              fontSize: '12px', 
               fontWeight: 'bold',
               display: 'block',
-              marginBottom: '16px',
+              marginBottom: '12px',
               textAlign: 'center'
             }}>
               Tee Information & Handicaps
@@ -437,15 +436,15 @@ const PlayerConfiguration: React.FC = () => {
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '12px',
+              gap: '8px',
               textAlign: 'center',
               alignItems: 'stretch'
             }}>
               {/* Tee Ratings */}
               <div style={{
                 backgroundColor: 'var(--ion-color-light)',
-                borderRadius: '8px',
-                padding: '12px 8px',
+                borderRadius: '6px',
+                padding: '8px 6px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center'
@@ -453,21 +452,21 @@ const PlayerConfiguration: React.FC = () => {
                 <div style={{ 
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '8px'
+                  gap: '6px'
                 }}>
                   <div>
                     <div style={{ 
-                      fontSize: '10px', 
+                      fontSize: '9px', 
                       color: 'var(--ion-color-medium)',
                       fontWeight: '600',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.3px',
-                      marginBottom: '2px'
+                      letterSpacing: '0.2px',
+                      marginBottom: '1px'
                     }}>
                       Course Rating
                     </div>
                     <div style={{ 
-                      fontSize: '20px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold',
                       color: 'var(--ion-color-primary)',
                       lineHeight: '1'
@@ -477,17 +476,17 @@ const PlayerConfiguration: React.FC = () => {
                   </div>
                   <div>
                     <div style={{ 
-                      fontSize: '10px', 
+                      fontSize: '9px', 
                       color: 'var(--ion-color-medium)',
                       fontWeight: '600',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.3px',
-                      marginBottom: '2px'
+                      letterSpacing: '0.2px',
+                      marginBottom: '1px'
                     }}>
                       Slope Rating
                     </div>
                     <div style={{ 
-                      fontSize: '20px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold',
                       color: 'var(--ion-color-primary)',
                       lineHeight: '1'
@@ -501,27 +500,27 @@ const PlayerConfiguration: React.FC = () => {
               {/* Course Handicap */}
               <div style={{
                 backgroundColor: 'var(--ion-color-light)',
-                borderRadius: '8px',
-                padding: '12px 8px',
+                borderRadius: '6px',
+                padding: '8px 6px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center'
               }}>
                 <div style={{ 
-                  fontSize: '11px', 
+                  fontSize: '9px', 
                   color: 'var(--ion-color-medium)',
-                  marginBottom: '6px',
+                  marginBottom: '4px',
                   fontWeight: '600',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
+                  letterSpacing: '0.4px'
                 }}>
                   Course HC
                 </div>
                 <div style={{ 
-                  fontSize: '32px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold',
                   color: 'var(--ion-color-secondary)',
-                  lineHeight: '1.2'
+                  lineHeight: '1.1'
                 }}>
                   {isNaN(currentPlayer.courseHandicap) ? '0' : currentPlayer.courseHandicap}
                 </div>
@@ -530,29 +529,29 @@ const PlayerConfiguration: React.FC = () => {
               {/* Match Handicap */}
               <div style={{
                 backgroundColor: 'var(--ion-color-light)',
-                borderRadius: '8px',
-                padding: '12px 8px',
+                borderRadius: '6px',
+                padding: '8px 6px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center'
               }}>
                 <div style={{ 
-                  fontSize: '11px', 
+                  fontSize: '9px', 
                   color: 'var(--ion-color-medium)',
-                  marginBottom: '6px',
+                  marginBottom: '4px',
                   fontWeight: '600',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
+                  letterSpacing: '0.4px'
                 }}>
                   Match HC
                 </div>
                 <div style={{ 
-                  fontSize: '32px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold',
                   color: currentPlayer.matchHandicap === 0 
                     ? 'var(--ion-color-success)' 
                     : 'var(--ion-color-tertiary)',
-                  lineHeight: '1.2'
+                  lineHeight: '1.1'
                 }}>
                   {isNaN(currentPlayer.matchHandicap) ? '0' : currentPlayer.matchHandicap}
                 </div>
@@ -561,16 +560,16 @@ const PlayerConfiguration: React.FC = () => {
 
             {currentPlayer.matchHandicap === 0 && !isNaN(currentPlayer.matchHandicap) && (
               <div style={{
-                marginTop: '12px',
+                marginTop: '8px',
                 textAlign: 'center',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '6px',
+                gap: '4px',
                 color: 'var(--ion-color-success)'
               }}>
-                <IonIcon icon={checkmarkCircleOutline} />
-                <span style={{ fontSize: '13px', fontWeight: '600' }}>
+                <IonIcon icon={checkmarkCircleOutline} style={{ fontSize: '14px' }} />
+                <span style={{ fontSize: '11px', fontWeight: '600' }}>
                   Lowest handicap (plays to scratch)
                 </span>
               </div>
@@ -578,45 +577,63 @@ const PlayerConfiguration: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons - Part of scrollable content */}
         <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: 'var(--ion-background-color)',
-          borderTop: '1px solid var(--ion-color-light-shade)',
           padding: '16px',
+          marginTop: '18px',
+          marginBottom: '16px',
           display: 'flex',
-          gap: '12px'
+          justifyContent: 'center',
+          gap: '10px',
+          width: '100%'
         }}>
-          {!isFirstPlayer && (
-            <IonButton
-              fill="outline"
-              onClick={handlePreviousPlayer}
-            >
-              Previous
-            </IonButton>
-          )}
-          
-          {!isLastPlayer ? (
-            <IonButton
-              expand="block"
-              onClick={handleNextPlayer}
-              style={{ flex: 1 }}
-            >
-              Next Player
-            </IonButton>
-          ) : (
-            <IonButton
-              expand="block"
-              onClick={handleProceedToSummary}
-              style={{ flex: 1 }}
-              color="success"
-            >
-              Review & Start Game
-            </IonButton>
-          )}
+          <div style={{
+            display: 'flex',
+            gap: '10px',
+            width: '88%',
+            maxWidth: '360px'
+          }}>
+            {!isFirstPlayer && (
+              <IonButton
+                expand="block"
+                fill="outline"
+                onClick={handlePreviousPlayer}
+                style={{ 
+                  flex: 1,
+                  height: '42px'
+                }}
+              >
+                <IonIcon icon={chevronBackOutline} slot="start" />
+                Previous
+              </IonButton>
+            )}
+            
+            {!isLastPlayer ? (
+              <IonButton
+                expand="block"
+                onClick={handleNextPlayer}
+                style={{ 
+                  flex: 1,
+                  height: '42px'
+                }}
+              >
+                Next Player
+                <IonIcon icon={chevronForwardOutline} slot="end" />
+              </IonButton>
+            ) : (
+              <IonButton
+                expand="block"
+                onClick={handleProceedToSummary}
+                style={{ 
+                  flex: 1,
+                  height: '42px'
+                }}
+                color="success"
+              >
+                Review & Start Game
+              </IonButton>
+            )}
+          </div>
         </div>
       </IonContent>
     </IonPage>
