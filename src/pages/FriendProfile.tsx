@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -48,11 +48,15 @@ const FriendProfile: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
 
-  useEffect(() => {
-    loadFriendProfile();
-  }, [id]);
+  // Define showMessage first as it's used by loadFriendProfile
+  const showMessage = useCallback((message: string, color: 'success' | 'danger') => {
+    setToastMessage(message);
+    setToastColor(color);
+    setShowToast(true);
+  }, []);
 
-  const loadFriendProfile = async () => {
+  // Define loadFriendProfile before useEffect
+  const loadFriendProfile = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await getFriendProfile(id);
@@ -69,7 +73,11 @@ const FriendProfile: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showMessage, history]);
+
+  useEffect(() => {
+    loadFriendProfile();
+  }, [loadFriendProfile]);
 
   const handleRemoveFriend = async () => {
     if (!friend) return;
@@ -89,12 +97,6 @@ const FriendProfile: React.FC = () => {
   const handleRemoveClick = () => {
     setShowActionSheet(false);
     setShowRemoveAlert(true);
-  };
-
-  const showMessage = (message: string, color: 'success' | 'danger') => {
-    setToastMessage(message);
-    setToastColor(color);
-    setShowToast(true);
   };
 
   // Mock golf stats - in future these would come from database

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -42,17 +42,15 @@ const Friends: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
 
-  useEffect(() => {
-    loadUserIdAndFriends();
+  // Define showMessage first as it's used by loadUserIdAndFriends
+  const showMessage = useCallback((message: string, color: 'success' | 'danger') => {
+    setToastMessage(message);
+    setToastColor(color);
+    setShowToast(true);
   }, []);
 
-  // Reload friends list every time the page is viewed
-  useIonViewWillEnter(() => {
-    // Simply reload the friends list each time we view the page
-    loadFriends();
-  });
-
-  const loadUserIdAndFriends = async () => {
+  // Define loadUserIdAndFriends before useEffect
+  const loadUserIdAndFriends = useCallback(async () => {
     setLoading(true);
     try {
       // Get current user ID
@@ -72,7 +70,17 @@ const Friends: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showMessage]);
+
+  useEffect(() => {
+    loadUserIdAndFriends();
+  }, [loadUserIdAndFriends]);
+
+  // Reload friends list every time the page is viewed
+  useIonViewWillEnter(() => {
+    // Simply reload the friends list each time we view the page
+    loadFriends();
+  });
 
   const loadFriends = async () => {
     // Just refresh the friends list without showing loading state
@@ -119,12 +127,6 @@ const Friends: React.FC = () => {
       if (data) setFriends(data);
     }
     setLoading(false);
-  };
-
-  const showMessage = (message: string, color: 'success' | 'danger') => {
-    setToastMessage(message);
-    setToastColor(color);
-    setShowToast(true);
   };
 
   const navigateToFriendProfile = (friendId: string) => {
