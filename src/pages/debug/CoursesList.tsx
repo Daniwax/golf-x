@@ -65,7 +65,7 @@ const CoursesList: React.FC = () => {
           course_type,
           status,
           course_number,
-          golf_clubs (
+          golf_clubs!inner (
             name,
             city
           )
@@ -77,9 +77,14 @@ const CoursesList: React.FC = () => {
         throw error;
       }
 
-      const typedData = data as CourseListItem[] | null;
-      setCourses(typedData || []);
-      setFilteredCourses(typedData || []);
+      // Transform the data to ensure golf_clubs is a single object
+      const transformedData = (data || []).map(course => ({
+        ...course,
+        golf_clubs: Array.isArray(course.golf_clubs) ? course.golf_clubs[0] : course.golf_clubs
+      })) as CourseListItem[];
+      
+      setCourses(transformedData);
+      setFilteredCourses(transformedData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch courses';
       setError(errorMessage);

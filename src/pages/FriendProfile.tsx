@@ -50,7 +50,7 @@ const FriendProfile: React.FC = () => {
 
   useEffect(() => {
     loadFriendProfile();
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadFriendProfile = async () => {
     setLoading(true);

@@ -44,7 +44,7 @@ const Friends: React.FC = () => {
 
   useEffect(() => {
     loadUserIdAndFriends();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reload friends list every time the page is viewed
   useIonViewWillEnter(() => {
