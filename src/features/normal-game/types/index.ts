@@ -37,6 +37,9 @@ export interface GameParticipant {
   holes_won?: number;
   holes_lost?: number;
   holes_halved?: number;
+  profiles?: {
+    full_name: string;
+  };
 }
 
 export interface GameHoleScore {

@@ -14,11 +14,14 @@ import {
   IonBackButton,
   IonButtons,
   IonNote,
-  IonSpinner
+  IonSpinner,
+  IonIcon
 } from '@ionic/react';
+import { informationCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import WeatherSelector from './WeatherSelector';
 import CourseSelector from './CourseSelector';
+import ScoringFormatModal from './ScoringFormatModal';
 import type { WeatherCondition, ScoringFormat } from '../types';
 
 const CreateGame: React.FC = () => {
@@ -28,6 +31,7 @@ const CreateGame: React.FC = () => {
   
   // Form state
   const [description, setDescription] = useState('');
+  const [showRulesModal, setShowRulesModal] = useState(false);
   const [courseId, setCourseId] = useState<number | null>(null);
   const [weather, setWeather] = useState<WeatherCondition>('sunny');
   const [format, setFormat] = useState<ScoringFormat>('match_play');
@@ -148,9 +152,31 @@ const CreateGame: React.FC = () => {
               color: 'var(--ion-color-medium)',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-              margin: '0 0 8px 0'
+              margin: '0 0 8px 0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
-              SCORING FORMAT
+              <span>SCORING FORMAT</span>
+              <IonButton
+                fill="clear"
+                size="small"
+                onClick={() => setShowRulesModal(true)}
+                style={{
+                  '--padding-start': '8px',
+                  '--padding-end': '8px',
+                  height: '28px'
+                }}
+              >
+                <IonIcon 
+                  icon={informationCircleOutline} 
+                  slot="icon-only" 
+                  style={{ 
+                    fontSize: '20px',
+                    color: 'var(--ion-color-primary)'
+                  }}
+                />
+              </IonButton>
             </h3>
           </div>
           <IonRadioGroup
@@ -207,6 +233,13 @@ const CreateGame: React.FC = () => {
           </IonButton>
         </div>
       </IonContent>
+      
+      {/* Scoring Format Rules Modal */}
+      <ScoringFormatModal
+        isOpen={showRulesModal}
+        onDismiss={() => setShowRulesModal(false)}
+        initialFormat={format}
+      />
     </IonPage>
   );
 };

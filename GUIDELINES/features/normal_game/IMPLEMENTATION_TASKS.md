@@ -68,7 +68,37 @@
 4. **BUT: LiveGame component doesn't exist yet** ❌
 5. **Result: You'll see a blank page or 404**
 
-## 🔄 In Progress (Phase 2: Live Game - NOT STARTED)
+## 🔄 In Progress (Phase 2: Profile Page Enhancements - IN PROGRESS)
+
+### Profile Page Game Statistics (IN PROGRESS - Priority)
+- [ ] **Update Profile.tsx** - Add real game statistics
+  - [ ] Fetch completed games for the user
+  - [ ] Display actual game counts (or 0/- if none)
+  - [ ] Calculate best score from completed games
+  - [ ] Calculate average score from completed games
+  - [ ] Show actual handicap or default if not set
+  
+- [ ] **CompletedMatches.tsx** - Section for completed games list
+  - [ ] List all completed games the user participated in
+  - [ ] Show: Date, Course name, Total strokes, Winner
+  - [ ] Click to view full game details
+  - [ ] Empty state when no games found
+  
+- [ ] **GameHistoryCard.tsx** - Individual game item in list
+  - [ ] Display game date and time
+  - [ ] Course name and format (Match/Stroke Play)
+  - [ ] Player's score and result (Won/Lost/Position)
+  - [ ] Quick stats (strokes, putts if available)
+  - [ ] Navigate to ViewCompletedGame on click
+  
+- [ ] **ViewCompletedGame.tsx** - Read-only view of completed game
+  - [ ] Same format as LiveGame but read-only
+  - [ ] Show Scorecard tab (same as live)
+  - [ ] Show Leaderboard/Classification tab (same as live)
+  - [ ] No editing capabilities
+  - [ ] Back navigation to profile
+
+### Phase 2.5: Live Game Interface (NEXT PRIORITY)
 - [ ] **LiveGame.tsx** - Main container for live game play (CRITICAL - NEEDED NEXT)
 
 ## 📋 Remaining Implementation Tasks
@@ -370,10 +400,10 @@
 5. Accessibility
 
 ## 📊 Progress Tracking
-- Total Tasks: ~80 components/features
-- Completed: 9 (11%)
-- In Progress: 1
-- Remaining: ~70
+- Total Tasks: ~85 components/features (including Profile enhancements)
+- Completed: 13 (15%) - Phase 1 complete
+- In Progress: 4 (Profile Page Enhancements)
+- Remaining: ~68
 
 ## 🔧 Technical Debt & Future Enhancements
 - [ ] Stroke Play format implementation

@@ -30,12 +30,11 @@ export const profileGameService = {
     if (!supabase) {
       console.error('Supabase not initialized');
       return {
-        totalGames: 0,
+        totalGamesPlayed: 0,
         averageScore: null,
         bestScore: null,
-        averageHandicap: null,
-        mostPlayedCourse: null,
-        recentGames: []
+        recentHandicap: null,
+        preferredCourse: null
       };
     }
     
@@ -87,7 +86,10 @@ export const profileGameService = {
 
       // Find most played course
       const courseFrequency = participations.reduce((acc, p) => {
-        const courseName = p.games?.golf_courses?.name;
+        const games: any = Array.isArray(p.games) ? p.games[0] : p.games;
+        const courseName = Array.isArray(games?.golf_courses) 
+          ? games?.golf_courses[0]?.name 
+          : games?.golf_courses?.name;
         if (courseName) {
           acc[courseName] = (acc[courseName] || 0) + 1;
         }
@@ -166,15 +168,17 @@ export const profileGameService = {
 
       // Sort games by completed_at in descending order
       const sortedGames = games.sort((a, b) => {
-        const dateA = a.games?.completed_at ? new Date(a.games.completed_at).getTime() : 0;
-        const dateB = b.games?.completed_at ? new Date(b.games.completed_at).getTime() : 0;
+        const gameA = Array.isArray(a.games) ? a.games[0] : a.games;
+        const gameB = Array.isArray(b.games) ? b.games[0] : b.games;
+        const dateA = gameA?.completed_at ? new Date(gameA.completed_at).getTime() : 0;
+        const dateB = gameB?.completed_at ? new Date(gameB.completed_at).getTime() : 0;
         return dateB - dateA; // Descending order (most recent first)
       });
 
       // For each game, get all participants to determine winner and position
       const completedGames: CompletedGame[] = await Promise.all(
         sortedGames.map(async (game) => {
-          const { data: allParticipants, error: participantsError } = await supabase
+          const { data: allParticipants, error: participantsError } = await supabase!
             .from('game_participants')
             .select(`
               user_id,
@@ -212,7 +216,7 @@ export const profileGameService = {
             const winnerData = sortedParticipants.find(p => p.total_strokes !== null);
             if (winnerData) {
               // Fetch winner's profile
-              const { data: winnerProfile } = await supabase
+              const { data: winnerProfile } = await supabase!
                 .from('profiles')
                 .select('full_name')
                 .eq('id', winnerData.user_id)
@@ -221,20 +225,24 @@ export const profileGameService = {
             }
           }
 
+          const gameData = Array.isArray(game.games) ? game.games[0] : game.games;
+          const courseData = Array.isArray(gameData?.golf_courses) ? gameData.golf_courses[0] : gameData?.golf_courses;
+          const clubData = Array.isArray(courseData?.golf_clubs) ? courseData.golf_clubs[0] : courseData?.golf_clubs;
+          
           return {
-            id: game.games.id,
-            courseId: game.games.course_id,
-            courseName: game.games.golf_courses.name,
-            clubName: game.games.golf_courses.golf_clubs.name,
-            gameDescription: game.games.game_description,
-            scoringFormat: game.games.scoring_format,
-            completedAt: game.games.completed_at,
+            id: gameData.id,
+            courseId: gameData.course_id,
+            courseName: courseData?.name || '',
+            clubName: clubData?.name || '',
+            gameDescription: gameData.game_description,
+            scoringFormat: gameData.scoring_format,
+            completedAt: gameData.completed_at,
             totalStrokes: game.total_strokes,
             netScore: game.net_score,
             position,
             totalPlayers,
             winner,
-            coursePar: game.games.golf_courses.par || 72
+            coursePar: courseData?.par || 72 || 72
           };
         })
       );
@@ -321,14 +329,14 @@ export const profileGameService = {
       const participantsWithDetails = await Promise.all(
         (participants || []).map(async (participant) => {
           // Fetch profile
-          const { data: profile } = await supabase
+          const { data: profile } = await supabase!
             .from('profiles')
             .select('full_name, avatar_url')
             .eq('id', participant.user_id)
             .single();
 
           // Fetch tee box
-          const { data: teeBox } = await supabase
+          const { data: teeBox } = await supabase!
             .from('tee_boxes')
             .select('name, color, slope_rating, course_rating')
             .eq('id', participant.tee_box_id)
