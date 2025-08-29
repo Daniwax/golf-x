@@ -15,6 +15,7 @@ export interface FriendProfile {
   full_name: string | null;
   email: string | null;
   avatar_url: string | null;
+  custom_avatar_url: string | null;
   handicap: number | null;
   created_at: string;
 }
@@ -24,6 +25,7 @@ export interface UserProfile {
   full_name: string | null;
   email: string | null;
   avatar_url: string | null;
+  custom_avatar_url: string | null;
   handicap: number | null;
   home_course: string | null;
   bio: string | null;

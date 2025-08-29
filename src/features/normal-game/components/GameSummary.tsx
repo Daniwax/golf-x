@@ -30,6 +30,8 @@ interface LocationState {
     courseId: number;
     weather: string;
     format: 'match_play' | 'stroke_play';
+    handicapType?: string;
+    scoringMethod?: string;
   };
   players: Array<{
     userId: string;
@@ -139,6 +141,8 @@ const GameSummary: React.FC = () => {
         course_id: gameData.courseId,
         weather: gameData.weather as 'sunny' | 'partly_cloudy' | 'rainy' | 'windy',
         format: gameData.format,
+        handicap_type: gameData.handicapType as 'none' | 'match_play' | 'stroke_play' | 'random' | undefined,
+        scoring_method: gameData.scoringMethod as 'net_score' | 'match_play' | 'stableford' | 'skins' | undefined,
         participants: players.map(p => ({
           user_id: p.userId,
           full_name: p.fullName,

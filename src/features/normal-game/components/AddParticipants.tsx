@@ -28,6 +28,8 @@ interface LocationState {
     courseId: number;
     weather: string;
     format: string;
+    handicapType?: string;
+    scoringMethod?: string;
   };
 }
 

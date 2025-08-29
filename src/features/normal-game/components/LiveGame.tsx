@@ -26,8 +26,6 @@ import {
   golfOutline, 
   exitOutline,
   refreshOutline,
-  pauseOutline,
-  playOutline,
   informationCircleOutline
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
@@ -311,16 +309,6 @@ const LiveGame: React.FC = () => {
                 />
               </IonButton>
             )}
-            <IonButton 
-              onClick={toggleAutoRefresh}
-              fill="clear"
-              color={autoRefresh ? 'primary' : 'medium'}
-            >
-              <IonIcon 
-                icon={autoRefresh ? playOutline : pauseOutline} 
-                slot="icon-only"
-              />
-            </IonButton>
             <IonButton onClick={() => loadGameData()} fill="clear">
               <IonIcon icon={refreshOutline} slot="icon-only" />
             </IonButton>
@@ -329,20 +317,52 @@ const LiveGame: React.FC = () => {
         <IonToolbar color="light" style={{ minHeight: '44px' }}>
           <div style={{ 
             display: 'flex', 
-            justifyContent: 'space-between', 
             alignItems: 'center',
-            padding: '0 16px'
+            padding: '0 16px',
+            width: '100%'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              flex: '1', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              justifyContent: 'flex-start'
+            }}>
               <IonNote>Hole</IonNote>
               <IonBadge color="primary">{currentHole}</IonBadge>
             </div>
-            <IonNote style={{ fontSize: '12px' }}>
-              {game.game_description || game.scoring_format.replace('_', ' ').toUpperCase()}
-            </IonNote>
-            <IonNote style={{ fontSize: '12px' }}>
-              {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
-            </IonNote>
+            <div style={{ 
+              flex: '1', 
+              display: 'flex', 
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <IonNote style={{ fontSize: '12px' }}>
+                {game.game_description || game.scoring_format.replace('_', ' ').toUpperCase()}
+              </IonNote>
+            </div>
+            <div style={{ 
+              flex: '1', 
+              display: 'flex', 
+              justifyContent: 'flex-end',
+              alignItems: 'center'
+            }}>
+              <IonButton
+                fill="clear"
+                onClick={toggleAutoRefresh}
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  '--color': autoRefresh ? '#22c55e' : '#ef4444',
+                  '--padding-start': '8px',
+                  '--padding-end': '8px',
+                  minHeight: '24px',
+                  height: '24px'
+                }}
+              >
+                Auto-refresh {autoRefresh ? 'ON' : 'OFF'}
+              </IonButton>
+            </div>
           </div>
         </IonToolbar>
       </IonHeader>
@@ -390,6 +410,7 @@ const LiveGame: React.FC = () => {
                 setSelectedTab('scorecard');
                 loadGameData(true);
               }}
+              isLiveMatch={game.status === 'active'}
             />
           )}
 

@@ -14,7 +14,12 @@ import {
   IonLabel,
   IonIcon
 } from '@ionic/react';
-import { checkmarkCircleOutline, chevronBackOutline, chevronForwardOutline } from 'ionicons/icons';
+import { 
+  checkmarkCircleOutline, 
+  chevronBackOutline, 
+  chevronForwardOutline, 
+  informationCircleOutline 
+} from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import HandicapInput from './HandicapInput';
@@ -32,6 +37,8 @@ interface LocationState {
     courseId: number;
     weather: string;
     format: 'match_play' | 'stroke_play';
+    handicapType?: string;
+    scoringMethod?: string;
   };
   participants: string[]; // Array of user IDs
 }
@@ -578,10 +585,61 @@ const PlayerConfiguration: React.FC = () => {
           </div>
         </div>
 
+        {/* Handicap Type Info Label */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '0 16px',
+          marginTop: '24px'
+        }}>
+          <div style={{
+            backgroundColor: 'rgba(128, 128, 128, 0.08)',
+            border: '1px solid rgba(128, 128, 128, 0.15)',
+            borderRadius: '8px',
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            maxWidth: '360px',
+            width: '88%'
+          }}>
+            <IonIcon 
+              icon={informationCircleOutline} 
+              style={{ 
+                fontSize: '16px',
+                color: 'var(--ion-color-medium)',
+                flexShrink: 0
+              }}
+            />
+            <div style={{
+              fontSize: '12px',
+              color: 'var(--ion-color-medium-shade)',
+              lineHeight: '1.4'
+            }}>
+              <span style={{ fontWeight: '600' }}>Handicap Type: </span>
+              <span style={{ textTransform: 'capitalize' }}>
+                {gameData.handicapType?.replace('_', ' ') || 'Stroke Play'}
+              </span>
+              <span style={{ 
+                display: 'block',
+                fontSize: '11px',
+                marginTop: '2px',
+                color: 'var(--ion-color-medium)'
+              }}>
+                {gameData.handicapType === 'match_play' && 'Match HC calculated by relative difference'}
+                {gameData.handicapType === 'stroke_play' && 'Match HC uses full handicap'}
+                {gameData.handicapType === 'none' && 'No HC adjustments'}
+                {gameData.handicapType === 'random' && 'HC randomly assigned'}
+                {!gameData.handicapType && 'Match HC uses full handicap'}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Navigation Buttons - Part of scrollable content */}
         <div style={{
           padding: '16px',
-          marginTop: '18px',
+          marginTop: '12px',
           marginBottom: '16px',
           display: 'flex',
           justifyContent: 'center',

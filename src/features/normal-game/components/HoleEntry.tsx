@@ -32,6 +32,7 @@ interface HoleEntryProps {
   onHoleChange: (hole: number) => void;
   onScoreUpdate: () => void;
   onGameComplete?: () => void;
+  isLiveMatch?: boolean;
 }
 
 interface HoleInfo {
@@ -55,7 +56,8 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
   currentHole,
   onHoleChange,
   onScoreUpdate,
-  onGameComplete
+  onGameComplete,
+  isLiveMatch = false
 }) => {
   const [holeInfo, setHoleInfo] = useState<HoleInfo | null>(null);
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
@@ -287,8 +289,16 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
     }
   };
 
+  // Calculate the maximum hole that has been played (has scores)
+  const maxHolePlayed = Math.max(
+    0,
+    ...scores.filter(s => s.strokes && s.strokes > 0).map(s => s.hole_number)
+  );
+  
+  // Allow navigation to all holes, but track if current hole is playable
   const canGoPrevious = currentHole > 1;
   const canGoNext = currentHole < 18;
+  const isCurrentHolePlayable = !isLiveMatch || currentHole <= maxHolePlayed + 1;
 
   if (loading || !holeInfo) {
     return (
@@ -849,6 +859,22 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
         );
       })}
 
+      {/* Show warning if trying to enter scores for future holes in live match */}
+      {isLiveMatch && !isCurrentHolePlayable && (
+        <div style={{
+          margin: '16px',
+          padding: '10px',
+          backgroundColor: '#fff4e6',
+          borderRadius: '8px',
+          textAlign: 'center',
+          border: '1px solid #ffd4a3'
+        }}>
+          <IonNote style={{ fontSize: '11px', fontWeight: '400', opacity: 0.8, color: '#8b6914' }}>
+            Tip: Stop auto-refresh to maintain hole view
+          </IonNote>
+        </div>
+      )}
+
       {/* Save Button - More Compact */}
       <div style={{
         position: 'fixed',
@@ -861,13 +887,18 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
         <IonButton
           expand="block"
           onClick={handleSaveScores}
-          disabled={saving}
+          disabled={saving || !isCurrentHolePlayable}
           style={{ height: '44px' }}
         >
           {saving ? (
             <>
               <IonSpinner name="crescent" style={{ marginRight: '8px' }} />
               Saving...
+            </>
+          ) : !isCurrentHolePlayable ? (
+            <>
+              <IonIcon icon={checkmarkOutline} slot="start" />
+              Complete Hole {maxHolePlayed + 1} First
             </>
           ) : (
             <>

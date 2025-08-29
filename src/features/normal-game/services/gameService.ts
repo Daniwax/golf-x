@@ -126,6 +126,9 @@ class GameService {
         game_description: gameData.description,
         scoring_format: gameData.format,
         weather_condition: gameData.weather,
+        handicap_type: gameData.handicap_type || 'match_play',
+        scoring_method: gameData.scoring_method || 'match_play',
+        num_holes: gameData.num_holes || 18,
         status: 'setup'
       })
       .select()

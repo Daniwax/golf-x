@@ -1,0 +1,6 @@
+ok, call 7 agents in parallel, 3 d:\projects\repositories\golf-x\.claude\agents\frontend-developer.md, 2 d:\projects\repositories\golf-x\.claude\agents\backend-architect.md, 1 
+  d:\projects\repositories\golf-x\.claude\agents\data-engineer.md, 1 d:\projects\repositories\golf-x\.claude\agents\vue-component-architect.md.  Tell them that they need to use a technoly that   
+  fits, and that THEY CAN ONLY EDIT THEIR 2 FILES, ITS REALLY IMPORTNAT SO THEY DONT BREAK ANYTHING, tell them is a constest, they can use playright, refer to the 
+  d:\projects\repositories\golf-x\GUIDELINES\PLAYWRIGHT_GUIDE_FOR_AGENTS.md, and tell them is a PWA and that the design must fit an exitite fashion and refinate paladar of golfers. they can add  
+   librarys, dont worry about modularization, we will reorder  later if won. just don wirte anywhere else. CALL them IN  PARALLEL, with exact same instructions, create the best desgin for those  
+   2 pages, they can crate difrent desgign for both to try new things, as there will be a winner for each of the 2 apages.

@@ -1,15 +1,19 @@
 // Game-related type definitions for Normal Game feature
 
 export type WeatherCondition = 'sunny' | 'partly_cloudy' | 'rainy' | 'windy';
-export type ScoringFormat = 'match_play' | 'stroke_play';
+export type ScoringFormat = 'match_play' | 'stroke_play'; // Legacy - kept for compatibility
 export type GameStatus = 'setup' | 'active' | 'completed' | 'cancelled';
+
+// New multi-game types
+export type HandicapType = 'none' | 'match_play' | 'stroke_play' | 'random';
+export type ScoringMethod = 'net_score' | 'match_play' | 'stableford' | 'skins';
 
 export interface Game {
   id: string;
   course_id: number;
   creator_user_id: string;
   game_description?: string;
-  scoring_format: ScoringFormat;
+  scoring_format: ScoringFormat; // Legacy field
   weather_condition?: WeatherCondition;
   status: GameStatus;
   created_at: string;
@@ -18,6 +22,10 @@ export interface Game {
   notes?: string;
   notes_updated_by?: string;
   notes_updated_at?: string;
+  // New fields for multi-game support
+  handicap_type?: HandicapType;
+  scoring_method?: ScoringMethod;
+  num_holes?: number; // Number of holes to play (1-18), defaults to 18
 }
 
 export interface GameParticipant {
@@ -53,6 +61,7 @@ export interface GameHoleScore {
   hole_handicap_strokes: number;
   net_score?: number;
   score_vs_par?: number;
+  player_match_par?: number;
   updated_at: string;
 }
 
@@ -109,8 +118,12 @@ export interface CreateGameData {
   description?: string;
   course_id: number;
   weather: WeatherCondition;
-  format: ScoringFormat;
+  format: ScoringFormat; // Legacy - kept for compatibility
   participants: PlayerConfig[];
+  // New fields for multi-game support
+  handicap_type?: HandicapType;
+  scoring_method?: ScoringMethod;
+  num_holes?: number; // Number of holes to play (1-18), defaults to 18
 }
 
 export interface LiveGameState {

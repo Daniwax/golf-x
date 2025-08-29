@@ -7,7 +7,42 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Development-only auth bypass
+  const DEV_AUTH_ENABLED = 
+    import.meta.env.DEV && 
+    import.meta.env.MODE === 'development' &&
+    !window.location.hostname.includes('fly.dev') &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  const mockDevUser = DEV_AUTH_ENABLED ? {
+    id: '00000000-0000-4000-8000-000000000001',
+    email: 'dev@localhost',
+    user_metadata: {
+      full_name: 'Development User',
+      avatar_url: null
+    },
+    app_metadata: {},
+    aud: 'authenticated',
+    created_at: '2024-01-01T00:00:00.000Z'
+  } as unknown as User : null;
+
   useEffect(() => {
+    // Development bypass
+    if (DEV_AUTH_ENABLED && window.location.search.includes('devAuth=true')) {
+      setUser(mockDevUser);
+      setSession({
+        user: mockDevUser,
+        access_token: 'dev-token',
+        expires_at: Date.now() + 3600000
+      } as unknown as Session);
+      setLoading(false);
+      
+      // Show warning in console
+      console.warn('⚠️ DEVELOPMENT AUTH BYPASS ACTIVE ⚠️');
+      console.warn('This should NEVER appear in production!');
+      return;
+    }
+
     // Skip auth if not configured
     if (!isConfigured || !supabase) {
       setLoading(false)

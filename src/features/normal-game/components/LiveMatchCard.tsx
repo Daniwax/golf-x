@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import {
   IonCard,
   IonCardHeader,
@@ -17,109 +17,11 @@ import {
   timeOutline
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { supabase } from '../../../lib/supabase';
-import { gameService } from '../services/gameService';
-import type { Game, GameParticipant } from '../types';
-
-interface LiveGame {
-  game: Game;
-  participants: GameParticipant[];
-  currentHole: number;
-  holesCompleted: number;
-}
+import { useLiveGamesWithNavigation } from '../../../hooks/useLiveGames';
 
 const LiveMatchCard: React.FC = () => {
   const history = useHistory();
-  const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadUserAndGames = useCallback(async () => {
-    try {
-      // Get current user
-      if (!supabase) {
-        console.log('Supabase not initialized');
-        return;
-      }
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user logged in');
-        return;
-      }
-      
-      console.log('Loading games for user:', user.id);
-      
-      // Load active games where user is a participant
-      const { data: games, error } = await supabase
-        .from('games')
-        .select(`
-          *,
-          game_participants!inner(*)
-        `)
-        .eq('game_participants.user_id', user.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading live games:', error);
-        return;
-      }
-
-      console.log('Found active games:', games?.length || 0);
-
-      if (!games || games.length === 0) {
-        setLiveGames([]);
-        return;
-      }
-
-      // Load detailed info for each game
-      const liveGameData = (await Promise.all(
-        games.map(async (game) => {
-          try {
-            const gameDetails = await gameService.getGameDetails(game.id);
-            
-            // Calculate current hole and holes completed
-            const scoresWithStrokes = gameDetails.scores.filter(s => s.strokes);
-            const holesPlayed = new Set(scoresWithStrokes.map(s => s.hole_number));
-            const holesCompleted = holesPlayed.size;
-            const currentHole = Math.min(Math.max(...Array.from(holesPlayed), 0) + 1, 18);
-            
-            return {
-              game: gameDetails.game,
-              participants: gameDetails.participants,
-              currentHole,
-              holesCompleted
-            };
-          } catch (err) {
-            console.error('Error loading game details:', err);
-            return null;
-          }
-        })
-      )).filter((game): game is LiveGame => game !== null);
-
-      setLiveGames(liveGameData.filter(g => g !== null) as LiveGame[]);
-    } catch (error) {
-      console.error('Error loading live games:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadUserAndGames();
-  }, [loadUserAndGames]);
-
-  // Reload games when navigating back to home page
-  useEffect(() => {
-    const unlistenHistory = history.listen((location) => {
-      if (location.pathname === '/home') {
-        console.log('Navigated to home - reloading live games');
-        // Small delay to ensure navigation is complete
-        setTimeout(() => loadUserAndGames(), 100);
-      }
-    });
-
-    return unlistenHistory;
-  }, [history, loadUserAndGames]);
+  const { data: liveGames, loading } = useLiveGamesWithNavigation(history);
 
   const handleContinueGame = (gameId: string) => {
     history.push(`/game/live/${gameId}`);
@@ -142,7 +44,7 @@ const LiveMatchCard: React.FC = () => {
     return null; // Silent loading for home page
   }
 
-  if (liveGames.length === 0) {
+  if (!liveGames || liveGames.length === 0) {
     return null; // No live games to show
   }
 

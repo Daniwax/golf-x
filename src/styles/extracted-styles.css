@@ -1,0 +1,1125 @@
+/* ========================================== */
+/* CSS Extracted from styles.md              */
+/* Auto-generated - Do not edit manually     */
+/* ========================================== */
+
+/* === Style Block 1 === */
+.course-detail {
+--background: #0f1a0f;
+}
+
+.green-header {
+--background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+--border-width: 0;
+}
+
+.green-header ion-toolbar {
+--background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+--color: #f1f5f9;
+}
+
+.green-header ion-back-button {
+--color: #ffc107;
+}
+
+.course-header-title {
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translateX(-50%) translateY(-50%);
+color: #f1f5f9;
+font-size: 16px;
+font-weight: 500;
+text-align: center;
+}
+
+.premium-content {
+--background: #0f1a0f;
+}
+
+.loading-container,
+.error-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+color: rgba(255, 255, 255, 0.7);
+}
+
+.premium-spinner {
+--color: #ffd700;
+transform: scale(1.5);
+}
+
+.course-header-section {
+position: relative;
+padding: 0;
+margin: 0;
+height: 250px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+display: flex;
+align-items: flex-end;
+border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.course-header-section:not([style*="background-image"]) {
+background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+}
+
+.course-header-overlay {
+position: absolute;
+inset: 0;
+background: linear-gradient(180deg, 
+rgba(30, 45, 30, 0.3) 0%, 
+rgba(30, 45, 30, 0.8) 70%,
+rgba(30, 45, 30, 0.95) 100%);
+}
+
+.course-header-section:not([style*="background-image"]) .course-header-overlay {
+background: rgba(0, 0, 0, 0.1);
+}
+
+.course-header-content {
+position: relative;
+z-index: 10;
+padding: 30px 20px;
+width: 100%;
+text-align: center;
+}
+
+.course-badge {
+display: inline-block;
+padding: 6px 12px;
+background: #ffd700;
+color: #0a0e14;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 1px;
+border-radius: 6px;
+margin-bottom: 15px;
+}
+
+.course-title {
+font-size: 28px;
+font-weight: 500;
+color: #f1f5f9;
+margin-bottom: 8px;
+}
+
+.club-title {
+font-size: 16px;
+color: rgba(255, 255, 255, 0.8);
+margin-bottom: 15px;
+}
+
+.course-basic-stats {
+display: flex;
+justify-content: center;
+gap: 12px;
+font-size: 14px;
+color: #ffc107;
+align-items: center;
+}
+
+.separator {
+opacity: 0.5;
+}
+
+.segment-container {
+position: relative;
+z-index: 10;
+padding: 16px;
+margin: 0;
+background: linear-gradient(135deg, #0f1a0f 0%, #1e2d1e 100%);
+border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.premium-segment {
+background: rgba(255, 255, 255, 0.05);
+border-radius: 12px;
+padding: 4px;
+}
+
+.premium-segment ion-segment-button {
+--color: rgba(255, 255, 255, 0.6);
+--color-checked: #0a0e14;
+--background: transparent;
+--background-checked: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+--indicator-height: 0;
+border-radius: 8px;
+font-weight: 500;
+letter-spacing: 0.5px;
+text-transform: uppercase;
+font-size: 12px;
+min-height: 36px;
+}
+
+.detail-content {
+background: linear-gradient(135deg, #0a0e14 0%, #1a252f 100%);
+min-height: 50vh;
+padding: 0;
+margin: 0;
+}
+
+.content-container {
+padding: 16px 16px 30px 16px;
+margin: 0;
+}
+
+.section-title {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 15px 20px;
+margin: 0 -20px 25px -20px;
+background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+font-size: 16px;
+font-weight: 500;
+letter-spacing: 0.5px;
+text-transform: uppercase;
+color: #f1f5f9;
+}
+
+.section-title svg {
+color: #ffc107;
+}
+
+.stats-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 12px;
+margin-bottom: 16px;
+}
+
+.stat-card {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+padding: 20px;
+display: flex;
+align-items: center;
+gap: 15px;
+/* cursor: pointer; */
+transition: all 0.3s ease;
+}
+
+.stat-icon {
+color: #ffd700;
+}
+
+.stat-info {
+display: flex;
+flex-direction: column;
+}
+
+.stat-value {
+font-size: 24px;
+font-weight: 300;
+color: white;
+}
+
+.stat-label {
+font-size: 12px;
+color: rgba(255, 255, 255, 0.6);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.info-section,
+.club-section {
+margin-bottom: 16px;
+}
+
+.amenities-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 15px;
+margin-top: 15px;
+}
+
+.amenity-card {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 15px;
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 12px;
+}
+
+.amenity-icon {
+color: #ffd700;
+}
+
+.amenity-label {
+color: rgba(255, 255, 255, 0.8);
+font-size: 14px;
+}
+
+.info-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 15px;
+}
+
+.info-item {
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+
+.info-label {
+font-size: 12px;
+color: rgba(255, 255, 255, 0.5);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.info-value {
+font-size: 16px;
+color: white;
+}
+
+.status-active {
+color: #4ade80;
+}
+
+.club-card {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 20px;
+padding: 25px;
+position: relative;
+}
+
+.royal-badge {
+position: absolute;
+top: 15px;
+right: 15px;
+padding: 6px 12px;
+background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+color: #0a0e14;
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 1px;
+border-radius: 6px;
+}
+
+.club-card h3 {
+font-size: 20px;
+color: white;
+margin-bottom: 10px;
+}
+
+.club-address,
+.club-city {
+color: rgba(255, 255, 255, 0.7);
+margin-bottom: 5px;
+}
+
+.club-actions {
+display: flex;
+gap: 15px;
+margin-top: 20px;
+}
+
+.action-button {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 10px 20px;
+background: rgba(255, 215, 0, 0.1);
+border: 1px solid #ffd700;
+border-radius: 25px;
+color: #ffd700;
+text-decoration: none;
+font-size: 14px;
+transition: all 0.3s ease;
+}
+
+.action-button:active {
+background: #ffd700;
+color: #0a0e14;
+transform: scale(0.95);
+}
+
+.tee-cards {
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+
+.tee-card {
+display: flex;
+gap: 15px;
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+padding: 20px;
+/* cursor: pointer; */
+transition: all 0.3s ease;
+}
+
+.tee-color-indicator {
+width: 6px;
+border-radius: 3px;
+flex-shrink: 0;
+}
+
+.tee-info {
+flex: 1;
+}
+
+.tee-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 15px;
+}
+
+.tee-header h3 {
+color: white;
+font-size: 18px;
+margin: 0;
+}
+
+.tee-gender {
+padding: 4px 10px;
+background: rgba(255, 215, 0, 0.1);
+border-radius: 12px;
+color: #ffd700;
+font-size: 12px;
+text-transform: uppercase;
+}
+
+.tee-stats {
+display: flex;
+gap: 30px;
+}
+
+.tee-stat {
+display: flex;
+flex-direction: column;
+}
+
+.tee-stat-value {
+font-size: 18px;
+color: white;
+font-weight: 300;
+}
+
+.tee-stat-label {
+font-size: 11px;
+color: rgba(255, 255, 255, 0.5);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.holes-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+gap: 15px;
+}
+
+.hole-card {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+padding: 15px;
+/* cursor: pointer; */
+transition: all 0.3s ease;
+}
+
+.hole-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 10px;
+}
+
+.hole-number {
+font-size: 18px;
+color: #ffd700;
+font-weight: 500;
+}
+
+.hole-badges {
+display: flex;
+gap: 5px;
+}
+
+.par-badge,
+.hcp-badge {
+padding: 2px 6px;
+background: rgba(255, 215, 0, 0.1);
+border-radius: 4px;
+font-size: 10px;
+color: rgba(255, 255, 255, 0.7);
+}
+
+.hole-distances {
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+
+.distance-item {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.distance-color {
+width: 12px;
+height: 12px;
+border-radius: 50%;
+border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.distance-value {
+font-size: 12px;
+color: rgba(255, 255, 255, 0.7);
+}
+
+.amenities-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+gap: 15px;
+}
+
+.amenity-card {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 10px;
+/* cursor: pointer; */
+transition: all 0.3s ease;
+}
+
+.amenity-icon {
+color: #ffd700;
+}
+
+.amenity-label {
+font-size: 12px;
+color: white;
+text-align: center;
+}
+
+.no-stats {
+text-align: center;
+padding: 40px 20px;
+color: rgba(255, 255, 255, 0.6);
+}
+
+.partner-card {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+padding: 20px;
+display: flex;
+align-items: center;
+gap: 15px;
+}
+
+.partner-icon {
+color: #ffc107;
+}
+
+.partner-info h3 {
+color: white;
+font-size: 18px;
+margin: 0 0 5px 0;
+}
+
+.partner-info p {
+color: rgba(255, 255, 255, 0.7);
+margin: 0;
+font-size: 14px;
+}
+
+/* === Enhanced Green Header for iOS === */
+.green-header ion-title {
+--color: #f1f5f9;
+font-weight: 600;
+letter-spacing: 0.5px;
+}
+
+.green-header ion-back-button {
+--color: #ffd700;
+}
+
+.green-header ion-toolbar {
+--background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+--color: #f1f5f9;
+box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Tee Selector Styles */
+.tee-selector {
+display: flex;
+gap: 10px;
+overflow-x: auto;
+padding-bottom: 10px;
+margin-bottom: 20px;
+}
+
+.tee-button {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 10px 16px;
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.2);
+border-radius: 12px;
+color: rgba(255, 255, 255, 0.7);
+font-size: 14px;
+white-space: nowrap;
+transition: all 0.3s ease;
+cursor: pointer;
+}
+
+.tee-button.active {
+background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+color: #0a0e14;
+border-color: #ffd700;
+}
+
+.tee-button:hover:not(.active) {
+border-color: rgba(255, 215, 0, 0.4);
+background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+}
+
+.tee-color-dot {
+width: 16px;
+height: 16px;
+border-radius: 50%;
+border: 1px solid rgba(255, 255, 255, 0.3);
+flex-shrink: 0;
+}
+
+/* Scorecard Styles */
+.scorecard-section {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+overflow: hidden;
+margin-bottom: 20px;
+}
+
+.scorecard-header {
+background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+padding: 12px 20px;
+border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.scorecard-header h4 {
+color: #f1f5f9;
+font-size: 16px;
+font-weight: 500;
+margin: 0;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.scorecard-table-wrapper {
+overflow-x: auto;
+}
+
+.scorecard-table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.scorecard-table thead {
+background: rgba(255, 215, 0, 0.05);
+}
+
+.scorecard-table th,
+.scorecard-table td {
+padding: 10px 8px;
+text-align: center;
+color: rgba(255, 255, 255, 0.8);
+font-size: 14px;
+}
+
+.scorecard-cell-label {
+text-align: left !important;
+font-weight: 500;
+color: #ffd700;
+text-transform: uppercase;
+font-size: 12px;
+letter-spacing: 0.5px;
+}
+
+.scorecard-cell {
+border-left: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.scorecard-cell-total {
+background: rgba(255, 215, 0, 0.1);
+font-weight: 600;
+color: #ffd700;
+border-left: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.scorecard-table tbody tr {
+border-top: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.scorecard-row-highlight {
+background: rgba(255, 215, 0, 0.05);
+}
+
+.scorecard-summary {
+margin-top: 20px;
+}
+
+/* Tee Filter Section */
+.tee-filter-section {
+margin-bottom: 20px;
+}
+
+.filter-label {
+color: rgba(255, 255, 255, 0.6);
+font-size: 14px;
+margin-bottom: 10px;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+/* Chart Section */
+.chart-section {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+padding: 20px;
+margin-bottom: 20px;
+}
+
+.chart-title {
+color: #f1f5f9;
+font-size: 18px;
+font-weight: 500;
+margin-bottom: 20px;
+}
+
+/* Score Distribution */
+.score-distribution {
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+border: 1px solid rgba(255, 215, 0, 0.1);
+border-radius: 16px;
+padding: 0;
+}
+
+.score-list {
+padding: 20px;
+}
+
+.score-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px 0;
+border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.score-item:last-child {
+border-bottom: none;
+}
+
+.score-label {
+color: rgba(255, 255, 255, 0.6);
+font-size: 14px;
+}
+
+.score-value {
+color: white;
+font-size: 18px;
+font-weight: 600;
+}
+
+.score-value.best {
+color: #4ade80;
+}
+
+.score-value.worst {
+color: #ef4444;
+}
+
+/* Holes List (for Tees tab) */
+.holes-list {
+display: flex;
+flex-direction: column;
+gap: 1px;
+background: rgba(255, 215, 0, 0.1);
+border-radius: 12px;
+overflow: hidden;
+}
+
+.hole-row {
+display: flex;
+align-items: center;
+background: linear-gradient(135deg, #1a252f 0%, #141f28 100%);
+padding: 12px;
+transition: all 0.3s ease;
+}
+
+.hole-row:hover {
+background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+}
+
+.hole-number-cell {
+min-width: 60px;
+}
+
+.hole-number {
+color: #ffd700;
+font-size: 16px;
+font-weight: 600;
+}
+
+.hole-stat {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 0 10px;
+}
+
+.hole-stat-label {
+font-size: 11px;
+color: rgba(255, 255, 255, 0.5);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-bottom: 4px;
+}
+
+.hole-stat-value {
+font-size: 16px;
+color: white;
+font-weight: 500;
+}
+
+/* Tee Segment Button (matches top segment style) */
+.tee-segment-button {
+--color: rgba(255, 255, 255, 0.6);
+--color-checked: #0a0e14;
+--background: transparent;
+--background-checked: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+border-radius: 8px;
+font-weight: 500;
+letter-spacing: 0.5px;
+text-transform: uppercase;
+font-size: 12px;
+min-height: 36px;
+padding: 8px 16px;
+display: flex;
+align-items: center;
+gap: 8px;
+color: rgba(255, 255, 255, 0.6);
+background: transparent;
+border: none;
+transition: all 0.3s ease;
+cursor: pointer;
+flex: 1;
+justify-content: center;
+}
+
+.tee-segment-button.active {
+background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+color: #0a0e14;
+}
+
+.tee-segment-button:hover:not(.active) {
+background: rgba(255, 255, 255, 0.05);
+}
+
+.tee-segment-button .tee-color-dot {
+width: 12px;
+height: 12px;
+}
+
+/* === iOS-Style Courses List === */
+.courses-list-ios {
+padding: 0;
+margin: 0;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+}
+
+.course-card-ios {
+margin: 0;
+padding: 0;
+margin-bottom: 0;
+background: transparent;
+position: relative;
+}
+
+/* PHOTO ON TOP - Full width course images */
+.course-image-full {
+width: 100vw;
+margin-left: calc(-50vw + 50%);
+height: 220px;
+position: relative;
+background: linear-gradient(135deg, #1e2d1e 0%, #2d4a2d 100%);
+cursor: pointer;
+overflow: hidden;
+transition: all 0.3s ease;
+}
+
+.course-image-full:active {
+transform: scale(0.98);
+}
+
+.course-image {
+width: 100%;
+height: 100%;
+object-fit: cover;
+position: absolute;
+top: 0;
+left: 0;
+transition: transform 0.3s ease;
+}
+
+.course-image-full:active .course-image {
+transform: scale(1.05);
+}
+
+/* Gradient overlay for text readability */
+.course-image-overlay {
+position: absolute;
+inset: 0;
+background: linear-gradient(180deg, 
+transparent 0%, 
+rgba(15, 26, 15, 0.3) 50%,
+rgba(15, 26, 15, 0.8) 80%,
+rgba(15, 26, 15, 0.95) 100%);
+z-index: 10;
+}
+
+/* Course name and club INSIDE PHOTO overlay */
+.course-info-overlay {
+position: absolute;
+bottom: 16px;
+left: 16px;
+right: 16px;
+z-index: 20;
+text-align: left;
+}
+
+.course-title-overlay {
+font-size: 20px;
+font-weight: 600;
+color: #f1f5f9;
+margin: 0 0 6px 0;
+text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+letter-spacing: 0.5px;
+}
+
+.club-title-overlay {
+font-size: 14px;
+color: rgba(255, 255, 255, 0.9);
+margin: 0;
+text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+font-weight: 400;
+letter-spacing: 0.3px;
+}
+
+/* TWO LINES BELOW PHOTO - Course Info Card */
+.course-info-card {
+margin: 0;
+border-radius: 0 0 20px 20px;
+border: 1px solid rgba(255, 215, 0, 0.15);
+border-top: none;
+background: linear-gradient(135deg, #0f1a0f 0%, #1a252f 100%);
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+margin-bottom: 24px;
+}
+
+.course-info-content {
+padding: 16px 20px 12px 20px;
+margin: 0;
+}
+
+.course-info-item {
+--padding-start: 0;
+--inner-padding-end: 0;
+background: transparent;
+min-height: 30px;
+margin: 0;
+padding: 0;
+}
+
+.course-info-item ion-label {
+margin: 0;
+padding: 0;
+}
+
+/* Enhanced course basic stats styling */
+.course-basic-stats {
+display: flex;
+justify-content: flex-start;
+gap: 12px;
+font-size: 14px;
+color: #ffc107;
+align-items: center;
+font-weight: 500;
+letter-spacing: 0.3px;
+}
+
+.separator {
+opacity: 0.6;
+color: #ffd700;
+}
+
+/* Status active for player stats (light green) */
+.status-active {
+color: #4ade80 !important;
+font-weight: 500;
+}
+
+/* Full height content to hide bottom menu */
+.premium-content {
+--background: #0f1a0f;
+min-height: 100vh;
+padding-bottom: 100px;
+}
+
+/* Enhanced search section */
+.search-section {
+padding: 12px 16px;
+background: linear-gradient(135deg, #0f1a0f 0%, #1e2d1e 100%);
+border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+margin-bottom: 0;
+}
+
+.search-input {
+width: 100%;
+padding: 14px 16px;
+background: rgba(255, 255, 255, 0.1);
+border: 1px solid rgba(255, 215, 0, 0.2);
+color: #f1f5f9;
+font-size: 16px;
+outline: none;
+transition: all 0.3s ease;
+border-radius: 12px;
+margin: 0;
+width: calc(100% - 32px);
+margin-left: 16px;
+}
+
+.search-input::placeholder {
+color: rgba(255, 255, 255, 0.5);
+}
+
+.search-input:focus {
+background: rgba(255, 255, 255, 0.15);
+border-color: #ffd700;
+box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+}
+
+/* iOS-style loading and error states */
+.loading-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 60vh;
+color: rgba(255, 255, 255, 0.7);
+padding: 40px;
+}
+
+.premium-spinner {
+--color: #ffd700;
+transform: scale(1.8);
+margin-bottom: 20px;
+}
+
+/* No stats/courses found state */
+.no-stats {
+text-align: center;
+padding: 60px 20px;
+color: rgba(255, 255, 255, 0.6);
+min-height: 40vh;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+.no-stats p {
+font-size: 18px;
+margin: 8px 0;
+}
+
+.info-label {
+font-size: 14px;
+color: rgba(255, 255, 255, 0.5);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+font-weight: 500;
+}
+
+/* Smooth iOS-like scrolling behavior */
+.courses-list-ios {
+scroll-behavior: smooth;
+-webkit-overflow-scrolling: touch;
+}
+
+/* iOS-style action button for search */
+.action-button {
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 10px;
+border-radius: 10px;
+background: rgba(255, 215, 0, 0.15);
+border: 1px solid rgba(255, 215, 0, 0.3);
+color: #ffd700;
+transition: all 0.3s ease;
+cursor: pointer;
+}
+
+.action-button:active {
+background: rgba(255, 215, 0, 0.25);
+transform: scale(0.95);
+}
+
+/* Responsive design for different screen sizes */
+@media (max-width: 375px) {
+.course-title-overlay {
+font-size: 18px;
+}
+
+.club-title-overlay {
+font-size: 13px;
+}
+
+.course-image-full {
+height: 200px;
+}
+}
+
+@media (min-width: 768px) {
+.course-title-overlay {
+font-size: 22px;
+}
+
+.club-title-overlay {
+font-size: 15px;
+}
+
+.course-image-full {
+height: 250px;
+}
+}
+
