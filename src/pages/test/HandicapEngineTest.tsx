@@ -38,6 +38,9 @@ const HandicapEngineTest: React.FC = () => {
   const [selectedFriendId, setSelectedFriendId] = useState<string>('');
   const [selectedGhostType, setSelectedGhostType] = useState<'personal_best' | 'friend_best' | 'course_record'>('personal_best');
   const [numberOfHoles, setNumberOfHoles] = useState<number>(18);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [playerMatches, setPlayerMatches] = useState<any[]>([]);
+  const [friendMatches, setFriendMatches] = useState<any[]>([]);
   
   // Available Data
   const [courses, setCourses] = useState<any[]>([]);
@@ -132,6 +135,17 @@ const HandicapEngineTest: React.FC = () => {
       loadMatchCounts(teeBoxId, friendIds);
     }
   }, [teeBoxId, friends]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // Load player matches when tee box changes and ghost mode is selected
+  useEffect(() => {
+    if (handicapType === 'ghost' && teeBoxId && currentUserId) {
+      if (selectedGhostType === 'personal_best') {
+        loadPlayerMatches(currentUserId, teeBoxId);
+      } else if (selectedGhostType === 'friend_best' && selectedFriendId) {
+        loadPlayerMatches(selectedFriendId, teeBoxId);
+      }
+    }
+  }, [handicapType, teeBoxId, currentUserId, selectedGhostType, selectedFriendId]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Calculate preview when players or settings change
   useEffect(() => {
@@ -265,6 +279,53 @@ const HandicapEngineTest: React.FC = () => {
     }
   };
   
+  // Load player matches for ghost mode
+  const loadPlayerMatches = async (userId: string, teeBoxId: number) => {
+    try {
+      // Query for completed games where the user played on this tee
+      const { data: games, error } = await supabase
+        .from('game_participants')
+        .select(`
+          game_id,
+          games!inner (
+            id,
+            name,
+            created_at,
+            status
+          )
+        `)
+        .eq('user_id', userId)
+        .eq('tee_box_id', teeBoxId)
+        .eq('games.status', 'completed')
+        .order('games.created_at', { ascending: false });
+      
+      if (!error && games) {
+        // Format matches for display
+        const matches = games.map(g => ({
+          id: g.game_id,
+          name: g.games.name || `Game ${g.game_id}`,
+          date: new Date(g.games.created_at).toLocaleDateString()
+        }));
+        
+        if (userId === currentUserId) {
+          setPlayerMatches(matches);
+          // Auto-select first match if available
+          if (matches.length > 0 && !selectedGameId) {
+            setSelectedGameId(matches[0].id);
+          }
+        } else {
+          setFriendMatches(matches);
+          // Auto-select first match for friend
+          if (matches.length > 0 && !selectedGameId) {
+            setSelectedGameId(matches[0].id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error loading player matches:', err);
+    }
+  };
+  
   // Load match counts for friends on selected tee
   const loadMatchCounts = async (teeBoxId: number, friendIds: string[]) => {
     try {
@@ -342,7 +403,8 @@ const HandicapEngineTest: React.FC = () => {
         courseId,
         teeBoxId,
         selectedFriendId: handicapType === 'ghost' ? selectedFriendId : undefined,
-        selectedGhostType: handicapType === 'ghost' ? selectedGhostType : undefined
+        selectedGhostType: handicapType === 'ghost' ? selectedGhostType : undefined,
+        selectedGameId: handicapType === 'ghost' ? selectedGameId : undefined
       };
       
       // Use selected number of holes or all holes for ghost mode
@@ -422,7 +484,8 @@ const HandicapEngineTest: React.FC = () => {
         courseId,
         teeBoxId,
         selectedFriendId: handicapType === 'ghost' ? selectedFriendId : undefined,
-        selectedGhostType: handicapType === 'ghost' ? selectedGhostType : undefined
+        selectedGhostType: handicapType === 'ghost' ? selectedGhostType : undefined,
+        selectedGameId: handicapType === 'ghost' ? selectedGameId : undefined
       };
       
       // Use selected number of holes or all holes for ghost mode
@@ -557,21 +620,71 @@ const HandicapEngineTest: React.FC = () => {
               </select>
             </div>
             
-            {selectedGhostType === 'friend_best' && (
+            {selectedGhostType === 'personal_best' && (
               <div style={{ marginBottom: '10px' }}>
-                <label><strong>Select Friend:</strong></label>
+                <label><strong>Select Your Match:</strong></label>
                 <select 
-                  value={selectedFriendId} 
-                  onChange={e => setSelectedFriendId(e.target.value)}
+                  value={selectedGameId || ''} 
+                  onChange={e => setSelectedGameId(e.target.value ? Number(e.target.value) : null)}
                   style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
                 >
-                  {friends.map(friend => (
-                    <option key={friend.friend_id} value={friend.friend_id}>
-                      {friend.full_name || friend.email || 'Friend'}
-                    </option>
-                  ))}
+                  {playerMatches.length === 0 ? (
+                    <option value="">No completed matches on this tee</option>
+                  ) : (
+                    playerMatches.map(match => (
+                      <option key={match.id} value={match.id}>
+                        {match.name} - {match.date}
+                      </option>
+                    ))
+                  )}
                 </select>
+                <span style={{ marginLeft: '10px', color: '#aaa', fontSize: '12px' }}>
+                  ({playerMatches.length} matches found)
+                </span>
               </div>
+            )}
+            
+            {selectedGhostType === 'friend_best' && (
+              <>
+                <div style={{ marginBottom: '10px' }}>
+                  <label><strong>Select Friend:</strong></label>
+                  <select 
+                    value={selectedFriendId} 
+                    onChange={e => setSelectedFriendId(e.target.value)}
+                    style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
+                  >
+                    {friends.map(friend => (
+                      <option key={friend.friend_id} value={friend.friend_id}>
+                        {friend.full_name || friend.email || 'Friend'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {selectedFriendId && (
+                  <div style={{ marginBottom: '10px' }}>
+                    <label><strong>Select Friend's Match:</strong></label>
+                    <select 
+                      value={selectedGameId || ''} 
+                      onChange={e => setSelectedGameId(e.target.value ? Number(e.target.value) : null)}
+                      style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
+                    >
+                      {friendMatches.length === 0 ? (
+                        <option value="">No completed matches on this tee</option>
+                      ) : (
+                        friendMatches.map(match => (
+                          <option key={match.id} value={match.id}>
+                            {match.name} - {match.date}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                    <span style={{ marginLeft: '10px', color: '#aaa', fontSize: '12px' }}>
+                      ({friendMatches.length} matches found)
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

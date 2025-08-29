@@ -38,6 +38,7 @@ export interface HandicapContext {
   teeBoxId?: number;
   selectedFriendId?: string; // For ghost mode with friend
   selectedGhostType?: 'personal_best' | 'friend_best' | 'course_record';
+  selectedGameId?: number | null; // For replaying specific matches in ghost mode
   // Future additions:
   weatherAdjustment?: boolean;
   seasonalAdjustment?: boolean;
