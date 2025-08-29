@@ -121,8 +121,7 @@ Fun mode with controlled randomness for playable chaos
 1. Calculate max strokes per hole based on MH range
 2. Determine minimum holes needed (MH / max_per_hole)
 3. Randomly select which holes get strokes
-4. Distribute evenly first, then allocate remainder
-5. Never exceed cap per hole
+4. Never exceed cap per hole
 ```
 
 #### Example

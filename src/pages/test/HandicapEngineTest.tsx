@@ -460,7 +460,7 @@ const HandicapEngineTest: React.FC = () => {
   const gameTypeInfo = TEST_GAME_TYPES[handicapType as keyof typeof TEST_GAME_TYPES] || TEST_GAME_TYPES.match_play;
   
   return (
-    <div style={{ padding: '10px', fontFamily: 'monospace', backgroundColor: '#1a1a1a', color: '#e0e0e0', minHeight: '100vh' }}>
+    <div style={{ padding: '10px', paddingBottom: '100px', fontFamily: 'monospace', backgroundColor: '#1a1a1a', color: '#e0e0e0', minHeight: '100vh' }}>
       <h1 style={{ color: '#ffffff', marginBottom: '10px', fontSize: '24px' }}>Handicap Engine Test Page</h1>
       
       {/* Top Section - Two Columns */}
@@ -750,6 +750,7 @@ const HandicapEngineTest: React.FC = () => {
                   <th style={{ border: '1px solid #555', padding: '10px', color: '#fff', textAlign: 'center' }}>Relative<br/><span style={{ fontSize: '10px', opacity: 0.7 }}>Adjustment</span></th>
                   <th style={{ border: '1px solid #555', padding: '10px', color: '#fff', textAlign: 'center' }}>MH (18)<br/><span style={{ fontSize: '10px', opacity: 0.7 }}>Match HC</span></th>
                   <th style={{ border: '1px solid #555', padding: '10px', color: '#fff', textAlign: 'center' }}>Holes<br/><span style={{ fontSize: '10px', opacity: 0.7 }}>Playing</span></th>
+                  <th style={{ border: '1px solid #555', padding: '10px', color: '#fff', textAlign: 'center' }}>Match Par<br/><span style={{ fontSize: '10px', opacity: 0.7 }}>Sum of Pars</span></th>
                   <th style={{ border: '1px solid #555', padding: '10px', color: '#fff', textAlign: 'center' }}>Factor<br/><span style={{ fontSize: '10px', opacity: 0.7 }}>n/18</span></th>
                   <th style={{ border: '1px solid #555', padding: '10px', color: '#fff', textAlign: 'center', backgroundColor: '#2a4a5a' }}>Adj MH<br/><span style={{ fontSize: '10px', opacity: 0.7 }}>Final</span></th>
                   <th style={{ border: '1px solid #555', padding: '10px', color: '#fff', textAlign: 'center', backgroundColor: '#2a4a5a' }}>PMP Total<br/><span style={{ fontSize: '10px', opacity: 0.7 }}>Sum</span></th>
@@ -763,6 +764,8 @@ const HandicapEngineTest: React.FC = () => {
                   const totalPMP = pmps.reduce((sum, pmp) => sum + pmp.playerMatchPar, 0);
                   const holesPlayed = pmps.length;
                   const adjustedMH = Math.round((player?.matchHandicap || 0) * (holesPlayed / 18));
+                  // Calculate Match Par (sum of pars for holes being played)
+                  const matchPar = pmps.reduce((sum, pmp) => sum + pmp.holePar, 0);
                   
                   // Determine allowance and relative adjustment based on handicap type
                   let allowance = '100%';
@@ -813,6 +816,9 @@ const HandicapEngineTest: React.FC = () => {
                       <td style={{ border: '1px solid #555', padding: '8px', color: '#e0e0e0', textAlign: 'center' }}>
                         {holesPlayed}
                       </td>
+                      <td style={{ border: '1px solid #555', padding: '8px', color: '#e0e0e0', textAlign: 'center', fontWeight: 'bold' }}>
+                        {matchPar}
+                      </td>
                       <td style={{ border: '1px solid #555', padding: '8px', color: '#999', textAlign: 'center', fontSize: '12px' }}>
                         {holesPlayed}/18
                       </td>
@@ -829,7 +835,7 @@ const HandicapEngineTest: React.FC = () => {
             </table>
           </div>
           <div style={{ marginTop: '10px', fontSize: '11px', color: '#999' }}>
-            <strong>Formula Path:</strong> HI → CH (slope/rating) → Allowance % → {handicapType === 'match_play' ? 'Relative Adj' : 'No Relative'} → MH → Holes Factor → Adjusted MH → PMP Distribution
+            <strong>Formula Path:</strong> HI → CH (slope/rating) → Allowance % → {handicapType === 'match_play' ? 'Relative Adj' : 'No Relative'} → MH → Holes/Match Par → Factor (n/18) → Adjusted MH → PMP Distribution
           </div>
         </div>
       )}

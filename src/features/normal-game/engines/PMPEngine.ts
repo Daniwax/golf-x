@@ -3,7 +3,6 @@
  * Distributes match handicap strokes across holes based on strategy
  */
 
-import { getStrokesOnHole } from '../utils/handicapCalculations';
 import type { MatchHandicapResult, Hole } from './MatchHandicapEngine';
 
 // ==========================================
@@ -46,8 +45,48 @@ class StrokeIndexDistribution implements PMPDistributionStrategy {
     holes: Hole[],
     userId: string
   ): PlayerMatchPar[] {
+    // Sort holes by stroke index to allocate strokes to hardest holes first
+    const sortedByStrokeIndex = [...holes].sort((a, b) => a.strokeIndex - b.strokeIndex);
+    
+    // Allocate strokes based on the adjusted match handicap
+    const strokeAllocation = new Map<number, number>();
+    let remainingStrokes = matchHandicap;
+    
+    // First pass: give 1 stroke to each hole in SI order
+    for (const hole of sortedByStrokeIndex) {
+      if (remainingStrokes > 0) {
+        strokeAllocation.set(hole.holeNumber, 1);
+        remainingStrokes--;
+      } else {
+        strokeAllocation.set(hole.holeNumber, 0);
+      }
+    }
+    
+    // Second pass: give additional strokes if MH > number of holes
+    if (remainingStrokes > 0) {
+      for (const hole of sortedByStrokeIndex) {
+        if (remainingStrokes > 0) {
+          const currentStrokes = strokeAllocation.get(hole.holeNumber) || 0;
+          strokeAllocation.set(hole.holeNumber, currentStrokes + 1);
+          remainingStrokes--;
+        }
+      }
+    }
+    
+    // Third pass: give third stroke if MH > 2 * number of holes
+    if (remainingStrokes > 0) {
+      for (const hole of sortedByStrokeIndex) {
+        if (remainingStrokes > 0) {
+          const currentStrokes = strokeAllocation.get(hole.holeNumber) || 0;
+          strokeAllocation.set(hole.holeNumber, currentStrokes + 1);
+          remainingStrokes--;
+        }
+      }
+    }
+    
+    // Return PMPs in original hole order
     return holes.map(hole => {
-      const strokesReceived = getStrokesOnHole(hole.strokeIndex, matchHandicap);
+      const strokesReceived = strokeAllocation.get(hole.holeNumber) || 0;
       
       return {
         userId,
@@ -146,42 +185,49 @@ class ControlledRandomDistribution implements PMPDistributionStrategy {
     holes: Hole[],
     userId: string
   ): PlayerMatchPar[] {
-    // Determine constraints based on Match HC range (ADJUSTED)
-    const maxPerHole = this.getMaxStrokesPerHole(matchHandicap);
-    const minHolesNeeded = this.getMinHolesNeeded(matchHandicap, maxPerHole, holes.length);
+    // Calculate what the original 18-hole match handicap would be
+    // This is needed to determine proper max strokes per hole
+    const holesPlayed = holes.length;
+    const original18HoleMatchHandicap = Math.round(matchHandicap * (18 / holesPlayed));
+    
+    // Determine constraints based on ORIGINAL 18-hole Match HC range
+    const maxPerHole = this.getMaxStrokesPerHole(original18HoleMatchHandicap);
     
     // Initialize stroke allocation
     const strokeAllocation = new Array(holes.length).fill(0);
     let remainingStrokes = matchHandicap;
     
-    // Randomly select which holes will receive strokes
-    const shuffledIndices = [...Array(holes.length).keys()]
-      .sort(() => Math.random() - 0.5);
-    const selectedHoles = shuffledIndices.slice(0, minHolesNeeded);
-    
-    // First pass: Distribute base strokes evenly to selected holes
-    const baseStrokes = Math.floor(matchHandicap / minHolesNeeded);
-    selectedHoles.forEach(holeIndex => {
-      const strokes = Math.min(baseStrokes, maxPerHole);
-      strokeAllocation[holeIndex] = strokes;
-      remainingStrokes -= strokes;
-    });
-    
-    // Second pass: Distribute remaining strokes randomly
+    // Pure random distribution - one stroke at a time
     while (remainingStrokes > 0) {
-      // Find holes that can still receive strokes
-      const availableHoles = strokeAllocation
-        .map((strokes, idx) => ({ idx, strokes }))
-        .filter(h => h.strokes < maxPerHole);
+      // Try to find a random hole that can receive a stroke
+      let attempts = 0;
+      const maxAttempts = holes.length * 10; // Prevent infinite loop
       
-      if (availableHoles.length === 0) break;
+      while (attempts < maxAttempts) {
+        // Pick a random hole
+        const randomHoleIndex = Math.floor(Math.random() * holes.length);
+        
+        // Check if this hole can receive another stroke
+        if (strokeAllocation[randomHoleIndex] < maxPerHole) {
+          strokeAllocation[randomHoleIndex]++;
+          remainingStrokes--;
+          break;
+        }
+        
+        attempts++;
+      }
       
-      // Randomly select a hole and add a stroke
-      const randomHole = availableHoles[
-        Math.floor(Math.random() * availableHoles.length)
-      ];
-      strokeAllocation[randomHole.idx]++;
-      remainingStrokes--;
+      // Safety check: if we can't find a hole after many attempts, 
+      // find any available hole (shouldn't happen with proper max settings)
+      if (attempts >= maxAttempts && remainingStrokes > 0) {
+        const availableHole = strokeAllocation.findIndex(s => s < maxPerHole);
+        if (availableHole !== -1) {
+          strokeAllocation[availableHole]++;
+          remainingStrokes--;
+        } else {
+          break; // No holes available (shouldn't happen)
+        }
+      }
     }
     
     // Convert to PlayerMatchPar format
@@ -194,9 +240,10 @@ class ControlledRandomDistribution implements PMPDistributionStrategy {
     }));
   }
   
-  private getMaxStrokesPerHole(matchHandicap: number): number {
-    if (matchHandicap <= 9) return 1;
-    if (matchHandicap <= 27) return 2;
+  private getMaxStrokesPerHole(original18HoleMatchHandicap: number): number {
+    // These thresholds are based on the original 18-hole match handicap
+    if (original18HoleMatchHandicap <= 9) return 1;
+    if (original18HoleMatchHandicap <= 27) return 2;
     return 3; // Cap at 3 for all higher handicaps
   }
   
@@ -237,6 +284,11 @@ class HistoricalDistribution implements PMPDistributionStrategy {
     holes: Hole[],
     userId: string
   ): PlayerMatchPar[] {
+    // For fallback, use stroke index distribution logic
+    const strokeIndexDistribution = new StrokeIndexDistribution();
+    const fallbackPMPs = strokeIndexDistribution.distribute(matchHandicap, holes, userId);
+    const fallbackMap = new Map(fallbackPMPs.map(pmp => [pmp.holeNumber, pmp]));
+    
     return holes.map(hole => {
       // If we have historical data, use it
       const historicalScore = this.historicalScores?.get(hole.holeNumber);
@@ -248,9 +300,10 @@ class HistoricalDistribution implements PMPDistributionStrategy {
         strokesReceived = Math.max(0, historicalScore - hole.par);
         playerMatchPar = historicalScore;
       } else {
-        // Fallback to normal distribution
-        strokesReceived = getStrokesOnHole(hole.strokeIndex, matchHandicap);
-        playerMatchPar = hole.par + strokesReceived;
+        // Fallback to stroke index distribution
+        const fallbackPMP = fallbackMap.get(hole.holeNumber);
+        strokesReceived = fallbackPMP?.strokesReceived || 0;
+        playerMatchPar = fallbackPMP?.playerMatchPar || hole.par;
       }
       
       return {
