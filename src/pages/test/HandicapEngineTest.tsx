@@ -282,7 +282,8 @@ const HandicapEngineTest: React.FC = () => {
   // Load player matches for ghost mode
   const loadPlayerMatches = async (userId: string, teeBoxId: number) => {
     try {
-      // Query for completed games where the user played on this tee
+      // Query for all games where the user played on this tee (not just completed)
+      // We'll include active games too since they might have scores
       const { data: games, error } = await supabase
         .from('game_participants')
         .select(`
@@ -296,7 +297,7 @@ const HandicapEngineTest: React.FC = () => {
         `)
         .eq('user_id', userId)
         .eq('tee_box_id', teeBoxId)
-        .eq('games.status', 'completed')
+        .in('games.status', ['active', 'completed'])  // Include both active and completed
         .order('games.created_at', { ascending: false });
       
       if (!error && games) {
@@ -304,7 +305,8 @@ const HandicapEngineTest: React.FC = () => {
         const matches = games.map(g => ({
           id: g.game_id,
           name: g.games.name || `Game ${g.game_id}`,
-          date: new Date(g.games.created_at).toLocaleDateString()
+          date: new Date(g.games.created_at).toLocaleDateString(),
+          status: g.games.status
         }));
         
         if (userId === currentUserId) {
@@ -629,11 +631,11 @@ const HandicapEngineTest: React.FC = () => {
                   style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
                 >
                   {playerMatches.length === 0 ? (
-                    <option value="">No completed matches on this tee</option>
+                    <option value="">No matches found on this tee</option>
                   ) : (
                     playerMatches.map(match => (
                       <option key={match.id} value={match.id}>
-                        {match.name} - {match.date}
+                        {match.name} - {match.date} ({match.status})
                       </option>
                     ))
                   )}
@@ -670,11 +672,11 @@ const HandicapEngineTest: React.FC = () => {
                       style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
                     >
                       {friendMatches.length === 0 ? (
-                        <option value="">No completed matches on this tee</option>
+                        <option value="">No matches found on this tee</option>
                       ) : (
                         friendMatches.map(match => (
                           <option key={match.id} value={match.id}>
-                            {match.name} - {match.date}
+                            {match.name} - {match.date} ({match.status})
                           </option>
                         ))
                       )}
