@@ -9,14 +9,14 @@ interface CacheEntry<T> {
   ttl: number;
 }
 
-interface PendingRequest {
-  promise: Promise<any>;
+interface PendingRequest<T = unknown> {
+  promise: Promise<T>;
   timestamp: number;
 }
 
 export class CacheService {
-  private cache = new Map<string, CacheEntry<any>>();
-  private pending = new Map<string, PendingRequest>();
+  private cache = new Map<string, CacheEntry<unknown>>();
+  private pending = new Map<string, PendingRequest<unknown>>();
   private maxEntries = 200; // Reasonable for mobile devices
   private maxPendingAge = 30000; // 30 seconds max for pending requests
 
@@ -194,7 +194,6 @@ export class CacheService {
    * Clean up expired entries (can be called periodically)
    */
   cleanup(): void {
-    const now = Date.now();
     const keysToDelete: string[] = [];
 
     // Clean expired cache entries

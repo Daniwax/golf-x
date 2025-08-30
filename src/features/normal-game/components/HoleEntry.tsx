@@ -29,7 +29,7 @@ interface HoleEntryProps {
   participants: GameParticipant[];
   scores: GameHoleScore[];
   currentHole: number;
-  game: any; // Add game prop to match Scorecard and Leaderboard
+  game: { id: string; course_id?: string; teebox_id?: string; status?: string; name?: string; format?: string }; // Add game prop to match Scorecard and Leaderboard
   onHoleChange: (hole: number) => void;
   onScoreUpdate: () => void;
   onGameComplete?: () => void;

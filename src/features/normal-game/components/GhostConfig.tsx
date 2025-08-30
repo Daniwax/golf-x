@@ -1,26 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButton,
-  IonItem,
-  IonLabel,
-  IonRadioGroup,
-  IonRadio,
   IonBackButton,
   IonButtons,
   IonNote,
   IonSpinner,
-  IonSelect,
-  IonSelectOption,
-  IonAvatar,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonIcon
 } from '@ionic/react';
 import { trophyOutline, personOutline, peopleOutline } from 'ionicons/icons';
@@ -83,7 +71,7 @@ const GhostConfig: React.FC = () => {
   // Ghost configuration state
   const [ghostType, setGhostType] = useState<'personal_best' | 'friend_best' | 'course_record'>('personal_best');
   const [teeBoxId, setTeeBoxId] = useState<number | null>(null);
-  const [teeBoxes, setTeeBoxes] = useState<any[]>([]);
+  const [teeBoxes, setTeeBoxes] = useState<Array<{ id: number; name: string; color: string; slope: number; rating: number }>>([]);
   
   // User and friends
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -100,21 +88,21 @@ const GhostConfig: React.FC = () => {
       return;
     }
     loadInitialData();
-  }, []);
+  }, [gameData, history, loadInitialData]);
 
   useEffect(() => {
     if (gameData?.courseId) {
       loadTeeBoxes(gameData.courseId);
     }
-  }, [gameData?.courseId]);
+  }, [gameData?.courseId, loadTeeBoxes]);
 
   useEffect(() => {
     if (teeBoxId && gameData?.courseId) {
       loadMatchesForGhostType();
     }
-  }, [ghostType, teeBoxId, selectedFriendId]);
+  }, [ghostType, teeBoxId, selectedFriendId, gameData?.courseId, loadMatchesForGhostType]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -136,9 +124,9 @@ const GhostConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadTeeBoxes = async (courseId: number) => {
+  const loadTeeBoxes = useCallback(async (courseId: number) => {
     try {
       const teesData = await dataService.courses.getCourseTeeBoxes(courseId);
       if (teesData && teesData.length > 0) {
@@ -148,9 +136,9 @@ const GhostConfig: React.FC = () => {
     } catch (err) {
       console.error('Error loading tee boxes:', err);
     }
-  };
+  }, []);
 
-  const loadMatchesForGhostType = async () => {
+  const loadMatchesForGhostType = useCallback(async () => {
     if (!gameData?.courseId || !teeBoxId) return;
     
     try {
@@ -216,7 +204,7 @@ const GhostConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [gameData?.courseId, teeBoxId, ghostType, currentUserId, selectedFriendId, friends]);
 
   const handleNext = () => {
     if (!selectedMatch && !isCurrentUserKing) {

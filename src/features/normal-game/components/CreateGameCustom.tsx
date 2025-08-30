@@ -16,16 +16,9 @@ import {
   IonNote,
   IonSpinner,
   IonIcon,
-  IonSelect,
-  IonSelectOption,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonToggle,
   IonRange
 } from '@ionic/react';
-import { informationCircleOutline, settingsOutline } from 'ionicons/icons';
+import { informationCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import WeatherSelector from './WeatherSelector';
 import CourseSelector from './CourseSelector';
@@ -78,7 +71,7 @@ const SCORING_METHODS = {
 
 const CreateGameCustom: React.FC = () => {
   const history = useHistory();
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Form state
@@ -86,7 +79,6 @@ const CreateGameCustom: React.FC = () => {
   const [showGameTypeModal, setShowGameTypeModal] = useState(false);
   const [showScoringModal, setShowScoringModal] = useState(false);
   const [courseId, setCourseId] = useState<number | null>(null);
-  const [teeBoxId, setTeeBoxId] = useState<number | null>(null);
   const [weather, setWeather] = useState<WeatherCondition>('sunny');
   
   // Custom game configuration
@@ -96,8 +88,6 @@ const CreateGameCustom: React.FC = () => {
   
   
   // Data
-  const [courses, setCourses] = useState<any[]>([]);
-  const [teeBoxes, setTeeBoxes] = useState<any[]>([]);
 
   // Load initial data
   useEffect(() => {

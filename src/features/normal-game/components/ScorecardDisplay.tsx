@@ -1,11 +1,5 @@
 import React from 'react';
 import {
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonNote,
-  IonBadge,
   IonIcon,
   IonRippleEffect
 } from '@ionic/react';
@@ -13,11 +7,8 @@ import {
   flagOutline, 
   trophyOutline, 
   golfOutline,
-  personCircleOutline,
-  sparklesOutline,
   medalOutline,
-  starOutline,
-  ribbonOutline
+  starOutline
 } from 'ionicons/icons';
 import '../../../styles/championship.css';
 
@@ -61,7 +52,6 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
   participants,
   scores,
   holes,
-  courseName,
   coursePar,
   currentHole = 0,
   onEditHole,

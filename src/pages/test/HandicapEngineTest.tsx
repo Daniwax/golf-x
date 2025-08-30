@@ -39,14 +39,14 @@ const HandicapEngineTest: React.FC = () => {
   const [selectedGhostType, setSelectedGhostType] = useState<'personal_best' | 'friend_best' | 'course_record'>('personal_best');
   const [numberOfHoles, setNumberOfHoles] = useState<number>(18);
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
-  const [playerMatches, setPlayerMatches] = useState<any[]>([]);
-  const [friendMatches, setFriendMatches] = useState<any[]>([]);
+  const [playerMatches, setPlayerMatches] = useState<Array<{ id: number; course_id: number; teebox_id: number; status: string }>>([]);
+  const [friendMatches, setFriendMatches] = useState<Array<{ id: number; course_id: number; teebox_id: number; status: string }>>([]);
   const [loadingFriendMatches, setLoadingFriendMatches] = useState(false);
-  const [courseRecordMatches, setCourseRecordMatches] = useState<any[]>([]);
+  const [courseRecordMatches, setCourseRecordMatches] = useState<Array<{ id: number; course_id: number; teebox_id: number; status: string }>>([]);
   
   // Available Data
-  const [courses, setCourses] = useState<any[]>([]);
-  const [teeBoxes, setTeeBoxes] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Array<{ id: number; name: string }>>([]);
+  const [teeBoxes, setTeeBoxes] = useState<Array<{ id: number; name: string; color: string; slope: number; rating: number }>>([]);
   const [loading, setLoading] = useState(false);
   
   // User and Friends Management
@@ -66,11 +66,11 @@ const HandicapEngineTest: React.FC = () => {
   const [error, setError] = useState<string>('');
   
   // Preview Results (for showing before running test)
-  const [previewMatchHandicaps, setPreviewMatchHandicaps] = useState<MatchHandicapResult[]>([]);
-  const [previewPmpResults, setPreviewPmpResults] = useState<Map<string, PlayerMatchPar[]>>(new Map());
+  const [, setPreviewMatchHandicaps] = useState<MatchHandicapResult[]>([]);
+  const [, setPreviewPmpResults] = useState<Map<string, PlayerMatchPar[]>>(new Map());
   
   // Course Holes - will be loaded from database
-  const [courseHoles, setCourseHoles] = useState<Hole[]>([]);
+  const [, setCourseHoles] = useState<Hole[]>([]);
   
   // Default test holes (fallback if database load fails)
   const defaultTestHoles: Hole[] = Array.from({ length: 18 }, (_, i) => ({
@@ -354,7 +354,6 @@ const HandicapEngineTest: React.FC = () => {
       }
     } catch (err) {
       console.error('Error loading course record matches:', err);
-    } finally {
     }
   };
   
@@ -387,7 +386,7 @@ const HandicapEngineTest: React.FC = () => {
   };
   
   // Helper function to calculate real handicaps based on tee data
-  const calculateRealHandicaps = async (players: Player[], teeBox: any, coursePar: number): Promise<Player[]> => {
+  const calculateRealHandicaps = async (players: Player[], teeBox: { slope_rating?: number; course_rating?: number }, coursePar: number): Promise<Player[]> => {
     return players.map(player => {
       const slopeRating = teeBox.slope_rating || 113;
       const courseRating = teeBox.course_rating || 72;
@@ -690,7 +689,7 @@ const HandicapEngineTest: React.FC = () => {
               <select 
                 value={selectedGhostType} 
                 onChange={e => {
-                  const newGhostType = e.target.value as any;
+                  const newGhostType = e.target.value as 'personal_best' | 'friend_best' | 'course_record';
                   setSelectedGhostType(newGhostType);
                   setSelectedGameId(null); // Clear game selection when switching ghost type
                   // Don't clear the match arrays - let the useEffect handle loading
@@ -719,7 +718,7 @@ const HandicapEngineTest: React.FC = () => {
                     borderRadius: '3px',
                     padding: '10px'
                   }}>
-                    {playerMatches.map((match, index) => (
+                    {playerMatches.map((match) => (
                       <label 
                         key={match.id} 
                         style={{ 
@@ -817,7 +816,7 @@ const HandicapEngineTest: React.FC = () => {
                         borderRadius: '3px',
                         padding: '10px'
                       }}>
-                        {friendMatches.map((match, index) => (
+                        {friendMatches.map((match) => (
                           <label 
                             key={match.id} 
                             style={{ 
@@ -889,7 +888,7 @@ const HandicapEngineTest: React.FC = () => {
                     borderRadius: '3px',
                     padding: '10px'
                   }}>
-                    {courseRecordMatches.map((match, index) => (
+                    {courseRecordMatches.map((match) => (
                       <label 
                         key={match.id} 
                         style={{ 

@@ -380,19 +380,20 @@ export class StatsDataService {
 
         return completedScores.map(score => {
           const game = Array.isArray(score.games) ? score.games[0] : score.games;
-          const course = Array.isArray((game as any)?.golf_courses) 
-            ? (game as any).golf_courses[0] 
-            : (game as any)?.golf_courses;
+          const gameWithCourse = game as { golf_courses?: { name?: string; par?: number }[] | { name?: string; par?: number } };
+          const course = Array.isArray(gameWithCourse?.golf_courses) 
+            ? gameWithCourse.golf_courses[0] 
+            : gameWithCourse?.golf_courses;
 
           return {
             gameId: score.game_id,
-            courseName: (course as any)?.name || 'Unknown Course',
+            courseName: course?.name || 'Unknown Course',
             holeNumber: score.hole_number,
             strokes: score.strokes!,
             putts: score.putts,
             par: score.hole_par || 4,
             scoreToPar: score.score_vs_par || 0,
-            playedAt: (game as any)?.completed_at || ''
+            playedAt: (game as { completed_at?: string })?.completed_at || ''
           };
         });
       },

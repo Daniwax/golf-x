@@ -12,8 +12,7 @@ import {
   IonButton,
   IonNote,
   IonIcon,
-  IonChip,
-  IonSpinner
+  IonChip
 } from '@ionic/react';
 import { 
   golfOutline, 

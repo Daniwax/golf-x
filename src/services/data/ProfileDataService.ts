@@ -44,7 +44,7 @@ export class ProfileDataService {
   /**
    * Update user profile
    */
-  async updateUserProfile(userId: string, updates: any) {
+  async updateUserProfile(userId: string, updates: { full_name?: string; bio?: string; handicap?: number; avatar_url?: string }) {
     const { supabase } = await import('../../lib/supabase');
     const { data, error } = await supabase
       .from('profiles')

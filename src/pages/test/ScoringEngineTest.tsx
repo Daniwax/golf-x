@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { dataService } from '../../services/data/DataService';
 import { getCurrentUserId } from '../../lib/friends';
-import { ScoringEngine, type ScoringMethod, type Scorecard as EngineScorecard, type LeaderboardEntry, type LeaderboardResult } from '../../features/normal-game/engines/ScoringEngine';
+import { ScoringEngine, type ScoringMethod, type Scorecard as EngineScorecard, type LeaderboardResult } from '../../features/normal-game/engines/ScoringEngine';
 
 // Define scoring methods to test
 const SCORING_METHODS = {
@@ -56,12 +56,12 @@ interface LeaderboardEntry {
   playerId: string;
   playerName: string;
   score: number | string; // Could be strokes, points, or match play result
-  details?: any; // Method-specific details
+  details?: Record<string, unknown>; // Method-specific details
 }
 
 const ScoringEngineTest: React.FC = () => {
   // State
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [, setCurrentUserId] = useState<string | null>(null);
   const [completedGames, setCompletedGames] = useState<CompletedGame[]>([]);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [selectedScoringMethod, setSelectedScoringMethod] = useState<string>('stroke_play');
@@ -87,7 +87,7 @@ const ScoringEngineTest: React.FC = () => {
     if (scorecards.length > 0) {
       calculateLeaderboard();
     }
-  }, [selectedScoringMethod, scorecards]);
+  }, [selectedScoringMethod, scorecards, calculateLeaderboard]);
 
   const loadUserAndGames = async () => {
     setLoading(true);
@@ -185,7 +185,7 @@ const ScoringEngineTest: React.FC = () => {
     }
   };
 
-  const calculateLeaderboard = () => {
+  const calculateLeaderboard = useCallback(() => {
     if (scorecards.length === 0) {
       setLeaderboard(null);
       return;
@@ -228,7 +228,7 @@ const ScoringEngineTest: React.FC = () => {
     );
     
     setLeaderboard(leaderboardResult);
-  };
+  }, [scorecards, selectedScoringMethod]);
 
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace', backgroundColor: '#1a1a1a', color: '#e0e0e0', minHeight: '100vh' }}>

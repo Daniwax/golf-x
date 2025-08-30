@@ -14,13 +14,12 @@ import {
 } from 'ionicons/icons';
 import type { Game, GameParticipant, GameHoleScore } from '../types';
 import { supabase } from '../../../lib/supabase';
-import { ScoringEngine, type ScoringMethod, type Scorecard as EngineScorecard, type LeaderboardResult } from '../engines/ScoringEngine';
+import { ScoringEngine, type ScoringMethod, type LeaderboardResult } from '../engines/ScoringEngine';
 
 interface LeaderboardProps {
   participants: GameParticipant[];
   scores: GameHoleScore[];
   game: Game;
-  currentHole: number;
 }
 
 interface HoleInfo {
@@ -32,11 +31,10 @@ interface HoleInfo {
 const Leaderboard: React.FC<LeaderboardProps> = ({
   participants,
   scores,
-  game,
-  currentHole
+  game
 }) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardResult | null>(null);
-  const [holes, setHoles] = useState<HoleInfo[]>([]);
+  const [, setHoles] = useState<HoleInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -226,7 +224,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
             <tbody>
               {leaderboard.entries.map((entry, idx) => {
                 // Get scorecard for additional data
-                const participant = participants.find(p => p.user_id === entry.playerId);
                 const participantScores = scores.filter(s => s.user_id === entry.playerId);
                 const totalStrokes = participantScores.reduce((sum, s) => sum + (s.strokes || 0), 0);
                 const holesPlayed = participantScores.filter(s => s.strokes && s.strokes > 0).length;
@@ -345,9 +342,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', fontSize: '11px' }}>
                 {leaderboard.entries.map((entry) => {
-                  const participant = participants.find(p => p.user_id === entry.playerId);
-                  const participantScores = scores.filter(s => s.user_id === entry.playerId);
-                  
                   return (
                     <div key={entry.playerId} style={{ 
                       padding: '8px', 

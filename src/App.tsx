@@ -13,7 +13,6 @@ import { Redirect, Route, useLocation } from 'react-router-dom';
 import { 
   homeOutline, 
   personOutline, 
-  statsChartOutline, 
   trophyOutline
 } from 'ionicons/icons';
 

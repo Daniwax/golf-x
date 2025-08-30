@@ -12,7 +12,6 @@ import {
   IonSegmentButton,
   IonLabel,
   IonSpinner,
-  IonCard,
   IonCardContent,
   IonIcon,
   IonChip,

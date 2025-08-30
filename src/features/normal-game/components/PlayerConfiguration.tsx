@@ -9,8 +9,6 @@ import {
   IonBackButton,
   IonButtons,
   IonAvatar,
-  IonSpinner,
-  IonNote,
   IonLabel,
   IonIcon
 } from '@ionic/react';
@@ -30,7 +28,7 @@ import {
   calculateMatchHandicap
 } from '../utils/handicapCalculations';
 import { MatchHandicapEngine } from '../engines/MatchHandicapEngine';
-import type { Player as EnginePlayer, HandicapContext, MatchHandicapResult } from '../engines/MatchHandicapEngine';
+import type { Player as EnginePlayer, HandicapContext } from '../engines/MatchHandicapEngine';
 import type { TeeBox } from '../types';
 
 interface LocationState {

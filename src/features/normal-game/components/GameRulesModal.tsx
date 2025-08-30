@@ -48,7 +48,7 @@ const GameRulesModal: React.FC<GameRulesModalProps> = ({
 
   React.useEffect(() => {
     setSelectedRule(getInitialSelection());
-  }, [mode, initialSelection]);
+  }, [mode, initialSelection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get the appropriate rules based on mode
   const rulesCollection = mode === 'handicap' ? handicapTypes : scoringMethods;

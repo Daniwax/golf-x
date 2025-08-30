@@ -29,7 +29,7 @@ jest.mock('@ionic/react', () => ({
   IonRefresherContent: () => <div data-testid="ion-refresher-content" />
 }));
 
-const mockUseCourseList = require('../../../hooks/useCourses').useCourseList;
+import { useCourseList as mockUseCourseList } from '../../../hooks/useCourses';
 
 // Mock course data for testing
 const mockCourseData = {
@@ -278,12 +278,12 @@ describe('CoursesList Component', () => {
     );
 
     // Simulate refresh event
-    const refresher = screen.getByTestId('ion-refresher');
+    screen.getByTestId('ion-refresher');
     const refreshEvent = {
       detail: {
         complete: jest.fn()
       }
-    } as any;
+    } as { detail: { complete: jest.Mock } };
 
     // This would normally be triggered by Ionic's refresh gesture
     // For testing, we'll just verify the refresh function exists

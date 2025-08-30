@@ -26,7 +26,7 @@ interface ProfileHeaderProps {
   gameStats: GameStats;
   isEditing: boolean;
   onEditToggle: (editing: boolean) => void;
-  onSave: (updates: any) => Promise<void>;
+  onSave: (updates: { full_name?: string; bio?: string; handicap?: number }) => Promise<void>;
   loading?: boolean;
   statsLoading?: boolean;
 }

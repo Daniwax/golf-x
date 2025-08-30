@@ -1,26 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import {
   IonCard,
-  IonCardHeader,
-  IonCardTitle,
   IonCardContent,
   IonNote,
   IonIcon,
-  IonBadge,
   IonSpinner
 } from '@ionic/react';
 import { 
   trophyOutline,
-  golfOutline,
   flagOutline,
   starOutline
 } from 'ionicons/icons';
 import { ScoringEngine, type ScoringMethod, type LeaderboardResult } from '../engines/ScoringEngine';
 
 interface CompletedLeaderboardProps {
-  participants: any[];
-  scores: any[];
-  holes: any[];
+  participants: Array<{
+    user_id: string;
+    user_profile?: {
+      id: string;
+      full_name: string;
+    };
+  }>;
+  scores: Array<{
+    user_id: string;
+    hole_number: number;
+    strokes: number;
+    player_match_par?: number;
+  }>;
+  holes: Array<{
+    hole_number: number;
+    par: number;
+    handicap: number;
+  }>;
   gameFormat: string;
 }
 
@@ -343,7 +354,6 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
             <tbody>
               {leaderboard.entries.map((entry, idx) => {
                 // Get scorecard for additional data
-                const participant = participants.find(p => p.user_id === entry.playerId);
                 const participantScores = scores.filter(s => s.user_id === entry.playerId);
                 const totalStrokes = participantScores.reduce((sum, s) => sum + (s.strokes || 0), 0);
                 const holesPlayed = participantScores.filter(s => s.strokes && s.strokes > 0).length;
@@ -487,9 +497,6 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', fontSize: '11px' }}>
                 {leaderboard.entries.map((entry) => {
-                  const participant = participants.find(p => p.user_id === entry.playerId);
-                  const participantScores = scores.filter(s => s.user_id === entry.playerId);
-                  
                   return (
                     <div key={entry.playerId} style={{ 
                       padding: '8px', 

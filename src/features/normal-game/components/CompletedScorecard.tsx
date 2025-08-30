@@ -1,11 +1,8 @@
 import React from 'react';
 import {
-  IonCard,
-  IonCardContent,
-  IonNote,
   IonIcon
 } from '@ionic/react';
-import { flagOutline, trophyOutline } from 'ionicons/icons';
+import { flagOutline } from 'ionicons/icons';
 import '../../../styles/championship.css';
 
 interface Participant {
