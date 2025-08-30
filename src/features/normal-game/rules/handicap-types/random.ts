@@ -1,43 +1,44 @@
 export const randomHandicap = {
   id: 'random',
   title: 'Lucky Draw',
-  subtitle: 'Fair handicaps with random distribution',
+  subtitle: 'Fun mode with controlled randomness for playable chaos',
   content: `
 ## Overview
-Lucky Draw adds an element of chance to the game by distributing strokes randomly among players. Perfect for casual rounds where fun takes priority over competition.
+Lucky Draw adds unpredictability while keeping handicaps fair. It applies the same 95% allowance as Stroke Play, but distributes strokes using a controlled random algorithm.
 
-## How It Works
-- Strokes are **randomly assigned** each round
-- Distribution changes every game for variety
-- Can level the playing field unexpectedly
-- Adds excitement and unpredictability
+## Match Handicap Calculation
+- **Allowance Applied**: 95% of Course Handicap
+- **Formula**: \`Course Handicap × 0.95\`
+- **Relative Adjustment**: None – each player keeps their adjusted handicap
 
-## Calculation Example
-**Random Distribution (changes each game):**
-- Player A (10 hcp): Gets 15 strokes today
-- Player B (18 hcp): Gets 8 strokes today
-- Player C (25 hcp): Gets 20 strokes today
+## PMHP Distribution Method
+- **Method**: Controlled random allocation
+- **Logic**: Caps per hole and minimum holes ensure playability
+- **Why**: Keeps the game fun, fair, and unpredictable
 
-**Next Game Could Be:**
-- Player A: 5 strokes
-- Player B: 25 strokes
-- Player C: 12 strokes
+## Control Rules
+| Player Match HC | Max Strokes/Hole | Min Holes w/Strokes | Strategy |
+|-----------------|------------------|---------------------|----------|
+| 1–9             | 1                | 0                   | Simple random |
+| 10–18           | 2                | MH/2 (min 9)        | Spread with doubles |
+| 19–27           | 2                | 10+                 | Balanced spread |
+| 28–36           | 3                | 12+                 | Most holes affected |
+| 37+             | 3                | 15+                 | Nearly all holes |
 
-## Stroke Distribution
-Random allocation methods:
-- Total strokes: 0-36 assigned randomly
-- Holes receiving strokes follow SI order
-- Distribution revealed at game start
-- Same random seed for fairness in a round
+## Distribution Algorithm
+1. Calculate max strokes per hole from MH range  
+2. Determine minimum holes required (\`MH / max_per_hole\`)  
+3. Randomly select holes for strokes  
+4. Never exceed the cap per hole  
 
-## When to Use
-**Best for:** Social golf, charity events, team building, or when you want to mix things up. Great for groups with widely varying skills who want equal winning chances.
+## Example
+Players:  
+- Player A: Course HC 10 → Match HC 10 (9.5 rounds up)  
+- Player B: Course HC 22 → Match HC 21 (20.9 rounds up)  
 
-## Strategic Notes
-- Embrace the chaos - it's meant to be fun
-- Good players might struggle, beginners might excel
-- Focus on enjoying the round
-- Perfect for trying new strategies
-- Keeps everyone engaged regardless of skill
-`
-};
+PMHP  for Player B (MH=21, controlled random):  
+- Max 2 strokes per hole (19–27 range)  
+- At least 11 holes receive strokes  
+- Random selection, not based on SI
+  `
+}
