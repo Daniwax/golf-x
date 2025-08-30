@@ -293,7 +293,7 @@ const FriendProfile: React.FC = () => {
           if (userGame.total_strokes < friendGame.total_strokes) result = 'won';
           else if (userGame.total_strokes > friendGame.total_strokes) result = 'lost';
 
-          const userGameData = userGame as GameWithCourse;
+          const userGameData = userGame as unknown as GameWithCourse;
           recent.push({
             id: userGame.game_id,
             course_name: userGameData.games?.[0]?.golf_courses?.[0]?.name || 'Unknown Course',
