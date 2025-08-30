@@ -12,8 +12,7 @@ import {
   IonIcon,
   IonSegment,
   IonSegmentButton,
-  IonButton,
-  IonRippleEffect
+  IonButton
 } from '@ionic/react';
 import { 
   trophyOutline, 
@@ -700,7 +699,7 @@ const MatchHistory: React.FC = () => {
               return (
                 <div 
                   key={game.id} 
-                  className="ion-activatable golf-card-no-padding"
+                  className="golf-card-no-padding"
                   onClick={() => handleGameClick(game)}
                   style={{
                     margin: '0',
@@ -709,7 +708,6 @@ const MatchHistory: React.FC = () => {
                     borderBottom: '1px solid var(--golf-tan-border)'
                   }}
                 >
-                  <IonRippleEffect />
                   
                   {/* Course Image */}
                   <div style={{

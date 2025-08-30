@@ -85,7 +85,7 @@ background: rgba(0, 0, 0, 0.1);
 .course-header-content {
 position: relative;
 z-index: 10;
-padding: 30px 20px;
+padding: 60px 20px 20px 20px;
 width: 100%;
 text-align: center;
 }
@@ -106,7 +106,7 @@ margin-bottom: 15px;
 font-size: 28px;
 font-weight: 500;
 color: #f1f5f9;
-margin-bottom: 8px;
+margin-bottom: 20px;
 }
 
 .club-title {
@@ -261,7 +261,7 @@ font-size: 14px;
 
 .info-grid {
 display: grid;
-grid-template-columns: repeat(2, 1fr);
+grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 gap: 15px;
 }
 

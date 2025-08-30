@@ -82,24 +82,27 @@ const LiveMatchCard: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '32px',
-                  height: '32px',
+                  width: '48px',
+                  height: '48px',
                   cursor: 'pointer',
                   borderRadius: '50%',
-                  backgroundColor: 'transparent',
-                  transition: 'background-color 0.2s ease'
+                  backgroundColor: 'rgba(42, 84, 52, 0.05)',
+                  transition: 'all 0.2s ease',
+                  margin: '-8px'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(42, 84, 52, 0.1)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.backgroundColor = 'rgba(42, 84, 52, 0.05)';
+                  e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
                 <IonIcon 
                   icon={chevronForwardOutline} 
                   style={{ 
-                    fontSize: '20px', 
+                    fontSize: '24px', 
                     color: '#2a5434' 
                   }} 
                 />

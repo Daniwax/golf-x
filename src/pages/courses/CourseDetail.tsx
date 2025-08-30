@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import '../../styles/extracted-styles.css';
+import '../../styles/golf_style.css';
 import {
   IonContent,
   IonHeader,
@@ -12,7 +13,6 @@ import {
   IonToolbar,
   IonBackButton,
   IonButtons,
-  IonSpinner,
   IonSegment,
   IonSegmentButton,
   IonButton,
@@ -100,7 +100,6 @@ const CourseDetail: React.FC = () => {
     amenities,
     courseImages,
     playerStats,
-    loading,
     error
   } = useCourseDetail(id);
 
@@ -125,7 +124,7 @@ const CourseDetail: React.FC = () => {
 
   // Process course image
   const courseImage = React.useMemo(() => {
-    const defaultImage = courseImages.find(img => img.is_primary);
+    const defaultImage = courseImages.find(img => img.is_primary) || courseImages[0];
     if (!defaultImage?.image_url) return '';
     
     try {
@@ -312,28 +311,7 @@ const CourseDetail: React.FC = () => {
 
   // Helper function for getting hole distances - kept for future use
 
-  // Render loading state
-  if (loading) {
-    return (
-      <IonPage className="course-detail">
-        <IonHeader className="green-header">
-          <IonToolbar>
-            <IonButtons slot="start">
-              <IonBackButton defaultHref="/courses" />
-            </IonButtons>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent className="premium-content">
-          <div className="loading-container">
-            <IonSpinner className="premium-spinner" />
-            <p style={{marginTop: '20px', fontSize: '16px', fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase'}}>
-              Loading Course
-            </p>
-          </div>
-        </IonContent>
-      </IonPage>
-    );
-  }
+  // Skip loading state - render immediately
 
   // Render error state
   if (error || !course) {
@@ -366,37 +344,32 @@ const CourseDetail: React.FC = () => {
           Course Information
         </h2>
         
-        <div className="info-grid" style={{
-          background: 'rgba(14, 30, 14, 0.3)',
-          padding: '16px',
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.06)'
-        }}>
+        <div className="golf-info-grid">
           {course.designer && (
-            <div className="info-item">
-              <span className="info-label" style={{ fontWeight: '400', fontSize: '11px', opacity: 0.6 }}>Designer</span>
-              <span className="info-value" style={{ fontWeight: '400', fontSize: '15px' }}>{course.designer}</span>
+            <div className="golf-info-item">
+              <span className="golf-info-label">Designer</span>
+              <span className="golf-info-value">{course.designer}</span>
             </div>
           )}
           
           {course.designed_year && (
-            <div className="info-item">
-              <span className="info-label" style={{ fontWeight: '400', fontSize: '11px', opacity: 0.6 }}>Established</span>
-              <span className="info-value" style={{ fontWeight: '400', fontSize: '15px' }}>{course.designed_year}</span>
+            <div className="golf-info-item">
+              <span className="golf-info-label">Established</span>
+              <span className="golf-info-value">{course.designed_year}</span>
             </div>
           )}
           
           {course.course_style && (
-            <div className="info-item">
-              <span className="info-label" style={{ fontWeight: '400', fontSize: '11px', opacity: 0.6 }}>Style</span>
-              <span className="info-value" style={{ fontWeight: '400', fontSize: '15px' }}>{course.course_style}</span>
+            <div className="golf-info-item">
+              <span className="golf-info-label">Style</span>
+              <span className="golf-info-value">{course.course_style}</span>
             </div>
           )}
           
           {course.status && (
-            <div className="info-item">
-              <span className="info-label" style={{ fontWeight: '400', fontSize: '11px', opacity: 0.6 }}>Status</span>
-              <span className={`info-value ${course.status === 'open' ? 'status-active' : ''}`} style={{ fontWeight: '400', fontSize: '15px' }}>
+            <div className="golf-info-item">
+              <span className="golf-info-label">Status</span>
+              <span className={`golf-info-value ${course.status === 'open' ? 'status-active' : ''}`}>
                 {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
               </span>
             </div>
@@ -1124,7 +1097,14 @@ const CourseDetail: React.FC = () => {
             <div className="course-header-overlay" />
             <div className="course-header-content">
               <h1 className="course-title">{course.name}</h1>
-              <div className="club-title">
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '400',
+                opacity: 0.9,
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+                marginBottom: '16px'
+              }}>
                 {course.golf_clubs?.name} • {course.golf_clubs?.city}
               </div>
               <div className="course-basic-stats" style={{

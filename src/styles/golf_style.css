@@ -552,6 +552,109 @@
 }
 
 /* ========================================
+   COURSE INFORMATION CARDS
+   ======================================== */
+
+/* Course Information Grid */
+.golf-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  background: rgba(14, 30, 14, 0.3);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Individual Information Item */
+.golf-info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.golf-info-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Information Label */
+.golf-info-label {
+  font-size: 10px;
+  font-family: serif;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+/* Information Value */
+.golf-info-value {
+  font-size: 16px;
+  font-family: Georgia, serif;
+  color: #f1f5f9;
+  font-weight: 400;
+  line-height: 1.2;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Status specific styling */
+.golf-info-value.status-active {
+  color: var(--golf-green-light);
+  font-weight: 600;
+}
+
+/* Responsive adjustments for course info */
+@media (max-width: 480px) {
+  .golf-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .golf-info-item {
+    padding: 12px 8px;
+  }
+  
+  .golf-info-label {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+  
+  .golf-info-value {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .golf-info-grid {
+    gap: 10px;
+    padding: 14px;
+  }
+  
+  .golf-info-item {
+    padding: 10px 6px;
+  }
+  
+  .golf-info-label {
+    font-size: 8px;
+  }
+  
+  .golf-info-value {
+    font-size: 13px;
+  }
+}
+
+/* ========================================
    UTILITY CLASSES
    ======================================== */
 
