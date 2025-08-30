@@ -44,8 +44,23 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
   scoringFormat,
   coursePar
 }) => {
+  
+  // Ensure participants is an array
+  const safeParticipants = Array.isArray(participants) ? participants : [];
+  
+  // Handle empty participants
+  if (safeParticipants.length === 0) {
+    return (
+      <IonCard>
+        <IonCardContent>
+          <p style={{ textAlign: 'center', color: '#666' }}>No participants to display</p>
+        </IonCardContent>
+      </IonCard>
+    );
+  }
+  
   // Sort participants by total strokes
-  const sortedParticipants = [...participants].sort((a, b) => {
+  const sortedParticipants = [...safeParticipants].sort((a, b) => {
     if (a.total_strokes === null) return 1;
     if (b.total_strokes === null) return -1;
     return a.total_strokes - b.total_strokes;

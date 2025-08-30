@@ -3,6 +3,7 @@ import { matchPlayHandicap } from './handicap-types/match-play';
 import { strokePlayHandicap } from './handicap-types/stroke-play';
 import { noHandicap } from './handicap-types/none';
 import { randomHandicap } from './handicap-types/random';
+import { ghostHandicap } from './handicap-types/ghost';
 
 // Scoring Methods
 import { netScoreMethod } from './scoring-methods/net-score';
@@ -14,7 +15,8 @@ export const handicapTypes = {
   match_play: matchPlayHandicap,
   stroke_play: strokePlayHandicap,
   none: noHandicap,
-  random: randomHandicap
+  random: randomHandicap,
+  ghost: ghostHandicap
 };
 
 export const scoringMethods = {

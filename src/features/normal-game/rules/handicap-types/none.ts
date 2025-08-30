@@ -1,10 +1,10 @@
 export const noHandicap = {
   id: 'none',
-  title: 'No Handicap',
-  subtitle: 'All players play to course par',
+  title: 'Scratch Golf',
+  subtitle: 'No handicap - pure skill competition',
   content: `
 ## Overview
-No Handicap means all players compete on equal terms with no stroke adjustments. Everyone plays to the course par, making it a pure test of golf skill.
+Scratch Golf means all players compete on equal terms with no stroke adjustments. Everyone plays to the course par, making it a pure test of golf skill.
 
 ## How It Works
 - **No strokes** are given or received

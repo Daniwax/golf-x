@@ -1,7 +1,7 @@
 export const matchPlayHandicap = {
   id: 'match_play',
-  title: 'Match Play Handicap',
-  subtitle: 'Relative handicap - lowest plays off scratch',
+  title: 'Match Play',
+  subtitle: 'Classic match play with relative handicaps',
   content: `
 ## Overview
 Match Play uses a relative handicap system where the lowest handicap player plays off scratch (zero), and all other players receive the difference in strokes.

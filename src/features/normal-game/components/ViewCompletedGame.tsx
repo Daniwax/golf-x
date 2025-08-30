@@ -7,6 +7,7 @@ import {
   IonToolbar,
   IonButtons,
   IonBackButton,
+  IonButton,
   IonSegment,
   IonSegmentButton,
   IonLabel,
@@ -19,13 +20,17 @@ import {
 } from '@ionic/react';
 import { 
   trophyOutline,
-  calendarOutline
+  calendarOutline,
+  informationCircleOutline
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import { format } from 'date-fns';
 import { profileGameService } from '../services/profileGameService';
+import { gameService } from '../services/gameService';
+import { supabase } from '../../../lib/supabase';
 import ScorecardDisplay from './ScorecardDisplay';
 import CompletedLeaderboard from './CompletedLeaderboard';
+import ScorecardColorGuideModal from './ScorecardColorGuideModal';
 import { calculateMatchPlayResults } from '../utils/handicapCalculations';
 
 interface GameData {
@@ -80,31 +85,66 @@ const ViewCompletedGame: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'scorecard' | 'leaderboard'>('scorecard');
   const [loading, setLoading] = useState(true);
   const [gameData, setGameData] = useState<GameData | null>(null);
+  const [isColorGuideOpen, setIsColorGuideOpen] = useState(false);
+
 
   useEffect(() => {
     const loadGameData = async () => {
       setLoading(true);
       try {
-        const data = await profileGameService.getGameDetails(gameId);
-        if (data) {
+        // Use gameService like LiveGame does - it returns clean arrays
+        const gameData = await gameService.getGameDetails(gameId);
+        
+        // Load hole and course information separately if needed
+        let holes = [];
+        let courseInfo = null;
+        if (gameData && gameData.game && gameData.game.course_id) {
+          const [holesResult, courseResult] = await Promise.all([
+            supabase
+              .from('holes')
+              .select('hole_number, par, handicap_index')
+              .eq('course_id', gameData.game.course_id)
+              .order('hole_number'),
+            supabase
+              .from('golf_courses')
+              .select('id, name, par, golf_clubs(name)')
+              .eq('id', gameData.game.course_id)
+              .single()
+          ]);
+          
+          holes = holesResult.data || [];
+          courseInfo = courseResult.data;
+        }
+        
+        if (gameData) {
+          // Now we have clean arrays from gameService
+          const safeData = {
+            ...gameData,
+            holes: holes,
+            game: {
+              ...gameData.game,
+              golf_courses: courseInfo || gameData.game.golf_courses || { name: 'Unknown Course', par: 72, golf_clubs: { name: 'Unknown Club' } }
+            }
+          };
+          
           // Calculate match play results if it's a match play game
-          if (data.game.scoring_format === 'match_play' && data.participants && data.scores && data.holes) {
-            const validParticipants = data.participants.filter(p => p.profiles).map(p => ({
+          if (safeData.game.scoring_format === 'match_play' && safeData.participants.length > 0) {
+            const validParticipants = safeData.participants.filter(p => p.profiles).map(p => ({
               ...p,
               profiles: p.profiles || { full_name: 'Unknown' },
               tee_boxes: p.tee_boxes || { name: 'Default' }
             }));
             const participantsWithMatchPlay = calculateMatchPlayResults(
               validParticipants,
-              data.scores,
-              data.holes
+              safeData.scores,
+              safeData.holes
             );
             setGameData({
-              ...data,
+              ...safeData,
               participants: participantsWithMatchPlay
             } as unknown as GameData);
           } else {
-            setGameData(data as unknown as GameData);
+            setGameData(safeData as unknown as GameData);
           }
         } else {
           // Navigate back if game not found
@@ -190,10 +230,13 @@ const ViewCompletedGame: React.FC = () => {
     );
   }
 
-  const { game, participants, scores, holes } = gameData;
-  const winner = participants.find((p) => 
-    p.total_strokes === Math.min(...participants.map((p) => p.total_strokes).filter((s) => s !== null))
-  );
+  const { game, participants = [], scores = [], holes = [] } = gameData;
+  
+  const winner = participants && Array.isArray(participants) && participants.length > 0
+    ? participants.find((p) => 
+        p.total_strokes === Math.min(...participants.map((p) => p.total_strokes).filter((s) => s !== null))
+      )
+    : null;
 
   return (
     <IonPage>
@@ -203,6 +246,15 @@ const ViewCompletedGame: React.FC = () => {
             <IonBackButton defaultHref="/profile" />
           </IonButtons>
           <IonTitle>Match Details</IonTitle>
+          <IonButtons slot="end">
+            <IonButton 
+              fill="clear" 
+              onClick={() => setIsColorGuideOpen(true)}
+              title="Color Guide"
+            >
+              <IonIcon icon={informationCircleOutline} />
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
       
@@ -306,6 +358,12 @@ const ViewCompletedGame: React.FC = () => {
           )}
         </div>
       </IonContent>
+
+      {/* Color Guide Modal */}
+      <ScorecardColorGuideModal 
+        isOpen={isColorGuideOpen}
+        onClose={() => setIsColorGuideOpen(false)}
+      />
     </IonPage>
   );
 };

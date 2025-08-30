@@ -1,7 +1,7 @@
 export const strokePlayHandicap = {
   id: 'stroke_play',
-  title: 'Stroke Play Handicap',
-  subtitle: 'Full handicap for all players',
+  title: 'Stroke Play',
+  subtitle: 'Tournament format with 95% handicap allowance',
   content: `
 ## Overview
 Stroke Play uses the full handicap system where each player receives their complete handicap allowance to calculate their net score.

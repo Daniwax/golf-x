@@ -315,11 +315,17 @@ class GameService {
           creator_user_id,
           game_description,
           scoring_format,
+          scoring_method,
           weather_condition,
           status,
           created_at,
           started_at,
-          completed_at
+          completed_at,
+          notes,
+          notes_updated_by,
+          notes_updated_at,
+          handicap_type,
+          num_holes
         `)
         .eq('id', gameId)
         .single(),
@@ -332,7 +338,12 @@ class GameService {
           handicap_index,
           course_handicap,
           playing_handicap,
-          match_handicap
+          match_handicap,
+          total_strokes,
+          total_putts,
+          net_score,
+          front_nine_strokes,
+          back_nine_strokes
         `)
         .eq('game_id', gameId),
       supabase.from('game_hole_scores')
@@ -347,7 +358,8 @@ class GameService {
           hole_handicap_strokes,
           net_score,
           score_vs_par,
-          updated_at
+          updated_at,
+          player_match_par
         `)
         .eq('game_id', gameId)
     ]);
@@ -356,20 +368,29 @@ class GameService {
     if (participantsResult.error) throw participantsResult.error;
     if (scoresResult.error) throw scoresResult.error;
 
-    // Get participant names separately
+    // Get participant names and tee box info separately
     const participants = participantsResult.data || [];
     const participantsWithNames = await Promise.all(
       participants.map(async (participant) => {
-        if (!supabase) return { ...participant, full_name: 'Unknown' };
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', participant.user_id)
-          .single();
+        if (!supabase) return { ...participant, profiles: { full_name: 'Unknown' }, tee_boxes: null };
+        
+        const [profileResult, teeBoxResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', participant.user_id)
+            .single(),
+          participant.tee_box_id ? supabase
+            .from('tee_boxes')
+            .select('name')
+            .eq('id', participant.tee_box_id)
+            .single() : Promise.resolve({ data: null })
+        ]);
         
         return {
           ...participant,
-          profiles: profile ? { full_name: profile.full_name } : null
+          profiles: profileResult.data ? { full_name: profileResult.data.full_name } : { full_name: 'Unknown' },
+          tee_boxes: teeBoxResult.data ? { name: teeBoxResult.data.name } : null
         };
       })
     );

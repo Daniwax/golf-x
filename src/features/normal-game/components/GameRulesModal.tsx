@@ -16,7 +16,7 @@ import {
   IonSegmentButton,
   IonLabel
 } from '@ionic/react';
-import { closeOutline, trophyOutline, golfOutline, calculatorOutline, diceOutline } from 'ionicons/icons';
+import { closeOutline, trophyOutline, golfOutline, calculatorOutline, diceOutline, eyeOutline } from 'ionicons/icons';
 import { handicapTypes, scoringMethods } from '../rules';
 import type { HandicapTypeKey, ScoringMethodKey } from '../rules';
 import ReactMarkdown from 'react-markdown';
@@ -53,6 +53,9 @@ const GameRulesModal: React.FC<GameRulesModalProps> = ({
   // Get the appropriate rules based on mode
   const rulesCollection = mode === 'handicap' ? handicapTypes : scoringMethods;
   const currentRule = rulesCollection[selectedRule as keyof typeof rulesCollection];
+  
+  // If the current rule doesn't exist, fall back to the first available rule
+  const validRule = currentRule || Object.values(rulesCollection)[0];
 
   // Icons for different rule types
   const getIcon = (key: string) => {
@@ -62,6 +65,7 @@ const GameRulesModal: React.FC<GameRulesModalProps> = ({
       stroke_play: golfOutline,
       none: calculatorOutline,
       random: diceOutline,
+      ghost: eyeOutline,
       // Scoring icons
       net_score: calculatorOutline,
       stableford: trophyOutline,
@@ -128,10 +132,10 @@ const GameRulesModal: React.FC<GameRulesModalProps> = ({
               className="format-chip-glass"
             >
               <IonIcon icon={getIcon(selectedRule)} />
-              <IonLabel>{currentRule.title}</IonLabel>
+              <IonLabel>{validRule.title}</IonLabel>
             </IonChip>
             <IonNote style={{ fontSize: '14px', textAlign: 'center' }}>
-              {currentRule.subtitle}
+              {validRule.subtitle}
             </IonNote>
           </div>
 
@@ -161,7 +165,7 @@ const GameRulesModal: React.FC<GameRulesModalProps> = ({
                       <pre className="md-code-block">{children}</pre>
                 }}
               >
-                {currentRule.content}
+                {validRule.content}
               </ReactMarkdown>
             </IonCardContent>
           </IonCard>

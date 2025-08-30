@@ -1,10 +1,10 @@
 export const randomHandicap = {
   id: 'random',
-  title: 'Random Handicap',
-  subtitle: 'Fun mode - strokes distributed randomly',
+  title: 'Lucky Draw',
+  subtitle: 'Fair handicaps with random distribution',
   content: `
 ## Overview
-Random Handicap adds an element of chance to the game by distributing strokes randomly among players. Perfect for casual rounds where fun takes priority over competition.
+Lucky Draw adds an element of chance to the game by distributing strokes randomly among players. Perfect for casual rounds where fun takes priority over competition.
 
 ## How It Works
 - Strokes are **randomly assigned** each round
