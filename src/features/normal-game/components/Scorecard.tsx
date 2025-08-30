@@ -95,7 +95,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
     return score?.hole_handicap_strokes || 0;
   };
 
-  const getScoreDisplay = (userId: string, holeNumber: number, par: number): React.ReactNode => {
+  const getScoreDisplay = (userId: string, holeNumber: number): React.ReactNode => {
     const strokes = getScore(userId, holeNumber);
     if (strokes === null) return '-';
     

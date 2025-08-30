@@ -45,14 +45,12 @@ import {
   Flag, 
   Trophy, 
   Star, 
-  Ruler,
   Phone,
   Globe,
   Info,
   Target,
   BarChart3,
   Home,
-  Layers,
   TrendingUp
 } from 'lucide-react';
 
@@ -292,23 +290,23 @@ const CourseDetail: React.FC = () => {
     return amenityMap.filter(item => amenities[item.key]);
   };
 
-  const getTeeColor = (color: string) => {
-    const colorMap: { [key: string]: string } = {
-      'black': '#000000',
-      'blue': '#3B82F6',
-      'white': '#FFFFFF',
-      'yellow': '#FDE047',
-      'red': '#EF4444',
-      'green': '#10B981',
-      'gold': '#F59E0B'
-    };
-    return colorMap[color.toLowerCase()] || '#9CA3AF';
-  };
+  // const getTeeColor = (color: string) => {
+  //   const colorMap: { [key: string]: string } = {
+  //     'black': '#000000',
+  //     'blue': '#3B82F6',
+  //     'white': '#FFFFFF',
+  //     'yellow': '#FDE047',
+  //     'red': '#EF4444',
+  //     'green': '#10B981',
+  //     'gold': '#F59E0B'
+  //   };
+  //   return colorMap[color.toLowerCase()] || '#9CA3AF';
+  // };
 
-  const getSelectedTeeData = () => {
-    if (!selectedTee || !teeBoxes) return null;
-    return teeBoxes.find(tee => tee.id === selectedTee);
-  };
+  // const getSelectedTeeData = () => {
+  //   if (!selectedTee || !teeBoxes) return null;
+  //   return teeBoxes.find(tee => tee.id === selectedTee);
+  // };
 
   // Helper function for getting hole distances - kept for future use
 

@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonTitle,
   IonToolbar,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonSegment,
   IonSegmentButton,
   IonLabel,
@@ -16,8 +12,6 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonItem,
-  IonNote,
   IonProgressBar,
   IonChip,
   IonSpinner,
@@ -30,12 +24,10 @@ import {
   statsChartOutline,
   golfOutline,
   trophyOutline,
-  flagOutline
 } from 'ionicons/icons';
 import { useAuth } from '../lib/useAuth';
 import { useRefresher } from '../lib/useRefresher';
 import { useHoleStats } from '../hooks/useHoleStats';
-import type { HoleStatistic, ParPerformance } from '../services/data/StatsDataService';
 
 const HoleStats: React.FC = () => {
   const { user } = useAuth();

@@ -8,7 +8,7 @@ import {
   IonBackButton,
   IonIcon
 } from '@ionic/react';
-import { trophyOutline, addCircleOutline, peopleOutline, flagOutline } from 'ionicons/icons';
+import { trophyOutline, addCircleOutline, peopleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import '../../styles/golf_style.css';
 

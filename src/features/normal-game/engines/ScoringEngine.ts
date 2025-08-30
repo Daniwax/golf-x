@@ -38,7 +38,7 @@ export interface LeaderboardEntry {
   playerId: string;
   playerName: string;
   score: number; // Always numeric for proper sorting
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export type ScoringMethod = 'stroke_play' | 'stableford' | 'match_play' | 'skins';
@@ -318,9 +318,9 @@ export class ScoringEngine {
   ): LeaderboardEntry[] {
     const entries: LeaderboardEntry[] = scorecards.map(card => {
       let totalPoints = 0;
-      const holeDetails: any[] = [];
+      const holeDetails: Array<{ hole: number; strokes: number; points: number; par: number }> = [];
       
-      card.holes.forEach((hole, index) => {
+      card.holes.forEach((hole) => {
         let strokes = hole.strokes;
         
         // Apply handicap strokes if included
@@ -594,7 +594,7 @@ export class ScoringEngine {
   ): LeaderboardEntry[] {
     const skinWins = new Map<string, number[]>();
     const skinValues = new Map<number, number>(); // Hole number -> skin value
-    const holeDetails: any[] = []; // Track each hole's calculation for debugging
+    const holeDetails: Array<{ hole: number; winner: string | null; strokes: Map<string, number>; value: number }> = []; // Track each hole's calculation for debugging
     
     // Initialize
     scorecards.forEach(card => {

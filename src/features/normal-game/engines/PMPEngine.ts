@@ -350,8 +350,8 @@ export class PMPEngine {
     
     // Store the original holes for reference
     let actualHoles = holes;
-    const holesPlayed = holes.length;
-    const adjustmentFactor = holesPlayed / 18;
+    // const holesPlayed = holes.length;
+    // const adjustmentFactor = holesPlayed / 18;
     
     // Fetch ghost scorecards if game IDs are provided
     const ghostScorecards = new Map<string, Map<number, { strokes: number; putts: number }>>();

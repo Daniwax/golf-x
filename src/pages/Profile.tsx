@@ -11,7 +11,6 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonButton,
   IonIcon,
   IonItem,
   IonLabel,
@@ -39,7 +38,7 @@ import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { StatsGrid } from '../components/profile/StatsGrid';
 
 const Profile: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const history = useHistory();
   
   // Use our new hook for all data

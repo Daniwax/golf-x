@@ -6,35 +6,24 @@ import {
   IonTitle,
   IonToolbar,
   IonButtons,
-  IonBackButton,
   IonButton,
   IonSegment,
   IonSegmentButton,
   IonLabel,
   IonSpinner,
-  IonCardContent,
-  IonIcon,
-  IonChip,
-  IonNote
+  IonIcon
 } from '@ionic/react';
 import { 
   trophyOutline,
   calendarOutline,
   informationCircleOutline,
-  golfOutline,
   flagOutline,
-  medalOutline,
   ribbonOutline,
-  sparklesOutline,
   chevronBackOutline,
-  timeOutline,
-  locationOutline,
-  starOutline,
-  roseOutline
+  starOutline
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import { format } from 'date-fns';
-import { profileGameService } from '../services/profileGameService';
 import { gameService } from '../services/gameService';
 import { supabase } from '../../../lib/supabase';
 import ScorecardDisplay from './ScorecardDisplay';
@@ -181,7 +170,7 @@ const ViewCompletedGame: React.FC = () => {
     return rules[scoringMethod] || rules['stroke_play'];
   };
 
-  // Legacy function for backward compatibility
+  /* Legacy function for backward compatibility - currently unused
   const getGameRules = (format: string) => {
     const rules: Record<string, { gameType: string[], scoring: string[] }> = {
       'stroke_play': {
@@ -321,6 +310,7 @@ const ViewCompletedGame: React.FC = () => {
     
     return rules[format] || rules['stroke_play'];
   };
+  */
 
 
   useEffect(() => {
@@ -402,13 +392,13 @@ const ViewCompletedGame: React.FC = () => {
     }
   }, [gameId, history]);
 
-  const formatDate = (dateStr: string) => {
-    try {
-      return format(new Date(dateStr), 'MMMM d, yyyy • h:mm a');
-    } catch {
-      return 'Date not available';
-    }
-  };
+  // const formatDate = (dateStr: string) => {
+  //   try {
+  //     return format(new Date(dateStr), 'MMMM d, yyyy • h:mm a');
+  //   } catch {
+  //     return 'Date not available';
+  //   }
+  // };
 
   const getWeatherIcon = (condition: string) => {
     switch (condition) {
@@ -509,11 +499,11 @@ const ViewCompletedGame: React.FC = () => {
   console.log('getScoringTypeLabel result:', getScoringTypeLabel(game.scoring_method));
   console.log('=== END DETAILED DEBUG ===');
   
-  const winner = participants && Array.isArray(participants) && participants.length > 0
-    ? participants.find((p) => 
-        p.total_strokes === Math.min(...participants.map((p) => p.total_strokes).filter((s) => s !== null))
-      )
-    : null;
+  // const winner = participants && Array.isArray(participants) && participants.length > 0
+  //   ? participants.find((p) => 
+  //       p.total_strokes === Math.min(...participants.map((p) => p.total_strokes).filter((s) => s !== null))
+  //     )
+  //   : null;
 
   return (
     <IonPage>

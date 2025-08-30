@@ -14,17 +14,11 @@ import {
   IonTitle,
   IonRefresher,
   IonRefresherContent,
-  IonSpinner,
-  IonCard,
-  IonCardContent,
-  IonItem,
-  IonLabel,
-  IonText,
-  IonChip
+  IonSpinner
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { useCourseList } from '../../hooks/useCourses';
-import { Zap, Trophy, Target, Clock, ChevronRight, Search, Star, BarChart3, Play } from 'lucide-react';
+import { Trophy, Target, ChevronRight, Star, BarChart3, Play } from 'lucide-react';
 
 const CoursesList: React.FC = () => {
   const history = useHistory();
@@ -38,8 +32,8 @@ const CoursesList: React.FC = () => {
     courseImages, 
     loading, 
     error, 
-    refresh, 
-    search 
+    refresh
+    // search 
   } = useCourseList();
 
   // Process course data with stats and tee boxes
@@ -112,26 +106,26 @@ const CoursesList: React.FC = () => {
     return `${Math.round(meters)} m`;
   };
 
-  const getDifficultyBadge = (rating: number | undefined) => {
-    if (!rating) return null;
-    
-    let color = 'emerald';
-    let label = 'Easy';
-    
-    if (rating >= 72) {
-      color = 'red';
-      label = 'Hard';
-    } else if (rating >= 70) {
-      color = 'yellow';
-      label = 'Medium';
-    }
-    
-    return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-${color}-100 text-${color}-800`}>
-        {label}
-      </span>
-    );
-  };
+  // const getDifficultyBadge = (rating: number | undefined) => {
+  //   if (!rating) return null;
+  //   
+  //   let color = 'emerald';
+  //   let label = 'Easy';
+  //   
+  //   if (rating >= 72) {
+  //     color = 'red';
+  //     label = 'Hard';
+  //   } else if (rating >= 70) {
+  //     color = 'yellow';
+  //     label = 'Medium';
+  //   }
+  //   
+  //   return (
+  //     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-${color}-100 text-${color}-800`}>
+  //       {label}
+  //     </span>
+  //   );
+  // };
 
   const processImageData = (imageData: string | undefined, mimeType: string | undefined) => {
     if (!imageData) return '/assets/golf-course-placeholder.jpg';

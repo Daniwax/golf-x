@@ -9,7 +9,7 @@ import type {
   PlayerConfig
 } from '../types';
 import type { MatchHandicapResult } from '../engines/MatchHandicapEngine';
-import type { PlayerMatchPar } from '../engines/PMPEngine';
+// PlayerMatchPar type available from '../engines/PMPEngine' if needed
 import { 
   calculateCourseHandicap, 
   calculatePlayingHandicap, 
@@ -189,13 +189,13 @@ class GameService {
   // Create a new game using engine-calculated handicap data
   async createGameWithEngines(
     gameData: CreateGameData,
-    matchHandicapResults: MatchHandicapResult[],
-    pmpResults: Map<string, PlayerMatchPar[]>,
-    holes: Array<{
-      hole_number: number;
-      par: number;
-      handicap_index: number;
-    }>
+    matchHandicapResults: MatchHandicapResult[]
+    // pmpResults: Map<string, PlayerMatchPar[]>,
+    // holes: Array<{
+    //   hole_number: number;
+    //   par: number;
+    //   handicap_index: number;
+    // }>
   ): Promise<Game> {
     if (!supabase) throw new Error('Supabase not configured');
     

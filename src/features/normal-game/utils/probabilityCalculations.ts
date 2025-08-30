@@ -17,7 +17,7 @@ export function calculateSuccessProbability(
   currentStrokes: number,
   holesPlayed: number,
   personalPar: number,
-  playingHandicap: number
+  _playingHandicap: number
 ): number {
   // If no holes played yet, base probability on handicap
   if (holesPlayed === 0) {
@@ -25,7 +25,7 @@ export function calculateSuccessProbability(
     return 50;
   }
 
-  const holesRemaining = 18 - holesPlayed;
+  // const holesRemaining = 18 - holesPlayed;
   
   // Simple calculation:
   // 1. What should they have scored by now?

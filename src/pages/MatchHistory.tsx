@@ -7,24 +7,18 @@ import {
   IonTitle,
   IonButtons,
   IonBackButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonItem,
   IonLabel,
-  IonBadge,
   IonSpinner,
   IonIcon,
   IonSegment,
   IonSegmentButton,
-  IonNote,
   IonButton,
   IonRippleEffect
 } from '@ionic/react';
 import { 
   trophyOutline, 
-  flagOutline, 
+ 
   calendarOutline,
   locationOutline,
   peopleOutline,

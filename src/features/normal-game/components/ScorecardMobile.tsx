@@ -11,9 +11,9 @@ import {
 import { supabase } from '../../../lib/supabase';
 import type { Game, GameParticipant, GameHoleScore } from '../types';
 import { handicapTypes, scoringMethods } from '../rules';
-import { 
-  calculatePersonalPars
-} from '../utils/handicapCalculations';
+// import { 
+//   calculatePersonalPars
+// } from '../utils/handicapCalculations';
 
 interface ScorecardProps {
   gameId: string;
@@ -226,12 +226,12 @@ const ScorecardMobile: React.FC<ScorecardProps> = ({
   });
 
   // Calculate totals for all players
-  const playerTotals = participants.map(p => ({
-    participant: p,
-    front: calculateTotal(p.user_id, 1, 9),
-    back: calculateTotal(p.user_id, 10, 18),
-    total: calculateTotal(p.user_id, 1, 18)
-  }));
+  // const playerTotals = participants.map(p => ({
+  //   participant: p,
+  //   front: calculateTotal(p.user_id, 1, 9),
+  //   back: calculateTotal(p.user_id, 10, 18),
+  //   total: calculateTotal(p.user_id, 1, 18)
+  // }));
 
   const parFront = calculateParTotal(1, 9);
   const parBack = calculateParTotal(10, 18);

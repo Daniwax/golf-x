@@ -102,7 +102,7 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
 
       // Calculate leaderboard using scoring engine
       const scoringMethod = (gameFormat as ScoringMethod) || 'stroke_play';
-      const includeHandicap = participants.some((p: any) => p.handicap_index > 0);
+      const includeHandicap = participants.some((p) => (p as { handicap_index?: number }).handicap_index && (p as { handicap_index?: number }).handicap_index! > 0);
       
       console.log(`🏆 CompletedLeaderboard calling ScoringEngine:`, {
         gameFormat,

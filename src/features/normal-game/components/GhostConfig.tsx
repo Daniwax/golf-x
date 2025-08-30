@@ -230,7 +230,8 @@ const GhostConfig: React.FC = () => {
     });
   };
 
-  const ghostTypeInfo = GHOST_TYPES[ghostType];
+  // Ghost type info available but not currently used in render
+  // const ghostTypeInfo = GHOST_TYPES[ghostType];
 
   return (
     <IonPage className="golf-letter-container">
@@ -257,7 +258,7 @@ const GhostConfig: React.FC = () => {
                 <div
                   key={key}
                   className={`golf-radio-item ${ghostType === key ? 'selected' : ''}`}
-                  onClick={() => setGhostType(key as any)}
+                  onClick={() => setGhostType(key as keyof typeof GHOST_TYPES)}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <IonIcon icon={info.icon} style={{ fontSize: '24px', color: '#2a5434' }} />
