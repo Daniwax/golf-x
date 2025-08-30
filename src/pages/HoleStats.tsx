@@ -35,7 +35,7 @@ const HoleStats: React.FC = () => {
   const [selectedHole, setSelectedHole] = useState<number | null>(null);
   
   // Use the hook for all data fetching
-  const { holeStats, parPerformance, loading, error, refresh } = useHoleStats(user?.id);
+  const { holeStats, parPerformance, loading, refresh } = useHoleStats(user?.id);
 
   const { RefresherComponent } = useRefresher(refresh);
 

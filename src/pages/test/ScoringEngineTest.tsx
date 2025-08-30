@@ -51,13 +51,14 @@ interface HoleScore {
   playerMatchPar?: number; // Player's personal par based on handicap
 }
 
-interface LeaderboardEntry {
-  position: number;
-  playerId: string;
-  playerName: string;
-  score: number | string; // Could be strokes, points, or match play result
-  details?: Record<string, unknown>; // Method-specific details
-}
+// LeaderboardEntry interface - commented out as it's not currently used
+// interface LeaderboardEntry {
+//   position: number;
+//   playerId: string;
+//   playerName: string;
+//   score: number | string; // Could be strokes, points, or match play result
+//   details?: Record<string, unknown>; // Method-specific details
+// }
 
 const ScoringEngineTest: React.FC = () => {
   // State

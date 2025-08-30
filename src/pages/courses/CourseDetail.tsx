@@ -187,7 +187,7 @@ const CourseDetail: React.FC = () => {
     if (!selectedTeeData) return [];
     
     return holes.map(hole => {
-      const distance = hole.hole_distances?.find((d: any) => d.tee_box_id === selectedTee);
+      const distance = hole.hole_distances?.find((d: { tee_box_id?: number }) => d.tee_box_id === selectedTee);
       return {
         hole: hole.hole_number,
         par: hole.par,
@@ -771,7 +771,7 @@ const CourseDetail: React.FC = () => {
                   padding: '0'
                 }}>
                   {holes.map(hole => {
-                    const distance = hole.hole_distances?.find((d: any) => d.tee_box_id === selectedTee);
+                    const distance = hole.hole_distances?.find((d: { tee_box_id?: number }) => d.tee_box_id === selectedTee);
                     const holeStat = holeStats.find(stat => stat.holeNumber === hole.hole_number);
                     
                     // Calculate colors for Best, Avg, and Friends Avg columns

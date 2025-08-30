@@ -7,7 +7,6 @@ import {
   IonTitle,
   IonButtons,
   IonBackButton,
-  IonItem,
   IonLabel,
   IonSpinner,
   IonIcon,
@@ -20,8 +19,6 @@ import {
   trophyOutline, 
  
   calendarOutline,
-  locationOutline,
-  peopleOutline,
   golfOutline,
   medalOutline,
   starOutline,

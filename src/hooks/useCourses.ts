@@ -8,10 +8,10 @@ import { dataService } from '../services/data/DataService';
 import { useAuth } from '../lib/useAuth';
 
 export interface UseCourseListResult {
-  courses: any[];
-  teeBoxes: any[];
-  playerStats: any[];
-  courseImages: any[];
+  courses: Array<{ id: number; name: string; city?: string; state?: string; country?: string; par?: number; holes?: number }>;
+  teeBoxes: Array<{ id: number; course_id: number; name: string; color?: string; slope?: number; rating?: number }>;
+  playerStats: Array<{ course_id: number; rounds_played: number; best_score?: number; average_score?: number }>;
+  courseImages: Array<{ id: number; course_id: number; image_url: string; is_primary?: boolean }>;
   loading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
@@ -19,12 +19,12 @@ export interface UseCourseListResult {
 }
 
 export interface UseCourseDetailResult {
-  course: any | null;
-  teeBoxes: any[];
-  holes: any[];
-  amenities: any | null;
-  courseImages: any[];
-  playerStats: any[];
+  course: { id: number; name: string; city?: string; state?: string; country?: string; par?: number; holes?: number } | null;
+  teeBoxes: Array<{ id: number; course_id: number; name: string; color?: string; slope?: number; rating?: number }>;
+  holes: Array<{ hole_number: number; par: number; handicap_index?: number; yardage?: number }>;
+  amenities: Record<string, boolean> | null;
+  courseImages: Array<{ id: number; course_id: number; image_url: string; is_primary?: boolean }>;
+  playerStats: Array<{ course_id: number; rounds_played: number; best_score?: number; average_score?: number }>;
   loading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
@@ -35,10 +35,10 @@ export interface UseCourseDetailResult {
  */
 export function useCourseList(): UseCourseListResult {
   const { user } = useAuth();
-  const [courses, setCourses] = useState<any[]>([]);
-  const [teeBoxes, setTeeBoxes] = useState<any[]>([]);
-  const [playerStats, setPlayerStats] = useState<any[]>([]);
-  const [courseImages, setCourseImages] = useState<any[]>([]);
+  const [courses, setCourses] = useState<UseCourseListResult['courses']>([]);
+  const [teeBoxes, setTeeBoxes] = useState<UseCourseListResult['teeBoxes']>([]);
+  const [playerStats, setPlayerStats] = useState<UseCourseListResult['playerStats']>([]);
+  const [courseImages, setCourseImages] = useState<UseCourseListResult['courseImages']>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -60,7 +60,7 @@ export function useCourseList(): UseCourseListResult {
         return;
       }
 
-      const courseIds = coursesData.map((c: any) => c.id);
+      const courseIds = coursesData.map((c) => c.id);
 
       // Load related data in parallel
       const [teeData, statsData, imagesData] = await Promise.all([
@@ -73,7 +73,7 @@ export function useCourseList(): UseCourseListResult {
         // Get images for all courses
         Promise.all(courseIds.map((id: number) => 
           dataService.courses.getCourseImages(id)
-            .then(images => images?.filter((img: any) => img.image_type === 'default'))
+            .then(images => images?.filter((img) => (img as { image_type?: string }).image_type === 'default'))
             .catch(() => [])
         )).then(results => results.flat())
       ]);
@@ -121,12 +121,12 @@ export function useCourseList(): UseCourseListResult {
  */
 export function useCourseDetail(courseId: string): UseCourseDetailResult {
   const { user } = useAuth();
-  const [course, setCourse] = useState<any | null>(null);
-  const [teeBoxes, setTeeBoxes] = useState<any[]>([]);
-  const [holes, setHoles] = useState<any[]>([]);
-  const [amenities, setAmenities] = useState<any | null>(null);
-  const [courseImages, setCourseImages] = useState<any[]>([]);
-  const [playerStats, setPlayerStats] = useState<any[]>([]);
+  const [course, setCourse] = useState<UseCourseDetailResult['course']>(null);
+  const [teeBoxes, setTeeBoxes] = useState<UseCourseDetailResult['teeBoxes']>([]);
+  const [holes, setHoles] = useState<UseCourseDetailResult['holes']>([]);
+  const [amenities, setAmenities] = useState<UseCourseDetailResult['amenities']>(null);
+  const [courseImages, setCourseImages] = useState<UseCourseDetailResult['courseImages']>([]);
+  const [playerStats, setPlayerStats] = useState<UseCourseDetailResult['playerStats']>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

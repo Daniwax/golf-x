@@ -138,7 +138,7 @@ export class CacheService {
   /**
    * Check if cache entry is expired
    */
-  private isExpired(entry: CacheEntry<any>): boolean {
+  private isExpired<T>(entry: CacheEntry<T>): boolean {
     return Date.now() - entry.timestamp > entry.ttl;
   }
 

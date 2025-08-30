@@ -279,11 +279,12 @@ describe('CoursesList Component', () => {
 
     // Simulate refresh event
     screen.getByTestId('ion-refresher');
-    const refreshEvent = {
-      detail: {
-        complete: jest.fn()
-      }
-    } as { detail: { complete: jest.Mock } };
+    // Refresh event structure for future use when implementing refresh test
+    // const refreshEvent = {
+    //   detail: {
+    //     complete: jest.fn()
+    //   }
+    // } as { detail: { complete: jest.Mock } };
 
     // This would normally be triggered by Ionic's refresh gesture
     // For testing, we'll just verify the refresh function exists

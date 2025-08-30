@@ -80,7 +80,7 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleSaveProfile = async (updates: any) => {
+  const handleSaveProfile = async (updates: { full_name?: string; bio?: string; handicap?: number; avatar_url?: string }) => {
     const success = await updateProfile(updates);
     if (success) {
       setToastMessage('Profile updated successfully');

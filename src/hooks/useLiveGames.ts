@@ -7,21 +7,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '../services/data/DataService';
 import { useAuth } from '../lib/useAuth';
 import type { UseDataResult } from '../services/data/types';
+import type { Game, GameParticipant, GameHoleScore } from '../features/normal-game/types';
 
 export interface LiveGame {
-  game: {
-    id: string;
-    course_id: string;
-    status: string;
-    scoring_format: string;
-    created_at: string;
-    current_hole?: number;
-    num_holes?: number; // Add total holes info
-  };
-  participants: any[];
+  game: Game;
+  participants: GameParticipant[];
   currentHole: number;
   holesCompleted: number;
-  totalHoles: number; // Add total holes for proper calculations
+  totalHoles: number;
   courseName?: string;
 }
 
@@ -55,7 +48,7 @@ export function useLiveGames(): UseDataResult<LiveGame[]> {
 
       // Transform and enrich the data
       const liveGameData = await Promise.all(
-        activeGames.map(async (game: any) => {
+        activeGames.map(async (game: Game) => {
           try {
             // Get detailed game info using existing gameService
             // This will be migrated to DataService later
@@ -63,8 +56,8 @@ export function useLiveGames(): UseDataResult<LiveGame[]> {
             const gameDetails = await gameService.getGameDetails(game.id);
             
             // Calculate current hole and holes completed
-            const scoresWithStrokes = gameDetails.scores.filter((s: any) => s.strokes);
-            const holesPlayed = new Set(scoresWithStrokes.map((s: any) => s.hole_number));
+            const scoresWithStrokes = gameDetails.scores.filter((s: GameHoleScore) => s.strokes);
+            const holesPlayed = new Set(scoresWithStrokes.map((s: GameHoleScore) => s.hole_number));
             const holesCompleted = holesPlayed.size;
             const totalHoles = gameDetails.game?.num_holes || 18;
             const currentHole = Math.min(Math.max(...Array.from(holesPlayed), 0) + 1, totalHoles);
@@ -110,15 +103,20 @@ export function useLiveGames(): UseDataResult<LiveGame[]> {
   return { data, loading, error, refresh };
 }
 
+// History interface for Ionic Router
+interface IonicHistory {
+  listen: (callback: (location: { pathname: string }) => void) => (() => void);
+}
+
 /**
  * Hook that also listens to navigation for refreshing
  * Useful for Home page that needs to refresh when navigated back to
  */
-export function useLiveGamesWithNavigation(history: any) {
+export function useLiveGamesWithNavigation(history: IonicHistory) {
   const liveGamesResult = useLiveGames();
 
   useEffect(() => {
-    const unlistenHistory = history.listen((location: any) => {
+    const unlistenHistory = history.listen((location: { pathname: string }) => {
       if (location.pathname === '/home') {
         console.log('Navigated to home - refreshing live games');
         // Small delay to ensure navigation is complete
