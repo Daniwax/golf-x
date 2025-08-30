@@ -7,7 +7,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import LiveMatchCard from '../features/normal-game/components/LiveMatchCard';
 import { useAuth } from '../lib/useAuth';
-import { sessionTracker } from '../services/sessionTrackingService';
+// Dynamic import for sessionTracker to avoid bundling conflicts
 import '../styles/golf_style.css';
 
 const Home: React.FC = () => {
@@ -17,7 +17,9 @@ const Home: React.FC = () => {
   // Track app entry when Home loads
   useEffect(() => {
     if (user?.id) {
-      sessionTracker.startSession(user.id, '/home');
+      import('../services/sessionTrackingService').then(({ sessionTracker }) => {
+        sessionTracker.startSession(user.id, '/home');
+      });
     }
   }, [user?.id]);
 
