@@ -4,12 +4,12 @@ http://ionicframework.com/docs/theming/ */
 /** Ionic CSS Variables **/
 :root {
   /** Primary colors for Golf App **/
-  --ion-color-primary: #2DD4BF;
-  --ion-color-primary-rgb: 45, 212, 191;
+  --ion-color-primary: #2a5434;
+  --ion-color-primary-rgb: 42, 84, 52;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #28C3AA;
-  --ion-color-primary-tint: #42D7C5;
+  --ion-color-primary-shade: #1f3e28;
+  --ion-color-primary-tint: #3d7c47;
 
   /** Secondary colors **/
   --ion-color-secondary: #0EA5E9;

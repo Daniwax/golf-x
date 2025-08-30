@@ -148,11 +148,18 @@ interface GameHistory {
   scoringMethod?: string; // Add scoring method field
 }
 
+// Cache for match history
+const matchHistoryCache = new Map<string, { data: GameHistory[]; timestamp: number; hasMore: boolean }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const PAGE_SIZE = 5; // Load 5 games at a time
+
 const MatchHistory: React.FC = () => {
   const { user } = useAuth();
   const history = useHistory();
   const [games, setGames] = useState<GameHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [selectedSegment, setSelectedSegment] = useState<'all' | 'completed'>('all');
   
   // Get course images from useCourseList
@@ -160,31 +167,63 @@ const MatchHistory: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
-      loadGames();
+      loadInitialGames();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const loadGames = async () => {
+  const loadInitialGames = async () => {
+    if (!user?.id) return;
+    
+    // Check cache first
+    const cacheKey = `${user.id}_page_0`;
+    const cached = matchHistoryCache.get(cacheKey);
+    const now = Date.now();
+    
+    if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+      setGames(cached.data);
+      setHasMore(cached.hasMore);
+      setLoading(false);
+      return;
+    }
+    
+    // Load fresh data
+    await loadGames(0, true);
+  };
+
+  const loadGames = async (page = 0, isInitial = false) => {
     if (!user?.id) {
       console.error('[MatchHistory] No user ID found');
       return;
     }
     
-    setLoading(true);
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+    
     try {
-      // Get completed games only
-      const completedGames = await dataService.games.getUserGameHistory(user.id, 50);
+      // Get paginated games - offset by page * PAGE_SIZE
+      const offset = page * PAGE_SIZE;
+      const completedGames = await dataService.games.getUserGameHistory(user.id, PAGE_SIZE + 1, offset);
       
-      // Format completed games and calculate leaderboards
-      if (!completedGames || completedGames.length === 0) {
-        setGames([]);
+      // Check if we have more games than requested (indicates more pages available)
+      const hasMoreGames = completedGames && completedGames.length > PAGE_SIZE;
+      const gamesToProcess = hasMoreGames ? completedGames.slice(0, PAGE_SIZE) : completedGames;
+      
+      if (!gamesToProcess || gamesToProcess.length === 0) {
+        if (isInitial) {
+          setGames([]);
+          setHasMore(false);
+        }
         setLoading(false);
+        setLoadingMore(false);
         return;
       }
       
       const formattedCompleted: GameHistory[] = await Promise.all(
-        (completedGames as unknown as DbGameResponse[]).map(async (game: DbGameResponse) => {
+        (gamesToProcess as unknown as DbGameResponse[]).map(async (game: DbGameResponse) => {
           let leaderboard: LeaderboardResult | undefined;
           let winner = '';
           let winnerScore: number | string = '';
@@ -375,7 +414,21 @@ const MatchHistory: React.FC = () => {
       // Sort by date (most recent first)
       formattedCompleted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
-      setGames(formattedCompleted);
+      // Update games list - append for pagination or replace for initial load
+      if (isInitial) {
+        setGames(formattedCompleted);
+        // Cache initial page
+        const cacheKey = `${user.id}_page_0`;
+        matchHistoryCache.set(cacheKey, { 
+          data: formattedCompleted, 
+          timestamp: Date.now(),
+          hasMore: hasMoreGames 
+        });
+      } else {
+        setGames(prevGames => [...prevGames, ...formattedCompleted]);
+      }
+      
+      setHasMore(hasMoreGames);
     } catch (error) {
       console.error('[MatchHistory] Error loading games:', error);
       // Try to load games without scoring engine calculation as fallback
@@ -403,7 +456,15 @@ const MatchHistory: React.FC = () => {
       }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const loadMoreGames = async () => {
+    if (loadingMore || !hasMore || !user?.id) return;
+    
+    const currentPage = Math.floor(games.length / PAGE_SIZE);
+    await loadGames(currentPage, false);
   };
 
   const filteredGames = games.filter(game => {
@@ -821,6 +882,31 @@ const MatchHistory: React.FC = () => {
                 </div>
               );
             })
+          )}
+          
+          {/* Load More Button */}
+          {hasMore && !loading && (
+            <div style={{ textAlign: 'center', margin: '20px' }}>
+              <IonButton
+                fill="outline"
+                onClick={loadMoreGames}
+                disabled={loadingMore}
+                style={{
+                  '--border-color': 'var(--golf-brown)',
+                  '--color': 'var(--golf-brown)',
+                  '--border-radius': '8px'
+                }}
+              >
+                {loadingMore ? (
+                  <>
+                    <IonSpinner name="crescent" style={{ marginRight: '8px', width: '16px', height: '16px' }} />
+                    Loading...
+                  </>
+                ) : (
+                  'Load More Games'
+                )}
+              </IonButton>
+            </div>
           )}
         </div>
 

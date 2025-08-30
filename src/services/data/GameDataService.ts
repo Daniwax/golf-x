@@ -15,17 +15,17 @@ export class GameDataService {
   }
 
   /**
-   * Get user's completed games
+   * Get user's completed games with pagination support
    */
-  async getUserGameHistory(userId: string, limit: number = 10) {
-    const key = getCacheKey('games', 'history', userId, limit);
+  async getUserGameHistory(userId: string, limit: number = 10, offset: number = 0) {
+    const key = getCacheKey('games', 'history', userId, limit.toString(), offset.toString());
     return this.cache.get(
       key,
       async () => {
         const { profileGameService } = await import('../../features/normal-game/services/profileGameService');
         const games = await profileGameService.getUserCompletedGames(userId);
-        // Apply limit to the results
-        return games.slice(0, limit);
+        // Apply offset and limit to the results
+        return games.slice(offset, offset + limit);
       },
       getTTL('gameHistory')
     );
