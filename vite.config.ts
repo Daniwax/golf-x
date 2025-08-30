@@ -38,6 +38,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB limit
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
