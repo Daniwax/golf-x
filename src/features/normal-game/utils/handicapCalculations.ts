@@ -234,7 +234,7 @@ export function getHoleDifficultyRanking(
  * Calculate match play results (for completed games)
  * This is a placeholder for ViewCompletedGame component
  */
-export function calculateMatchPlayResults(participants: Array<{ user_id: string; profiles?: { full_name: string } }>, _scores: Array<{ user_id: string; hole_number: number; strokes: number }>, _holes: Array<{ hole_number: number; par: number }>): Array<{ user_id: string; total_strokes: number }> {
+export function calculateMatchPlayResults(participants: Array<{ user_id: string; profiles?: { full_name: string } }>): Array<{ user_id: string; total_strokes: number }> {
   if (!Array.isArray(participants) || participants.length === 0) {
     return [];
   }

@@ -17,23 +17,15 @@ import {
 } from '@ionic/react';
 import { 
   trophyOutline, 
- 
   calendarOutline,
-  golfOutline,
-  medalOutline,
-  starOutline,
-  chevronForwardOutline,
-  sparklesOutline,
-  ribbonOutline,
-  playOutline,
-  eyeOutline,
-  timeOutline
+  chevronForwardOutline
 } from 'ionicons/icons';
 import { useAuth } from '../lib/useAuth';
 import { dataService } from '../services/data/DataService';
 import { useHistory } from 'react-router-dom';
 import { useCourseList } from '../hooks/useCourses';
 import { ScoringEngine, type ScoringMethod, type Scorecard as EngineScorecard, type LeaderboardResult } from '../features/normal-game/engines/ScoringEngine';
+import type { GameParticipant, GameHoleScore, Hole } from '../services/data/types';
 import '../styles/championship.css';
 import '../styles/golf_style.css';
 
@@ -73,6 +65,7 @@ const MatchHistory: React.FC = () => {
     if (user?.id) {
       loadGames();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadGames = async () => {
@@ -94,7 +87,7 @@ const MatchHistory: React.FC = () => {
       }
       
       const formattedCompleted: GameHistory[] = await Promise.all(
-        completedGames.map(async (game: any) => {
+        completedGames.map(async (game: { id: string; courseId: number; numHoles?: number; scoringMethod?: string; handicapType?: string; courseName?: string; }) => {
           let leaderboard: LeaderboardResult | undefined;
           let winner = '';
           let winnerScore: number | string = '';
@@ -114,14 +107,14 @@ const MatchHistory: React.FC = () => {
               const holes = await dataService.courses.getCourseHoles(game.courseId);
               
               // Build scorecards for ScoringEngine
-              const engineScorecards: EngineScorecard[] = participants.map((participant: any) => {
-                const playerScores = holeScores.filter((hs: any) => hs.user_id === participant.user_id);
+              const engineScorecards: EngineScorecard[] = participants.map((participant: GameParticipant) => {
+                const playerScores = holeScores.filter((hs: GameHoleScore) => hs.user_id === participant.user_id);
                 // Only include holes up to the game's num_holes limit
                 const gameHoleCount = game.numHoles || 18;
                 const playerHoles = holes
-                  .filter((hole: any) => hole.hole_number <= gameHoleCount)
-                  .map((hole: any) => {
-                    const score = playerScores.find((ps: any) => ps.hole_number === hole.hole_number);
+                  .filter((hole: Hole) => hole.hole_number <= gameHoleCount)
+                  .map((hole: Hole) => {
+                    const score = playerScores.find((ps: GameHoleScore) => ps.hole_number === hole.hole_number);
                     return {
                       holeNumber: hole.hole_number,
                       par: hole.par,
@@ -136,8 +129,8 @@ const MatchHistory: React.FC = () => {
                   userId: participant.user_id,
                   playerName: participant.display_name || 'Player',
                   holes: playerHoles,
-                  totalStrokes: playerHoles.reduce((sum: number, h: any) => sum + h.strokes, 0),
-                  totalPutts: playerHoles.reduce((sum: number, h: any) => sum + h.putts, 0),
+                  totalStrokes: playerHoles.reduce((sum: number, h: { strokes: number }) => sum + h.strokes, 0),
+                  totalPutts: playerHoles.reduce((sum: number, h: { putts: number }) => sum + h.putts, 0),
                   courseHandicap: participant.course_handicap || 0,
                   playingHandicap: participant.playing_handicap || 0
                 };
@@ -153,7 +146,7 @@ const MatchHistory: React.FC = () => {
               
               // Calculate leaderboard using the game's scoring method
               const scoringMethod = (game.scoring_method || 'stroke_play') as ScoringMethod;
-              const includeHandicap = participants.some((p: any) => p.handicap_index > 0);
+              const includeHandicap = participants.some((p: GameParticipant) => (p as GameParticipant & { handicap_index?: number }).handicap_index && (p as GameParticipant & { handicap_index?: number }).handicap_index! > 0);
               scoringType = includeHandicap ? 'Net' : 'Gross';
               
               console.log(`🔧 Scoring params for ${game.id}:`, {
@@ -322,7 +315,16 @@ const MatchHistory: React.FC = () => {
       // Try to load games without scoring engine calculation as fallback
       try {
         const completedGames = await dataService.games.getUserGameHistory(user.id, 50);
-        const simpleGames = completedGames.map((game: any) => ({
+        const simpleGames = completedGames.map((game: { 
+          id?: string; 
+          gameDescription?: string; 
+          courseName?: string; 
+          completedAt?: string; 
+          totalStrokes?: number; 
+          netScore?: number; 
+          numHoles?: number; 
+          scoringMethod?: string; 
+        }) => ({
           id: game.id || `completed-${Date.now()}-${Math.random()}`,
           name: game.gameDescription || `Round at ${game.courseName}`,
           date: game.completedAt ? new Date(game.completedAt).toLocaleDateString() : 'Unknown date',
@@ -379,41 +381,6 @@ const MatchHistory: React.FC = () => {
     return types[scoringMethod] || scoringMethod.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
   
-  const getScoringLabel = (game: GameHistory) => {
-    if (!game.leaderboard || !game.winnerScore) return '';
-    
-    // Get the actual score value and format based on game type
-    const score = game.winnerScore;
-    
-    switch (game.gameType) {
-      case 'stroke_play':
-        // For stroke play, winnerScore is already the vs par value (like "-2" or "+3" or "E")
-        // Just return it as is since it's the important metric
-        return score.toString();
-        
-      case 'match_play':
-        // Match play shows different formats based on player count
-        if (game.participants === 2) {
-          // Head-to-head shows match result like "Won 3&2" or "2 up"
-          return typeof score === 'string' ? score : `${score} points`;
-        } else {
-          // Multi-player shows points from round-robin
-          return `${score} points`;
-        }
-        
-      case 'stableford':
-        // Stableford uses points (higher is better)
-        return `${score} points`;
-        
-      case 'skins':
-        // Skins shows number of skins won
-        return `${score} skins`;
-        
-      default:
-        // Default to stroke play format
-        return score?.toString() || '';
-    }
-  };
 
   const getUserScoringLabel = (game: GameHistory) => {
     if (!game.userScore) return '';
@@ -439,16 +406,6 @@ const MatchHistory: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'var(--champ-green-dark)';
-      case 'in_progress':
-        return 'var(--champ-gold)';
-      default:
-        return 'var(--champ-gray)';
-    }
-  };
 
   const getTotalDiff = (totalStrokes: number | undefined) => {
     if (!totalStrokes) return null;
@@ -660,7 +617,7 @@ const MatchHistory: React.FC = () => {
               </p>
             </div>
           ) : (
-            filteredGames.map((game, index) => {
+            filteredGames.map((game) => {
               const courseImage = getCourseImage(game.course_id);
               const totalDiff = getTotalDiff(game.totalStrokes);
               

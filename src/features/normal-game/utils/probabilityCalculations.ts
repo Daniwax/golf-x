@@ -16,8 +16,7 @@
 export function calculateSuccessProbability(
   currentStrokes: number,
   holesPlayed: number,
-  personalPar: number,
-  _playingHandicap: number
+  personalPar: number
 ): number {
   // If no holes played yet, base probability on handicap
   if (holesPlayed === 0) {

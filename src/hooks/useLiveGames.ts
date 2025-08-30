@@ -125,6 +125,7 @@ export function useLiveGamesWithNavigation(history: IonicHistory) {
     });
 
     return unlistenHistory;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history, liveGamesResult.refresh]);
 
   return liveGamesResult;
