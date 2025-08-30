@@ -12,8 +12,8 @@ Match Play scoring is a hole-by-hole competition where each hole is a separate c
 ---
 
 ## Scoring System
-- **Win a hole**: 1 point
-- **Halve a hole**: 0.5 points
+- **Win a hole**: 2 point
+- **Halve a hole**: 1 points
 - **Lose a hole**: 0 points
 - **Multiple opponents**: Points earned against each opponent separately
 
