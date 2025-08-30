@@ -75,10 +75,10 @@ http://ionicframework.com/docs/theming/ */
   --ion-card-box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   
   /** Tab bar styling **/
-  --ion-tab-bar-background: #2a5434;
-  --ion-tab-bar-border-color: rgba(255, 255, 255, 0.1);
-  --ion-tab-bar-color: rgba(255, 255, 255, 0.6);
-  --ion-tab-bar-color-selected: rgba(255, 255, 255, 0.9);
+  --ion-tab-bar-background: #f8f8f8;
+  --ion-tab-bar-border-color: rgba(0, 0, 0, 0.08);
+  --ion-tab-bar-color: #8e8e93;
+  --ion-tab-bar-color-selected: #2a5434;
   
   /** Toolbar styling **/
   --ion-toolbar-background: rgba(255, 255, 255, 0.95);
@@ -171,10 +171,10 @@ http://ionicframework.com/docs/theming/ */
     --ion-card-background: #2C2C2E;
     --ion-card-box-shadow: none;
     
-    --ion-tab-bar-background: #2a5434;
-    --ion-tab-bar-border-color: rgba(255, 255, 255, 0.1);
-    --ion-tab-bar-color: rgba(255, 255, 255, 0.6);
-    --ion-tab-bar-color-selected: rgba(255, 255, 255, 0.9);
+    --ion-tab-bar-background: #1c1c1e;
+    --ion-tab-bar-border-color: rgba(255, 255, 255, 0.08);
+    --ion-tab-bar-color: #8e8e93;
+    --ion-tab-bar-color-selected: #34d399;
     
     --ion-toolbar-background: rgba(28, 28, 30, 0.95);
     --ion-toolbar-border-color: rgba(255, 255, 255, 0.1);
