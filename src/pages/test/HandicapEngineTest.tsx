@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MatchHandicapEngine } from '../../features/normal-game/engines/MatchHandicapEngine';
 import { PMPEngine } from '../../features/normal-game/engines/PMPEngine';
-import { supabase } from '../../lib/supabase';
 import { getFriends, getCurrentUserId, type FriendProfile } from '../../lib/friends';
+import { dataService } from '../../services/data/DataService';
 import type { Player, Hole, HandicapContext, MatchHandicapResult } from '../../features/normal-game/engines/MatchHandicapEngine';
 import type { PlayerMatchPar } from '../../features/normal-game/engines/PMPEngine';
 
@@ -41,6 +41,8 @@ const HandicapEngineTest: React.FC = () => {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [playerMatches, setPlayerMatches] = useState<any[]>([]);
   const [friendMatches, setFriendMatches] = useState<any[]>([]);
+  const [loadingFriendMatches, setLoadingFriendMatches] = useState(false);
+  const [courseRecordMatches, setCourseRecordMatches] = useState<any[]>([]);
   
   // Available Data
   const [courses, setCourses] = useState<any[]>([]);
@@ -138,19 +140,38 @@ const HandicapEngineTest: React.FC = () => {
   
   // Load player matches when tee box changes and ghost mode is selected
   useEffect(() => {
-    if (handicapType === 'ghost' && teeBoxId && currentUserId) {
-      if (selectedGhostType === 'personal_best') {
+    console.log('[useEffect] Ghost match loading triggered:', {
+      handicapType,
+      selectedGhostType,
+      selectedFriendId,
+      teeBoxId,
+      courseId
+    });
+    
+    if (handicapType === 'ghost' && teeBoxId && courseId) {
+      if (selectedGhostType === 'personal_best' && currentUserId) {
         loadPlayerMatches(currentUserId, teeBoxId);
       } else if (selectedGhostType === 'friend_best' && selectedFriendId) {
+        console.log('[useEffect] Loading friend matches for:', selectedFriendId);
         loadPlayerMatches(selectedFriendId, teeBoxId);
+      } else if (selectedGhostType === 'course_record') {
+        // Load course record - this will find the best score on this course/tee
+        loadCourseRecordMatches(courseId, teeBoxId);
       }
     }
-  }, [handicapType, teeBoxId, currentUserId, selectedGhostType, selectedFriendId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handicapType, teeBoxId, courseId, currentUserId, selectedGhostType, selectedFriendId]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Calculate preview when players or settings change
   useEffect(() => {
+    // Don't calculate preview if in ghost mode without a selected game
+    if (handicapType === 'ghost' && !selectedGameId) {
+      // Clear preview results when no game selected
+      setPreviewMatchHandicaps([]);
+      setPreviewPmpResults(new Map());
+      return;
+    }
     calculatePreview();
-  }, [testPlayers, handicapType, testHoles, selectedFriendId, selectedGhostType, numberOfHoles]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [testPlayers, handicapType, testHoles, selectedFriendId, selectedGhostType, selectedGameId, numberOfHoles]); // eslint-disable-line react-hooks/exhaustive-deps
   
   const loadTestData = async () => {
     setLoading(true);
@@ -160,12 +181,8 @@ const HandicapEngineTest: React.FC = () => {
       if (userId) {
         setCurrentUserId(userId);
         
-        // Load current user's profile
-        const { data: userData } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, handicap')
-          .eq('id', userId)
-          .single();
+        // Load current user's profile using data service
+        const userData = await dataService.profiles.getUserProfile(userId);
         
         if (userData) {
           const handicapIndex = userData.handicap || 15.0;
@@ -206,22 +223,15 @@ const HandicapEngineTest: React.FC = () => {
         setFriendsData(friendsMap);
       }
       
-      // Load courses
-      const { data: coursesData } = await supabase
-        .from('golf_courses')
-        .select('id, name, par')
-        .limit(10);
+      // Load courses using data service
+      const coursesData = await dataService.courses.getAllCourses();
       if (coursesData) {
         setCourses(coursesData);
         if (coursesData.length > 0) {
           setCourseId(coursesData[0].id);
           
-          // Load tee boxes for first course
-          const { data: teesData } = await supabase
-            .from('tee_boxes')
-            .select('*')
-            .eq('course_id', coursesData[0].id)
-            .order('display_order');
+          // Load tee boxes for first course using data service
+          const teesData = await dataService.courses.getCourseTeeBoxes(coursesData[0].id);
           if (teesData && teesData.length > 0) {
             setTeeBoxes(teesData);
             setTeeBoxId(teesData[0].id);
@@ -253,17 +263,14 @@ const HandicapEngineTest: React.FC = () => {
   // Load course holes from database
   const loadCourseHoles = async (courseId: number) => {
     try {
-      const { data: holesData } = await supabase
-        .from('holes')
-        .select('hole_number, par, stroke_index')
-        .eq('course_id', courseId)
-        .order('hole_number');
+      // Load holes using data service
+      const holesData = await dataService.courses.getCourseHoles(courseId);
       
       if (holesData && holesData.length > 0) {
         const holes: Hole[] = holesData.map(h => ({
           holeNumber: h.hole_number,
           par: h.par,
-          strokeIndex: h.stroke_index
+          strokeIndex: h.handicap_index
         }));
         setTestHoles(holes);
         setCourseHoles(holes);
@@ -279,55 +286,79 @@ const HandicapEngineTest: React.FC = () => {
     }
   };
   
-  // Load player matches for ghost mode
+  // Load player matches for ghost mode using DataService
   const loadPlayerMatches = async (userId: string, teeBoxId: number) => {
     try {
-      // Query for completed games only - we need full score data for ghost mode
-      const { data: games, error } = await supabase
-        .from('game_participants')
-        .select(`
-          game_id,
-          games!inner (
-            id,
-            name,
-            created_at,
-            status
-          )
-        `)
-        .eq('user_id', userId)
-        .eq('tee_box_id', teeBoxId)
-        .eq('games.status', 'completed')  // Only completed games have reliable score data
-        .order('games.created_at', { ascending: false });
+      console.log(`[loadPlayerMatches] Loading for user ${userId}, course ${courseId}, tee ${teeBoxId}`);
       
-      if (!error && games) {
-        // Format matches for display
-        const matches = games.map(g => ({
-          id: g.game_id,
-          name: g.games.name || `Game ${g.game_id}`,
-          date: new Date(g.games.created_at).toLocaleDateString(),
-          status: g.games.status
-        }));
-        
-        if (userId === currentUserId) {
-          setPlayerMatches(matches);
-          // Auto-select first match if available
-          if (matches.length > 0 && !selectedGameId) {
-            setSelectedGameId(matches[0].id);
-          }
-        } else {
-          setFriendMatches(matches);
-          // Auto-select first match for friend
-          if (matches.length > 0 && !selectedGameId) {
-            setSelectedGameId(matches[0].id);
-          }
-        }
+      // Set loading state for friend matches
+      if (userId !== currentUserId) {
+        setLoadingFriendMatches(true);
+      }
+      
+      // Use the reusable service function
+      const games = await dataService.games.getUserCompletedGames(userId, courseId, teeBoxId);
+      
+      console.log(`[loadPlayerMatches] Found ${games.length} completed games for user ${userId}`);
+      
+      // Format matches for display in dropdown
+      const matches = games.map(g => ({
+        id: g.id,
+        name: g.name,
+        date: g.date,
+        totalStrokes: g.totalStrokes,
+        netScore: g.netScore
+      }));
+      
+      if (userId === currentUserId) {
+        console.log(`[loadPlayerMatches] Setting ${matches.length} matches for current user`);
+        setPlayerMatches(matches);
+      } else {
+        console.log(`[loadPlayerMatches] Setting ${matches.length} matches for friend ${userId}`);
+        setFriendMatches(matches);
       }
     } catch (err) {
       console.error('Error loading player matches:', err);
+    } finally {
+      // Clear loading state
+      if (userId !== currentUserId) {
+        setLoadingFriendMatches(false);
+      }
     }
   };
   
-  // Load match counts for friends on selected tee
+  // Load course record matches - finds best scores on this course/tee from ALL users
+  const loadCourseRecordMatches = async (courseId: number, teeBoxId: number) => {
+    try {
+      // Get top scores from ALL users on this course/tee
+      // Only standard rounds (9 or 18 holes) are included
+      const games = await dataService.games.getTopCompletedGames(courseId, teeBoxId, 10, [9, 18]);
+      
+      const matches = games.map(g => ({
+        id: g.id,
+        name: `${g.playerName} - ${g.name}`,
+        date: g.date,
+        totalStrokes: g.totalStrokes,
+        netScore: g.netScore,
+        userId: g.userId,
+        playerName: g.playerName,
+        numHoles: g.numHoles
+      }));
+      
+      setCourseRecordMatches(matches);
+      // Auto-select first match if available (best score)
+      if (matches.length > 0) {
+        setSelectedGameId(matches[0].id);
+      } else {
+        setSelectedGameId(null);
+      }
+    } catch (err) {
+      console.error('Error loading course record matches:', err);
+    } finally {
+    }
+  };
+  
+  // Load match counts for friends on selected tee using DataService
   const loadMatchCounts = async (teeBoxId: number, friendIds: string[]) => {
     try {
       if (!currentUserId || friendIds.length === 0) return;
@@ -339,19 +370,12 @@ const HandicapEngineTest: React.FC = () => {
       
       // Query for each user's COMPLETED match count on this tee
       for (const userId of allUserIds) {
-        const { data, error } = await supabase
-          .from('game_participants')
-          .select(`
-            id,
-            games!inner(status)
-          `, { count: 'exact' })
-          .eq('user_id', userId)
-          .eq('tee_box_id', teeBoxId)
-          .eq('games.status', 'completed');
-        
-        if (!error && data) {
-          counts.set(userId, data.length);
-        } else {
+        try {
+          const games = await dataService.games.getUserCompletedGames(userId, courseId, teeBoxId);
+          counts.set(userId, games.length);
+          console.log(`User ${userId} has ${games.length} completed matches on tee ${teeBoxId}`);
+        } catch (error) {
+          console.error(`Error counting matches for user ${userId}:`, error);
           counts.set(userId, 0);
         }
       }
@@ -402,6 +426,14 @@ const HandicapEngineTest: React.FC = () => {
   const calculatePreview = async () => {
     if (testPlayers.length === 0 || testHoles.length === 0) return;
     
+    // Don't calculate if in ghost mode without a game selected
+    if (handicapType === 'ghost' && !selectedGameId) {
+      console.log('[calculatePreview] Skipping - no game selected for ghost mode');
+      return;
+    }
+    
+    console.log('[calculatePreview] Starting with selectedGameId:', selectedGameId);
+    
     try {
       // Build context
       const context: HandicapContext = {
@@ -423,11 +455,29 @@ const HandicapEngineTest: React.FC = () => {
       );
       setPreviewMatchHandicaps(matchHandicaps);
       
+      // Build ghost game IDs map if in ghost mode
+      const ghostGameIds = new Map<string, number>();
+      const finalGameId = context.selectedGameId;
+      console.log('[calculatePreview] finalGameId from context:', finalGameId, 'direct selectedGameId:', selectedGameId);
+      
+      if (handicapType === 'ghost' && finalGameId) {
+        // In ghost mode, BOTH real players and ghosts use the same game scorecard
+        console.log('[calculatePreview] Building ghost map for', matchHandicaps.length, 'players');
+        matchHandicaps.forEach(result => {
+          console.log(`[calculatePreview] Setting game ${finalGameId} for player ${result.userId}`);
+          ghostGameIds.set(result.userId, finalGameId);
+        });
+        console.log('[calculatePreview] Ghost map built:', Array.from(ghostGameIds.entries()));
+      } else {
+        console.log('[calculatePreview] NOT building ghost map - type:', handicapType, 'gameId:', finalGameId);
+      }
+      
       // Calculate PMP
-      const pmpMap = PMPEngine.calculatePMP(
+      const pmpMap = await PMPEngine.calculatePMP(
         matchHandicaps,
         holesToPlay,
-        handicapType
+        handicapType,
+        ghostGameIds
       );
       setPreviewPmpResults(pmpMap);
     } catch (err) {
@@ -484,7 +534,7 @@ const HandicapEngineTest: React.FC = () => {
     setError('');
     
     try {
-      // Build context
+      // Build context - use whatever is selected
       const context: HandicapContext = {
         courseId,
         teeBoxId,
@@ -508,11 +558,25 @@ const HandicapEngineTest: React.FC = () => {
       
       console.log('Match Handicap Results:', matchHandicaps);
       
+      // Build ghost game IDs map if in ghost mode
+      const ghostGameIds = new Map<string, number>();
+      const finalGameId = context.selectedGameId;
+      console.log('[Ghost Mode] Using game ID:', finalGameId);
+      
+      if (handicapType === 'ghost' && finalGameId) {
+        // In ghost mode, BOTH real players and ghosts use the same game scorecard
+        matchHandicaps.forEach(result => {
+          console.log(`[Ghost Mode] Setting game ${finalGameId} for player ${result.userId}`);
+          ghostGameIds.set(result.userId, finalGameId);
+        });
+      }
+      
       // Step 2: Calculate PMP
-      const pmpMap = PMPEngine.calculatePMP(
+      const pmpMap = await PMPEngine.calculatePMP(
         matchHandicaps,
         holesToPlay,
-        handicapType
+        handicapType,
+        ghostGameIds
       );
       setPmpResults(pmpMap);
       
@@ -528,8 +592,17 @@ const HandicapEngineTest: React.FC = () => {
   const gameTypeInfo = TEST_GAME_TYPES[handicapType as keyof typeof TEST_GAME_TYPES] || TEST_GAME_TYPES.match_play;
   
   return (
-    <div style={{ padding: '10px', paddingBottom: '100px', fontFamily: 'monospace', backgroundColor: '#1a1a1a', color: '#e0e0e0', minHeight: '100vh' }}>
-      <h1 style={{ color: '#ffffff', marginBottom: '10px', fontSize: '24px' }}>Handicap Engine Test Page</h1>
+    <>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+      <div style={{ padding: '10px', paddingBottom: '100px', fontFamily: 'monospace', backgroundColor: '#1a1a1a', color: '#e0e0e0', minHeight: '100vh' }}>
+        <h1 style={{ color: '#ffffff', marginBottom: '10px', fontSize: '24px' }}>Handicap Engine Test Page</h1>
       
       {/* Top Section - Two Columns */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
@@ -616,7 +689,12 @@ const HandicapEngineTest: React.FC = () => {
               <label><strong>Ghost Type:</strong></label>
               <select 
                 value={selectedGhostType} 
-                onChange={e => setSelectedGhostType(e.target.value as any)}
+                onChange={e => {
+                  const newGhostType = e.target.value as any;
+                  setSelectedGhostType(newGhostType);
+                  setSelectedGameId(null); // Clear game selection when switching ghost type
+                  // Don't clear the match arrays - let the useEffect handle loading
+                }}
                 style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
               >
                 <option value="personal_best">Beat Your Best Round</option>
@@ -627,24 +705,70 @@ const HandicapEngineTest: React.FC = () => {
             
             {selectedGhostType === 'personal_best' && (
               <div style={{ marginBottom: '10px' }}>
-                <label><strong>Select Your Match:</strong></label>
-                <select 
-                  value={selectedGameId || ''} 
-                  onChange={e => setSelectedGameId(e.target.value ? Number(e.target.value) : null)}
-                  style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
-                >
-                  {playerMatches.length === 0 ? (
-                    <option value="">No completed matches on this tee</option>
-                  ) : (
-                    playerMatches.map(match => (
-                      <option key={match.id} value={match.id}>
-                        {match.name} - {match.date}
-                      </option>
-                    ))
-                  )}
-                </select>
-                <span style={{ marginLeft: '10px', color: '#aaa', fontSize: '12px' }}>
-                  ({playerMatches.length} matches found)
+                <label style={{ display: 'block', marginBottom: '10px' }}><strong>Select Your Match:</strong></label>
+                {playerMatches.length === 0 ? (
+                  <div style={{ color: '#999', padding: '10px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '3px' }}>
+                    No completed matches on this tee
+                  </div>
+                ) : (
+                  <div style={{ 
+                    maxHeight: '200px', 
+                    overflowY: 'auto', 
+                    backgroundColor: '#1a1a1a', 
+                    border: '1px solid #333', 
+                    borderRadius: '3px',
+                    padding: '10px'
+                  }}>
+                    {playerMatches.map((match, index) => (
+                      <label 
+                        key={match.id} 
+                        style={{ 
+                          display: 'block', 
+                          padding: '8px', 
+                          marginBottom: '5px',
+                          backgroundColor: selectedGameId === match.id ? '#2a4a5a' : 'transparent',
+                          border: '1px solid',
+                          borderColor: selectedGameId === match.id ? '#4a9eff' : '#444',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => {
+                          if (selectedGameId !== match.id) {
+                            e.currentTarget.style.backgroundColor = '#1e3a4a';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (selectedGameId !== match.id) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="personalMatch"
+                          value={match.id}
+                          checked={selectedGameId === match.id}
+                          onChange={() => {
+                            console.log('[Personal Match Selection] Changed to', match.id);
+                            setSelectedGameId(match.id);
+                          }}
+                          style={{ marginRight: '10px' }}
+                        />
+                        <span style={{ color: '#e0e0e0' }}>
+                          {match.name} - {match.date}
+                        </span>
+                        {match.totalStrokes && (
+                          <span style={{ color: '#4a9eff', marginLeft: '10px' }}>
+                            ({match.totalStrokes} strokes)
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <span style={{ display: 'block', marginTop: '5px', color: '#aaa', fontSize: '12px' }}>
+                  {playerMatches.length} matches found
                 </span>
               </div>
             )}
@@ -655,7 +779,14 @@ const HandicapEngineTest: React.FC = () => {
                   <label><strong>Select Friend:</strong></label>
                   <select 
                     value={selectedFriendId} 
-                    onChange={e => setSelectedFriendId(e.target.value)}
+                    onChange={e => {
+                      const newFriendId = e.target.value;
+                      console.log('[Friend Select] Changed to:', newFriendId);
+                      setSelectedFriendId(newFriendId);
+                      setSelectedGameId(null);
+                      // Clear friend matches to show loading state
+                      setFriendMatches([]);
+                    }}
                     style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
                   >
                     {friends.map(friend => (
@@ -668,28 +799,146 @@ const HandicapEngineTest: React.FC = () => {
                 
                 {selectedFriendId && (
                   <div style={{ marginBottom: '10px' }}>
-                    <label><strong>Select Friend's Match:</strong></label>
-                    <select 
-                      value={selectedGameId || ''} 
-                      onChange={e => setSelectedGameId(e.target.value ? Number(e.target.value) : null)}
-                      style={{ marginLeft: '10px', padding: '5px', backgroundColor: '#fff', color: '#000', border: '1px solid #555' }}
-                    >
-                      {friendMatches.length === 0 ? (
-                        <option value="">No completed matches on this tee</option>
-                      ) : (
-                        friendMatches.map(match => (
-                          <option key={match.id} value={match.id}>
-                            {match.name} - {match.date}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                    <span style={{ marginLeft: '10px', color: '#aaa', fontSize: '12px' }}>
-                      ({friendMatches.length} matches found)
+                    <label style={{ display: 'block', marginBottom: '10px' }}><strong>Select Friend's Match:</strong></label>
+                    {loadingFriendMatches ? (
+                      <div style={{ color: '#999', padding: '10px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '3px' }}>
+                        Loading matches...
+                      </div>
+                    ) : friendMatches.length === 0 ? (
+                      <div style={{ color: '#999', padding: '10px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '3px' }}>
+                        No completed matches on this tee
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        maxHeight: '200px', 
+                        overflowY: 'auto', 
+                        backgroundColor: '#1a1a1a', 
+                        border: '1px solid #333', 
+                        borderRadius: '3px',
+                        padding: '10px'
+                      }}>
+                        {friendMatches.map((match, index) => (
+                          <label 
+                            key={match.id} 
+                            style={{ 
+                              display: 'block', 
+                              padding: '8px', 
+                              marginBottom: '5px',
+                              backgroundColor: selectedGameId === match.id ? '#2a4a5a' : 'transparent',
+                              border: '1px solid',
+                              borderColor: selectedGameId === match.id ? '#4a9eff' : '#444',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={e => {
+                              if (selectedGameId !== match.id) {
+                                e.currentTarget.style.backgroundColor = '#1e3a4a';
+                              }
+                            }}
+                            onMouseLeave={e => {
+                              if (selectedGameId !== match.id) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name="friendMatch"
+                              value={match.id}
+                              checked={selectedGameId === match.id}
+                              onChange={() => {
+                                console.log('Friend match selected:', match.id);
+                                setSelectedGameId(match.id);
+                              }}
+                              style={{ marginRight: '10px' }}
+                            />
+                            <span style={{ color: '#e0e0e0' }}>
+                              {match.name} - {match.date}
+                            </span>
+                            {match.totalStrokes && (
+                              <span style={{ color: '#4a9eff', marginLeft: '10px' }}>
+                                ({match.totalStrokes} strokes)
+                              </span>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    <span style={{ display: 'block', marginTop: '5px', color: '#aaa', fontSize: '12px' }}>
+                      {loadingFriendMatches ? 'Loading...' : `${friendMatches.length} matches found`}
                     </span>
                   </div>
                 )}
               </>
+            )}
+            
+            {selectedGhostType === 'course_record' && (
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '10px' }}><strong>Select Course Record:</strong></label>
+                {courseRecordMatches.length === 0 ? (
+                  <div style={{ color: '#999', padding: '10px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '3px' }}>
+                    No completed matches on this tee
+                  </div>
+                ) : (
+                  <div style={{ 
+                    maxHeight: '200px', 
+                    overflowY: 'auto', 
+                    backgroundColor: '#1a1a1a', 
+                    border: '1px solid #333', 
+                    borderRadius: '3px',
+                    padding: '10px'
+                  }}>
+                    {courseRecordMatches.map((match, index) => (
+                      <label 
+                        key={match.id} 
+                        style={{ 
+                          display: 'block', 
+                          padding: '8px', 
+                          marginBottom: '5px',
+                          backgroundColor: selectedGameId === match.id ? '#2a4a5a' : 'transparent',
+                          border: '1px solid',
+                          borderColor: selectedGameId === match.id ? '#4a9eff' : '#444',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => {
+                          if (selectedGameId !== match.id) {
+                            e.currentTarget.style.backgroundColor = '#1e3a4a';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (selectedGameId !== match.id) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="courseRecord"
+                          value={match.id}
+                          checked={selectedGameId === match.id}
+                          onChange={() => {
+                            console.log('[Course Record Selection] Changed to', match.id);
+                            setSelectedGameId(match.id);
+                          }}
+                          style={{ marginRight: '10px' }}
+                        />
+                        <span style={{ color: '#e0e0e0' }}>
+                          {match.name} - {match.date}
+                        </span>
+                        <span style={{ color: '#4a9eff', marginLeft: '10px' }}>
+                          ({match.totalStrokes} strokes, {match.numHoles} holes)
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <span style={{ display: 'block', marginTop: '5px', color: '#aaa', fontSize: '12px' }}>
+                  Top {courseRecordMatches.length} best scores
+                </span>
+              </div>
             )}
           </>
         )}
@@ -705,8 +954,9 @@ const HandicapEngineTest: React.FC = () => {
             <div style={{ marginBottom: '10px', padding: '8px', backgroundColor: '#1e3a4a', borderRadius: '3px', border: '1px solid #3a5a6a' }}>
               <div style={{ marginBottom: '5px', fontSize: '12px', color: '#4a9eff' }}>You (Always Playing)</div>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <tr>
-                  <td style={{ padding: '2px', fontSize: '12px' }}><strong>{currentUser.fullName}</strong></td>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '2px', fontSize: '12px' }}><strong>{currentUser.fullName}</strong></td>
                 <td style={{ padding: '5px' }}>
                   <label>HI: </label>
                   <input
@@ -730,8 +980,9 @@ const HandicapEngineTest: React.FC = () => {
                     Matches on tee: <strong>{matchCounts.get(currentUser.userId) || 0}</strong>
                   </span>
                 </td>
-              </tr>
-            </table>
+                  </tr>
+                </tbody>
+              </table>
           </div>
         )}
           
@@ -828,22 +1079,77 @@ const HandicapEngineTest: React.FC = () => {
       
       {/* Run Test Button */}
       <div style={{ border: '1px solid #444', padding: '15px', marginTop: '10px', marginBottom: '10px', backgroundColor: '#2a2a2a' }}>
-        <button 
-          onClick={runTest} 
-          disabled={loading || testPlayers.length === 0}
-          style={{ 
-            padding: '12px 40px', 
-            fontSize: '18px',
-            backgroundColor: loading || testPlayers.length === 0 ? '#444' : '#28a745',
-            color: 'white',
-            border: 'none',
-            cursor: loading || testPlayers.length === 0 ? 'not-allowed' : 'pointer',
-            borderRadius: '4px',
-            width: '100%'
-          }}
-        >
-          {loading ? 'RUNNING ENGINE...' : testPlayers.length === 0 ? 'SELECT PLAYERS FIRST' : 'RUN FULL ENGINE TEST'}
-        </button>
+        {(() => {
+          // Simple button logic - just check basic requirements
+          let isDisabled = false;
+          let buttonText = 'RUN FULL ENGINE TEST';
+          let buttonColor = '#28a745';
+          let showSpinner = false;
+          
+          if (loading) {
+            isDisabled = true;
+            buttonText = 'RUNNING ENGINE...';
+            buttonColor = '#444';
+            showSpinner = true;
+          } else if (testPlayers.length === 0) {
+            isDisabled = true;
+            buttonText = 'SELECT PLAYERS FIRST';
+            buttonColor = '#444';
+          } else if (handicapType === 'ghost' && !selectedGameId) {
+            // Ghost mode without selection - allow click, will auto-select first
+            isDisabled = false;
+            if (selectedGhostType === 'personal_best' && playerMatches.length === 0) {
+              isDisabled = true;
+              buttonText = 'NO PERSONAL MATCHES AVAILABLE';
+              buttonColor = '#444';
+            } else if (selectedGhostType === 'friend_best' && friendMatches.length === 0) {
+              isDisabled = true;
+              buttonText = 'NO FRIEND MATCHES AVAILABLE';
+              buttonColor = '#444';
+            } else if (selectedGhostType === 'course_record' && courseRecordMatches.length === 0) {
+              isDisabled = true;
+              buttonText = 'NO COURSE RECORDS AVAILABLE';
+              buttonColor = '#444';
+            } else {
+              buttonText = 'RUN TEST (will use first match)';
+              buttonColor = '#ffc107'; // Yellow warning
+            }
+          }
+          
+          return (
+            <button 
+              onClick={runTest} 
+              disabled={isDisabled}
+              style={{ 
+                padding: '12px 40px', 
+                fontSize: '18px',
+                backgroundColor: buttonColor,
+                color: 'white',
+                border: 'none',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                borderRadius: '4px',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
+              }}
+            >
+              {showSpinner && (
+                <span style={{
+                  display: 'inline-block',
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  borderTop: '2px solid white',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }} />
+              )}
+              {buttonText}
+            </button>
+          );
+        })()}
         
         {error && (
           <div style={{ color: '#ff6b6b', marginTop: '10px', padding: '10px', backgroundColor: '#3a1a1a', border: '1px solid #ff6b6b' }}>
@@ -1257,7 +1563,8 @@ const HandicapEngineTest: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

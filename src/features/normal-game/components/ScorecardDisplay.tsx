@@ -50,14 +50,21 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
   onEditHole,
   isReadOnly = false
 }) => {
+  console.log('[ScorecardDisplay] Props received:', { participants, scores, holes, courseName, coursePar });
+  
+  // Ensure we have valid arrays
+  const safeParticipants = Array.isArray(participants) ? participants : [];
+  const safeHoles = Array.isArray(holes) ? holes : [];
+  const safeScores = Array.isArray(scores) ? scores : [];
+  
   // Helper functions
   const getScore = (userId: string, holeNumber: number): number | null => {
-    const score = scores.find(s => s.user_id === userId && s.hole_number === holeNumber);
+    const score = safeScores.find(s => s.user_id === userId && s.hole_number === holeNumber);
     return score?.strokes || null;
   };
 
   const getHandicapStrokes = (userId: string, holeNumber: number): number => {
-    const score = scores.find(s => s.user_id === userId && s.hole_number === holeNumber);
+    const score = safeScores.find(s => s.user_id === userId && s.hole_number === holeNumber);
     return score?.hole_handicap_strokes || 0;
   };
 
@@ -104,7 +111,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
   };
 
   const calculateParTotal = (startHole: number, endHole: number): number => {
-    return holes
+    return safeHoles
       .filter(h => h.hole_number >= startHole && h.hole_number <= endHole)
       .reduce((sum, h) => sum + h.par, 0);
   };
@@ -117,11 +124,11 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
   };
 
   // Separate front and back nine holes
-  const frontNineHoles = holes.filter(h => h.hole_number <= 9);
-  const backNineHoles = holes.filter(h => h.hole_number > 9);
+  const frontNineHoles = safeHoles.filter(h => h.hole_number <= 9);
+  const backNineHoles = safeHoles.filter(h => h.hole_number > 9);
 
   // Calculate totals
-  const playerTotals = participants.map(p => ({
+  const playerTotals = safeParticipants.map(p => ({
     participant: p,
     front: calculateTotal(p.user_id, 1, 9),
     back: calculateTotal(p.user_id, 10, 18),
@@ -203,7 +210,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
               <tr>
                 <th style={{ ...tableStyles.th, ...tableStyles.holeCell }}>Hole</th>
                 <th style={{ ...tableStyles.th, ...tableStyles.parCell }}>Par</th>
-                {participants.map((p, idx) => (
+                {safeParticipants.map((p, idx) => (
                   <th key={p.id || p.user_id} style={{ ...tableStyles.th, minWidth: '40px' }}>
                     {getShortName(p.profiles?.full_name, idx)}
                   </th>
@@ -228,7 +235,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
                     <td style={{ ...tableStyles.td, ...tableStyles.parCell }}>
                       {hole.par}
                     </td>
-                    {participants.map(p => {
+                    {safeParticipants.map(p => {
                       const score = getScore(p.user_id, hole.hole_number);
                       const handicapStrokes = getHandicapStrokes(p.user_id, hole.hole_number);
                       return (
@@ -253,7 +260,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
               <tr style={tableStyles.totalRow}>
                 <td style={{ ...tableStyles.td, fontWeight: '700' }}>OUT</td>
                 <td style={{ ...tableStyles.td, color: 'var(--ion-color-medium)' }}>{parFront}</td>
-                {participants.map(p => {
+                {safeParticipants.map(p => {
                   const total = calculateTotal(p.user_id, 1, 9);
                   return (
                     <td key={p.id || p.user_id} style={{ ...tableStyles.td, fontWeight: '700' }}>
@@ -278,7 +285,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
               <tr>
                 <th style={{ ...tableStyles.th, ...tableStyles.holeCell }}>Hole</th>
                 <th style={{ ...tableStyles.th, ...tableStyles.parCell }}>Par</th>
-                {participants.map((p, idx) => (
+                {safeParticipants.map((p, idx) => (
                   <th key={p.id || p.user_id} style={{ ...tableStyles.th, minWidth: '40px' }}>
                     {getShortName(p.profiles?.full_name, idx)}
                   </th>
@@ -303,7 +310,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
                     <td style={{ ...tableStyles.td, ...tableStyles.parCell }}>
                       {hole.par}
                     </td>
-                    {participants.map(p => {
+                    {safeParticipants.map(p => {
                       const score = getScore(p.user_id, hole.hole_number);
                       const handicapStrokes = getHandicapStrokes(p.user_id, hole.hole_number);
                       return (
@@ -328,7 +335,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
               <tr style={tableStyles.totalRow}>
                 <td style={{ ...tableStyles.td, fontWeight: '700' }}>IN</td>
                 <td style={{ ...tableStyles.td, color: 'var(--ion-color-medium)' }}>{parBack}</td>
-                {participants.map(p => {
+                {safeParticipants.map(p => {
                   const total = calculateTotal(p.user_id, 10, 18);
                   return (
                     <td key={p.id || p.user_id} style={{ ...tableStyles.td, fontWeight: '700' }}>

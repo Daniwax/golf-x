@@ -1,5 +1,5 @@
 # Database Schema - Compact Overview
-*Scanned: 2025-08-29T20:02:24.892Z*
+*Scanned: 2025-08-30T01:29:21.967Z*
 
 ## Tables & Fields
 
@@ -9,7 +9,7 @@
 
 ### Game Management
 
-**games** [31 rows] (id: uuid, course_id: int, creator_user_id: uuid, game_description: nullable, scoring_format: varchar, weather_condition: varchar, status: varchar, created_at: timestamptz, started_at: nullable, completed_at: nullable, notes: nullable, notes_updated_by: nullable, notes_updated_at: nullable, handicap_type: varchar, scoring_method: varchar)
+**games** [31 rows] (id: uuid, course_id: int, creator_user_id: uuid, game_description: nullable, scoring_format: varchar, weather_condition: varchar, status: varchar, created_at: timestamptz, started_at: nullable, completed_at: nullable, notes: nullable, notes_updated_by: nullable, notes_updated_at: nullable, handicap_type: varchar, scoring_method: varchar, num_holes: int)
   ↳ course_id → course
   ↳ creator_user_id → creatoruser
 
@@ -18,7 +18,7 @@
   ↳ user_id → user
   ↳ tee_box_id → teebox
 
-**game_hole_scores** [344 rows] (id: uuid, game_id: uuid, user_id: uuid, hole_number: int, strokes: int, putts: int, hole_par: int, hole_handicap_strokes: int, net_score: int, score_vs_par: int, updated_at: timestamptz, player_match_par: int)
+**game_hole_scores** [350 rows] (id: uuid, game_id: uuid, user_id: uuid, hole_number: int, strokes: int, putts: int, hole_par: int, hole_handicap_strokes: int, net_score: int, score_vs_par: int, updated_at: timestamptz, player_match_par: int)
   ↳ game_id → game
   ↳ user_id → user
 
@@ -104,10 +104,10 @@
 ## Database Statistics
 
 ### Summary
-- **Scan Date:** 29/8/2025, 22:02:24
+- **Scan Date:** 30/8/2025, 3:29:21
 - **Total Tables:** 13
-- **Total Columns:** 189
-- **Total Rows:** 923
+- **Total Columns:** 190
+- **Total Rows:** 929
 - **Tables with Data:** 13
 - **Empty Tables:** 0
 - **Foreign Keys:** 20
@@ -117,10 +117,10 @@
 | Table | Category | Columns | Rows | Status |
 |-------|----------|---------|------|--------|
 | hole_distances | Course Details | 8 | 360 | 🟢 Active |
-| game_hole_scores | Game Management | 12 | 344 | 🟢 Active |
+| game_hole_scores | Game Management | 12 | 350 | 🟢 Active |
 | holes | Course Details | 13 | 90 | 🟢 Active |
 | game_participants | Game Management | 13 | 54 | 🟢 Active |
-| games | Game Management | 15 | 31 | 🟢 Active |
+| games | Game Management | 16 | 31 | 🟢 Active |
 | tee_boxes | Course Details | 21 | 20 | 🟢 Active |
 | course_images | Media | 15 | 9 | 🟢 Active |
 | profiles | User & Auth | 10 | 6 | 🟢 Active |
@@ -132,7 +132,7 @@
 
 ### Largest Tables (by row count)
 1. **hole_distances** - 360 rows
-2. **game_hole_scores** - 344 rows
+2. **game_hole_scores** - 350 rows
 3. **holes** - 90 rows
 4. **game_participants** - 54 rows
 5. **games** - 31 rows

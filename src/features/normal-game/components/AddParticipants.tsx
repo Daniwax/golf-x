@@ -27,9 +27,12 @@ interface LocationState {
     description?: string;
     courseId: number;
     weather: string;
-    format: string;
+    format?: string;
     handicapType?: string;
     scoringMethod?: string;
+    numberOfHoles?: number;
+    includeHandicap?: boolean;
+    isCustomGame?: boolean;
   };
 }
 
@@ -133,6 +136,102 @@ const AddParticipants: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen>
+        {/* Game Configuration Summary */}
+        {gameData?.isCustomGame && (
+          <div style={{ paddingTop: '8px', paddingLeft: '16px', paddingRight: '16px', paddingBottom: '8px', backgroundColor: 'var(--ion-background-color)' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '6px'
+            }}>
+              {/* Game Type Button */}
+              <div style={{
+                backgroundColor: 'var(--ion-color-light)',
+                borderRadius: '8px',
+                padding: '6px 8px',
+                textAlign: 'center',
+                border: '1px solid var(--ion-color-medium-tint)',
+                flex: 1
+              }}>
+                <div style={{ fontSize: '10px', color: 'var(--ion-color-medium)', textTransform: 'uppercase', fontWeight: '600' }}>TYPE</div>
+                <div style={{ fontSize: '12px', fontWeight: '600', marginTop: '2px' }}>
+                  {gameData.handicapType === 'match_play' ? 'Match' :
+                   gameData.handicapType === 'stroke_play' ? 'Stroke' :
+                   gameData.handicapType === 'none' ? 'Scratch' :
+                   gameData.handicapType === 'random' ? 'Lucky' :
+                   gameData.handicapType === 'ghost' ? 'Ghost' : 'Match'}
+                </div>
+              </div>
+
+              {/* Scoring Method Button */}
+              <div style={{
+                backgroundColor: 'var(--ion-color-light)',
+                borderRadius: '8px',
+                padding: '6px 8px',
+                textAlign: 'center',
+                border: '1px solid var(--ion-color-medium-tint)',
+                flex: 1
+              }}>
+                <div style={{ fontSize: '10px', color: 'var(--ion-color-medium)', textTransform: 'uppercase', fontWeight: '600' }}>SCORING</div>
+                <div style={{ fontSize: '12px', fontWeight: '600', marginTop: '2px' }}>
+                  {gameData.scoringMethod === 'match_play' ? 'Match' :
+                   gameData.scoringMethod === 'net_score' ? 'Net' :
+                   gameData.scoringMethod === 'stroke_play' ? 'Stroke' :
+                   gameData.scoringMethod === 'stableford' ? 'Stableford' :
+                   gameData.scoringMethod === 'skins' ? 'Skins' : 'Match'}
+                </div>
+              </div>
+
+              {/* Holes Button */}
+              <div style={{
+                backgroundColor: gameData.numberOfHoles !== 9 && gameData.numberOfHoles !== 18 ? '#FFE5B4' : 'var(--ion-color-light)',
+                borderRadius: '8px',
+                padding: '6px 8px',
+                textAlign: 'center',
+                border: `1px solid ${gameData.numberOfHoles !== 9 && gameData.numberOfHoles !== 18 ? '#FFB366' : 'var(--ion-color-medium-tint)'}`,
+                flex: 1
+              }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: gameData.numberOfHoles !== 9 && gameData.numberOfHoles !== 18 ? '#B8690A' : 'var(--ion-color-medium)', 
+                  textTransform: 'uppercase', 
+                  fontWeight: '600' 
+                }}>HOLES</div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  fontWeight: '600', 
+                  marginTop: '2px',
+                  color: gameData.numberOfHoles !== 9 && gameData.numberOfHoles !== 18 ? '#B8690A' : 'inherit'
+                }}>
+                  {gameData.numberOfHoles || 18}
+                </div>
+              </div>
+
+              {/* Handicaps Button */}
+              <div style={{
+                backgroundColor: gameData.handicapType === 'none' ? '#FFE5B4' : 'var(--ion-color-light)',
+                borderRadius: '8px',
+                padding: '6px 8px',
+                textAlign: 'center',
+                border: `1px solid ${gameData.handicapType === 'none' ? '#FFB366' : 'var(--ion-color-medium-tint)'}`,
+                flex: 1
+              }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: gameData.handicapType === 'none' ? '#B8690A' : 'var(--ion-color-medium)', 
+                  textTransform: 'uppercase', 
+                  fontWeight: '600' 
+                }}>HANDICAPS</div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  fontWeight: '600', 
+                  marginTop: '2px',
+                  color: gameData.handicapType === 'none' ? '#B8690A' : 'inherit'
+                }}>{gameData.includeHandicap ? 'Yes' : 'No'}</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Selection Info Header */}
         <div style={{ 
           backgroundColor: 'var(--ion-color-primary)',

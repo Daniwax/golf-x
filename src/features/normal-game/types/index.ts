@@ -42,9 +42,8 @@ export interface GameParticipant {
   net_score?: number;
   front_nine_strokes?: number;
   back_nine_strokes?: number;
-  holes_won?: number;
-  holes_lost?: number;
-  holes_halved?: number;
+  // Note: holes_won, holes_lost, holes_halved are calculated at runtime for match play
+  // They are not stored in the database
   profiles?: {
     full_name: string;
   };

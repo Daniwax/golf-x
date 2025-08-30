@@ -3,7 +3,7 @@
  * Supports multiple strategies including ghost mode and future expansions
  */
 
-import { supabase } from '../../../lib/supabase';
+import { dataService } from '../../../services/data/DataService';
 
 // ==========================================
 // Type Definitions
@@ -132,10 +132,11 @@ class RandomHandicapStrategy implements HandicapStrategy {
 
 /**
  * Ghost Mode Strategy - Compete against best scorecards
+ * Everyone plays scratch (0 handicap) - pure competition against historical scores
  */
 class GhostModeStrategy implements HandicapStrategy {
   name = 'ghost';
-  description = 'Compete against best scorecards';
+  description = 'Compete against best scorecards (scratch play)';
   requiresHistoricalData = true;
 
   async calculate(
@@ -144,152 +145,55 @@ class GhostModeStrategy implements HandicapStrategy {
   ): Promise<MatchHandicapResult[]> {
     const results: MatchHandicapResult[] = [];
     
-    // Add real players with their handicaps (ghost mode uses 100% allowance)
+    // Ghost mode = 0% handicap allowance (everyone plays scratch)
     const realPlayerHandicaps = players.map(player => ({
       userId: player.userId,
       fullName: player.fullName,
-      matchHandicap: player.courseHandicap
+      matchHandicap: 0 // 0% allowance - scratch play
     }));
     results.push(...realPlayerHandicaps);
 
-    // Add ghost player(s) based on context
-    if (context.selectedGhostType === 'personal_best') {
-      const ghosts = await this.getPersonalBestGhosts(players, context);
-      results.push(...ghosts);
-    } else if (context.selectedGhostType === 'friend_best' && context.selectedFriendId) {
-      const ghost = await this.getFriendBestGhost(context.selectedFriendId, context);
-      if (ghost) results.push(ghost);
-    } else if (context.selectedGhostType === 'course_record') {
-      const ghost = await this.getCourseRecordGhost(context);
-      if (ghost) results.push(ghost);
-    }
-
-    // Recalculate as relative handicaps including ghosts
-    const lowestHandicap = Math.min(...results.map(r => r.matchHandicap));
-    return results.map(result => ({
-      ...result,
-      matchHandicap: result.matchHandicap - lowestHandicap
-    }));
-  }
-
-  private async getPersonalBestGhosts(
-    players: Player[],
-    context: HandicapContext
-  ): Promise<MatchHandicapResult[]> {
-    const ghosts: MatchHandicapResult[] = [];
-    
-    for (const player of players) {
-      const bestScore = await this.getBestScore(
-        player.userId,
-        context.courseId,
-        context.teeBoxId
-      );
+    // Add a single ghost player if we have a game ID to replay
+    // All ghost types work the same - they just differ in which game ID is selected
+    if (context.selectedGameId) {
+      let ghostUserId = '';
+      let ghostName = '';
       
-      if (bestScore) {
-        ghosts.push({
-          userId: `ghost_${player.userId}`,
-          fullName: `${player.fullName} (Best)`,
-          matchHandicap: bestScore.effectiveHandicap || 0,
+      if (context.selectedGhostType === 'personal_best') {
+        // Ghost is the current player's best
+        ghostUserId = `ghost_${players[0]?.userId || 'player'}`;
+        ghostName = `${players[0]?.fullName || 'You'} (Best)`;
+      } else if (context.selectedGhostType === 'friend_best' && context.selectedFriendId) {
+        // Ghost is a friend's best
+        ghostUserId = `ghost_${context.selectedFriendId}`;
+        // Get friend name if possible
+        try {
+          const profile = await dataService.profiles.getUserProfile(context.selectedFriendId);
+          ghostName = `${profile?.full_name || 'Friend'} (Best)`;
+        } catch {
+          ghostName = 'Friend (Best)';
+        }
+      } else if (context.selectedGhostType === 'course_record') {
+        // Ghost is the course record holder
+        ghostUserId = 'ghost_record';
+        ghostName = 'Course Record';
+      }
+      
+      if (ghostUserId) {
+        results.push({
+          userId: ghostUserId,
+          fullName: ghostName,
+          matchHandicap: 0, // Ghost mode = scratch play
           isGhost: true,
-          ghostType: 'personal_best'
+          ghostType: context.selectedGhostType
         });
       }
     }
-    
-    return ghosts;
+
+    return results;
   }
 
-  private async getFriendBestGhost(
-    friendId: string,
-    context: HandicapContext
-  ): Promise<MatchHandicapResult | null> {
-    const bestScore = await this.getBestScore(
-      friendId,
-      context.courseId,
-      context.teeBoxId
-    );
-    
-    if (!bestScore) return null;
-
-    // Get friend's name
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', friendId)
-      .single();
-
-    return {
-      userId: `ghost_friend_${friendId}`,
-      fullName: `${profile?.full_name || 'Friend'} (Best)`,
-      matchHandicap: bestScore.effectiveHandicap || 0,
-      isGhost: true,
-      ghostType: 'friend_best'
-    };
-  }
-
-  private async getCourseRecordGhost(
-    context: HandicapContext
-  ): Promise<MatchHandicapResult | null> {
-    // Get course record for this tee
-    const { data: record } = await supabase
-      .from('game_participants')
-      .select(`
-        user_id,
-        total_strokes,
-        profiles!inner(full_name)
-      `)
-      .eq('course_id', context.courseId)
-      .eq('tee_box_id', context.teeBoxId)
-      .order('total_strokes', { ascending: true })
-      .limit(1)
-      .single();
-
-    if (!record) return null;
-
-    // Calculate what handicap would produce this score
-    const coursePar = 72; // Should get from course data
-    const effectiveHandicap = (record.total_strokes || coursePar) - coursePar;
-
-    return {
-      userId: `ghost_record`,
-      fullName: `Course Record (${record.profiles.full_name})`,
-      matchHandicap: effectiveHandicap,
-      isGhost: true,
-      ghostType: 'course_record'
-    };
-  }
-
-  private async getBestScore(
-    userId: string,
-    courseId: number,
-    teeBoxId?: number
-  ): Promise<{ totalStrokes: number; effectiveHandicap: number } | null> {
-    const query = supabase
-      .from('game_participants')
-      .select('total_strokes, course_handicap')
-      .eq('user_id', userId)
-      .eq('course_id', courseId)
-      .order('total_strokes', { ascending: true })
-      .limit(1);
-
-    if (teeBoxId) {
-      query.eq('tee_box_id', teeBoxId);
-    }
-
-    const { data } = await query.single();
-    
-    if (!data) return null;
-
-    // Calculate effective handicap from that round
-    const coursePar = 72; // Should get from course data
-    const netScore = (data.total_strokes || coursePar) - (data.course_handicap || 0);
-    const effectiveHandicap = netScore - coursePar;
-
-    return {
-      totalStrokes: data.total_strokes || coursePar,
-      effectiveHandicap
-    };
-  }
+  // Removed unnecessary helper methods - ghost mode now just needs a game ID
 }
 
 /**

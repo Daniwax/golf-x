@@ -328,10 +328,7 @@ export const profileGameService = {
           total_putts,
           net_score,
           front_nine_strokes,
-          back_nine_strokes,
-          holes_won,
-          holes_lost,
-          holes_halved
+          back_nine_strokes
         `)
         .eq('game_id', gameId);
 
@@ -339,6 +336,8 @@ export const profileGameService = {
         console.error('Error fetching participants:', participantsError);
         return null;
       }
+      
+      console.log('[profileGameService] Participants fetched:', participants);
 
       // Fetch profiles and tee boxes separately for each participant
       const participantsWithDetails = await Promise.all(
@@ -365,6 +364,8 @@ export const profileGameService = {
         })
       );
 
+      console.log('[profileGameService] Participants with details:', participantsWithDetails);
+      
       // Sort participants by total_strokes (nulls last)
       const sortedParticipants = participantsWithDetails.sort((a, b) => {
         if (a.total_strokes === null && b.total_strokes === null) return 0;
@@ -372,6 +373,8 @@ export const profileGameService = {
         if (b.total_strokes === null) return -1;
         return a.total_strokes - b.total_strokes;
       });
+      
+      console.log('[profileGameService] Sorted participants:', sortedParticipants);
 
       // Get hole scores
       const { data: scores, error: scoresError } = await supabase
@@ -391,6 +394,8 @@ export const profileGameService = {
       if (scoresError) {
         console.error('Error fetching scores:', scoresError);
       }
+      
+      console.log('[profileGameService] Scores fetched:', scores);
 
       // Get hole information
       const { data: holes, error: holesError } = await supabase
@@ -407,13 +412,18 @@ export const profileGameService = {
       if (holesError) {
         console.error('Error fetching holes:', holesError);
       }
+      
+      console.log('[profileGameService] Holes fetched:', holes);
 
-      return {
+      const result = {
         game,
         participants: sortedParticipants,
         scores: scores || [],
         holes: holes || []
       };
+      
+      console.log('[profileGameService] Final result being returned:', result);
+      return result;
     } catch (error) {
       console.error('Error in getGameDetails:', error);
       return null;

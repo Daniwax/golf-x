@@ -33,15 +33,23 @@ import FriendProfile from './pages/FriendProfile';
 
 // Import Normal Game components
 import CreateGame from './features/normal-game/components/CreateGame';
+import CreateGameCustom from './features/normal-game/components/CreateGameCustom';
+import GhostConfig from './features/normal-game/components/GhostConfig';
 import AddParticipants from './features/normal-game/components/AddParticipants';
 import PlayerConfiguration from './features/normal-game/components/PlayerConfiguration';
 import GameSummary from './features/normal-game/components/GameSummary';
+
+// Import Tournament components
+import TournamentHub from './features/tournament/TournamentHub';
+import TournamentLeaderboard from './features/tournament/TournamentLeaderboard';
 import LiveGame from './features/normal-game/components/LiveGame';
 import ViewCompletedGame from './features/normal-game/components/ViewCompletedGame';
 import HoleStats from './pages/HoleStats';
 
 // Import Test pages
 import HandicapEngineTest from './pages/test/HandicapEngineTest';
+import ScoringEngineTest from './pages/test/ScoringEngineTest';
+import MatchHistory from './pages/MatchHistory';
 
 // Import Supabase config check
 import { isConfigured } from './lib/supabase';
@@ -64,14 +72,19 @@ const AppWithTabs: React.FC = () => {
       <IonRouterOutlet>
         <Route exact path="/home" component={Home} />
         <Route exact path="/profile" component={Profile} />
+        <Route exact path="/profile/match-history" component={MatchHistory} />
         <Route exact path="/stats" component={Stats} />
         <Route exact path="/stats/holes" component={HoleStats} />
         <Route exact path="/tournaments" component={Tournaments} />
+        <Route exact path="/tournament" component={TournamentHub} />
+        <Route exact path="/tournament/leaderboard" component={TournamentLeaderboard} />
         <Route exact path="/friends" component={Friends} />
         <Route exact path="/friend/:id" component={FriendProfile} />
         
         {/* Normal Game Routes */}
         <Route exact path="/game/create" component={CreateGame} />
+        <Route exact path="/game/create-custom" component={CreateGameCustom} />
+        <Route exact path="/game/ghost-config" component={GhostConfig} />
         <Route exact path="/game/add-participants" component={AddParticipants} />
         <Route exact path="/game/configure-players" component={PlayerConfiguration} />
         <Route exact path="/game/summary" component={GameSummary} />
@@ -84,6 +97,7 @@ const AppWithTabs: React.FC = () => {
         
         {/* Test Routes - Only for development */}
         <Route exact path="/test/handicap-engine" component={HandicapEngineTest} />
+        <Route exact path="/test/scoring-engine" component={ScoringEngineTest} />
         
         <Route exact path="/">
           <Redirect to="/home" />

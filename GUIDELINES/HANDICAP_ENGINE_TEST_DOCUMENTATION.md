@@ -148,15 +148,11 @@ PMHP:  4  6  3  7  4  4  5  5  4  6  6  3  7  4  6  3  5  4
 Compete against your best previous round
 
 #### Match Handicap Calculation
-- **Allowance Applied**: 100% for real players
-- **Formula**:
-  - Real players: `Course Handicap` (no relative adjustment)
-  - Ghost player: Retrieved from historical best round
-- **Why 100%?**: Simulates playing against yourself at your best
-- **Relative Adjustment**: NO - Ghost and players keep full handicaps
+- **Allowance Applied**: 0% (No handicap)
+- **Formula**: Matches other game scorecard.
 
 #### PMHP Distribution Method
-- **Real Players**: Stroke Index Distribution
+- **Real Players**: No distribution
 - **Ghost Player**: No distribution - uses actual scorecard
   - PMHP = Actual score from best round on each hole
   - Not calculated or distributed - it's their real performance

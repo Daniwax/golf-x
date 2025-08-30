@@ -16,6 +16,7 @@ export interface PlayerMatchPar {
   strokesReceived: number;
   playerMatchPar: number;
   isGhost?: boolean;
+  putts?: number;  // Putts from ghost scorecard (for future use)
 }
 
 export interface PMPDistributionStrategy {
@@ -270,51 +271,55 @@ class ControlledRandomDistribution implements PMPDistributionStrategy {
 }
 
 /**
- * Historical Distribution - Based on past performance
- * For ghost mode - uses actual strokes from best round
+ * Ghost Distribution - Uses actual scores from a past game
+ * For ghost mode - replays exact scores from selected game
  */
-class HistoricalDistribution implements PMPDistributionStrategy {
-  name = 'historical';
-  description = 'Based on actual past performance';
+class GhostDistribution implements PMPDistributionStrategy {
+  name = 'ghost';
+  description = 'Actual scores from past game';
 
-  constructor(private historicalScores?: Map<number, number>) {}
+  constructor(private scorecard?: Map<number, { strokes: number; putts: number }>) {}
 
   distribute(
-    matchHandicap: number,
+    matchHandicap: number,  // Not used for ghosts
     holes: Hole[],
     userId: string
   ): PlayerMatchPar[] {
-    // For fallback, use stroke index distribution logic
-    const strokeIndexDistribution = new StrokeIndexDistribution();
-    const fallbackPMPs = strokeIndexDistribution.distribute(matchHandicap, holes, userId);
-    const fallbackMap = new Map(fallbackPMPs.map(pmp => [pmp.holeNumber, pmp]));
+    // For ghost mode, only return PMPs for holes that exist in the scorecard
+    // This ensures the match adapts to the exact number of holes played historically
+    const pmps: PlayerMatchPar[] = [];
     
-    return holes.map(hole => {
-      // If we have historical data, use it
-      const historicalScore = this.historicalScores?.get(hole.holeNumber);
-      let strokesReceived = 0;
-      let playerMatchPar = hole.par;
-      
-      if (historicalScore !== undefined) {
-        // Calculate strokes received based on historical score
-        strokesReceived = Math.max(0, historicalScore - hole.par);
-        playerMatchPar = historicalScore;
-      } else {
-        // Fallback to stroke index distribution
-        const fallbackPMP = fallbackMap.get(hole.holeNumber);
-        strokesReceived = fallbackPMP?.strokesReceived || 0;
-        playerMatchPar = fallbackPMP?.playerMatchPar || hole.par;
+    // If we have a scorecard, only process holes that exist in it
+    if (this.scorecard && this.scorecard.size > 0) {
+      // Only process holes that exist in the historical scorecard
+      for (const hole of holes) {
+        const scorecardData = this.scorecard.get(hole.holeNumber);
+        if (scorecardData) {
+          pmps.push({
+            userId,
+            holeNumber: hole.holeNumber,
+            holePar: hole.par,
+            strokesReceived: scorecardData.strokes - hole.par,  // Shows how many over/under par
+            playerMatchPar: scorecardData.strokes,  // Their actual score IS their target
+            isGhost: true,
+            putts: scorecardData.putts  // Store putts for future use
+          });
+        }
       }
-      
-      return {
+    } else {
+      // Fallback if no scorecard (shouldn't happen in proper ghost mode)
+      console.warn(`No scorecard data for ghost distribution`);
+      return holes.map(hole => ({
         userId,
         holeNumber: hole.holeNumber,
         holePar: hole.par,
-        strokesReceived,
-        playerMatchPar,
-        isGhost: userId.includes('ghost')
-      };
-    });
+        strokesReceived: 0,
+        playerMatchPar: hole.par,
+        isGhost: true
+      }));
+    }
+    
+    return pmps;
   }
 }
 
@@ -327,8 +332,7 @@ export class PMPEngine {
     ['stroke_index', new StrokeIndexDistribution()],
     ['even', new EvenDistribution()],
     ['random', new RandomDistribution()],  // Legacy random (uncapped)
-    ['controlled_random', new ControlledRandomDistribution()],  // New Lucky Draw
-    ['historical', new HistoricalDistribution()]
+    ['controlled_random', new ControlledRandomDistribution()]  // New Lucky Draw
   ]);
 
   /**
@@ -336,37 +340,104 @@ export class PMPEngine {
    * Distribution method is determined by handicap type
    * IMPORTANT: Adjusts Match Handicap based on number of holes played
    */
-  static calculatePMP(
+  static async calculatePMP(
     matchHandicaps: MatchHandicapResult[],
     holes: Hole[],
     handicapType: string,
-    historicalData?: Map<string, Map<number, number>> // userId -> holeNumber -> score
-  ): Map<string, PlayerMatchPar[]> {
+    ghostGameIds?: Map<string, number> // userId -> gameId for ghost players
+  ): Promise<Map<string, PlayerMatchPar[]>> {
     const pmpMap = new Map<string, PlayerMatchPar[]>();
     
-    // CRITICAL: Adjust match handicap for number of holes
+    // Store the original holes for reference
+    let actualHoles = holes;
     const holesPlayed = holes.length;
     const adjustmentFactor = holesPlayed / 18;
     
-    matchHandicaps.forEach(({ userId, matchHandicap, isGhost }) => {
-      // Adjust the match handicap proportionally for holes played
-      const adjustedMatchHandicap = Math.round(matchHandicap * adjustmentFactor);
+    // Fetch ghost scorecards if game IDs are provided
+    const ghostScorecards = new Map<string, Map<number, { strokes: number; putts: number }>>();
+    let ghostHoleNumbers: number[] | null = null; // Track which holes were played in ghost game
+    
+    if (ghostGameIds && ghostGameIds.size > 0) {
+      console.log('[PMPEngine] Loading ghost scorecards for:', Array.from(ghostGameIds.entries()));
+      const { dataService } = await import('../../../services/data/DataService');
+      
+      for (const [userId, gameId] of ghostGameIds.entries()) {
+        try {
+          // Fetch hole scores for this game
+          const holeScores = await dataService.games.getGameHoleScores(gameId.toString());
+          
+          if (holeScores && holeScores.length > 0) {
+            // For ghost mode, we're replaying a specific game
+            // Since it's a selected game with one player's scores, just use all scores
+            // This works for personal best, friend best, and course record
+            const playerScores = holeScores;
+            
+            // Convert to scorecard map (handles both 9 and 18 hole rounds)
+            const scorecard = new Map<number, { strokes: number; putts: number }>();
+            playerScores.forEach(score => {
+              scorecard.set(score.hole_number, {
+                strokes: score.strokes,
+                putts: score.putts || 0
+              });
+            });
+            
+            // Track which holes were actually played in the ghost game
+            if (!ghostHoleNumbers && scorecard.size > 0) {
+              ghostHoleNumbers = Array.from(scorecard.keys()).sort((a, b) => a - b);
+              console.log(`Ghost game has ${ghostHoleNumbers.length} holes:`, ghostHoleNumbers);
+            }
+            
+            // Store scorecard for ALL players in ghost mode
+            // In ghost mode, all players (real and ghost) need access to the historical scorecard
+            // Store it with the userId from the map (which could be any player)
+            ghostScorecards.set(userId, scorecard);
+            
+            // Also store for all players in the match
+            // This ensures every player can access the scorecard regardless of their userId
+            for (const player of matchHandicaps) {
+              console.log(`[PMPEngine] Storing scorecard for player: ${player.userId}`);
+              ghostScorecards.set(player.userId, scorecard);
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to fetch ghost scorecard for ${userId}, game ${gameId}:`, error);
+        }
+      }
+    }
+    
+    // In ghost mode, use ONLY the holes from the historical game
+    if (handicapType === 'ghost' && ghostHoleNumbers && ghostHoleNumbers.length > 0) {
+      // Use exactly the holes that were played in the ghost game
+      actualHoles = holes.filter(hole => ghostHoleNumbers.includes(hole.holeNumber));
+      console.log(`Ghost mode: Using ${ghostHoleNumbers.length} holes from historical game (holes ${ghostHoleNumbers.join(', ')})`);
+    }
+    
+    // Process each player
+    for (const { userId, matchHandicap, isGhost } of matchHandicaps) {
+      // In ghost mode, everyone has 0 handicap (scratch play)
+      // For other modes, adjust the match handicap proportionally for holes played
+      const adjustedMatchHandicap = handicapType === 'ghost' ? 0 : Math.round(matchHandicap * (actualHoles.length / 18));
       
       let distribution: PMPDistributionStrategy;
       
-      // Choose distribution based on handicap type and player type
-      if (isGhost && historicalData?.has(userId)) {
-        // Use historical distribution for ghosts with data (first N holes)
-        const historicalScores = historicalData.get(userId);
-        // Filter historical data to only include the holes being played
-        const filteredHistorical = new Map<number, number>();
-        holes.forEach(hole => {
-          const score = historicalScores?.get(hole.holeNumber);
-          if (score !== undefined) {
-            filteredHistorical.set(hole.holeNumber, score);
-          }
-        });
-        distribution = new HistoricalDistribution(filteredHistorical);
+      // In ghost mode, BOTH real players and ghosts use the historical scorecard
+      if (handicapType === 'ghost') {
+        // In ghost mode, all players use the same scorecard
+        // Just get it with the current userId
+        const scorecard = ghostScorecards.get(userId);
+        
+        if (scorecard) {
+          // Both player and ghost use the same historical scorecard
+          distribution = new GhostDistribution(scorecard);
+        } else {
+          // Fallback if no scorecard found (shouldn't happen in proper ghost mode)
+          console.warn(`[PMPEngine] No scorecard found for ${userId} in ghost mode. Available keys:`, Array.from(ghostScorecards.keys()));
+          distribution = this.strategies.get('stroke_index')!;
+        }
+      } else if (isGhost && ghostScorecards.has(userId)) {
+        // This shouldn't happen anymore but keep for safety
+        const scorecard = ghostScorecards.get(userId);
+        distribution = new GhostDistribution(scorecard);
       } else if (handicapType === 'random') {
         // Use controlled random for Lucky Draw mode
         distribution = this.strategies.get('controlled_random')!;
@@ -375,8 +446,8 @@ export class PMPEngine {
         distribution = this.strategies.get('stroke_index')!;
       }
       
-      // Use ADJUSTED match handicap for distribution
-      const playerPMPs = distribution.distribute(adjustedMatchHandicap, holes, userId);
+      // Use ADJUSTED match handicap for distribution with actualHoles (filtered for ghost mode)
+      const playerPMPs = distribution.distribute(adjustedMatchHandicap, actualHoles, userId);
       
       // Mark ghost players
       if (isGhost) {
@@ -384,7 +455,7 @@ export class PMPEngine {
       }
       
       pmpMap.set(userId, playerPMPs);
-    });
+    }
     
     return pmpMap;
   }

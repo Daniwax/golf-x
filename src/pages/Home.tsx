@@ -7,7 +7,8 @@ import {
 } from '@ionic/react';
 import { 
   playCircleOutline,
-  trophyOutline
+  trophyOutline,
+  cogOutline
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import LiveMatchCard from '../features/normal-game/components/LiveMatchCard';
@@ -61,6 +62,27 @@ const Home: React.FC = () => {
               >
                 <IonIcon icon={playCircleOutline} slot="start" style={{ fontSize: '20px' }} />
                 Normal Game
+              </IonButton>
+
+              {/* Custom Game Button */}
+              <IonButton
+                expand="block"
+                size="default"
+                fill="outline"
+                onClick={() => history.push('/game/create-custom')}
+                style={{
+                  height: '50px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  '--border-radius': '12px',
+                  '--border-width': '2px',
+                  '--border-color': 'var(--ion-color-primary)',
+                  '--color': 'var(--ion-color-primary)',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                <IonIcon icon={cogOutline} slot="start" style={{ fontSize: '20px' }} />
+                Custom Game
               </IonButton>
 
               {/* Ranked Game Button */}

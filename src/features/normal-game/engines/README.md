@@ -88,10 +88,13 @@ const matchHandicaps = await MatchHandicapEngine.calculateMatchHandicap(
 // ]
 
 // Step 2: Calculate PMP (Player Match Par)
-const pmpMap = PMPEngine.calculatePMP(
+// For ghost mode, pass game IDs to fetch historical scorecards
+const ghostGameIds = new Map(); // Map<userId, gameId> for ghost players
+const pmpMap = await PMPEngine.calculatePMP(
   matchHandicaps,
   holes,
-  'match_play' // Uses this to determine distribution method
+  'match_play', // Uses this to determine distribution method
+  ghostGameIds  // Optional: Map of userId -> gameId for ghost players
 );
 
 // Result: Map with PMP for each player on each hole
