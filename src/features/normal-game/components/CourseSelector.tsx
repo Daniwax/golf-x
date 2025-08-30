@@ -67,6 +67,10 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
       interfaceOptions={{
         header: 'Select Golf Course'
       }}
+      style={{
+        color: !value ? 'var(--ion-color-success)' : undefined,
+        fontWeight: !value ? '600' : undefined
+      }}
     >
       {courses.map(course => (
         <IonSelectOption key={course.id} value={course.id}>

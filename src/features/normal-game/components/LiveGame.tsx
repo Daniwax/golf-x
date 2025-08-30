@@ -26,8 +26,6 @@ import {
   golfOutline, 
   exitOutline,
   refreshOutline,
-  pauseOutline,
-  playOutline,
   informationCircleOutline
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
@@ -60,6 +58,7 @@ const LiveGame: React.FC = () => {
   const [courseName, setCourseName] = useState('');
   const [showColorGuide, setShowColorGuide] = useState(false);
   const [showStrokesInfo, setShowStrokesInfo] = useState(false);
+  const [showSaveIndicator, setShowSaveIndicator] = useState(false);
 
   // Load game data on mount
   useEffect(() => {
@@ -95,6 +94,13 @@ const LiveGame: React.FC = () => {
       if (showLoader) setLoading(true);
       
       const gameData = await gameService.getGameDetails(gameId);
+      console.log('[LiveGame] Loaded game data:', {
+        gameId: gameData.game?.id,
+        numHoles: gameData.game?.num_holes,
+        courseId: gameData.game?.course_id,
+        participantCount: gameData.participants?.length,
+        scoreCount: gameData.scores?.length
+      });
       setGame(gameData.game);
       setParticipants(gameData.participants);
       setScores(gameData.scores);
@@ -104,7 +110,8 @@ const LiveGame: React.FC = () => {
         0,
         ...gameData.scores.filter(s => s.strokes).map(s => s.hole_number)
       );
-      setCurrentHole(Math.min(maxHolePlayed + 1, 18));
+      const maxHoles = gameData.game?.num_holes || 18;
+      setCurrentHole(Math.min(maxHolePlayed + 1, maxHoles));
       
       // Load course name
       // TODO: Add course name loading from database
@@ -145,6 +152,15 @@ const LiveGame: React.FC = () => {
 
   const toggleAutoRefresh = () => {
     setAutoRefresh(!autoRefresh);
+  };
+
+  const handleSaveSuccess = () => {
+    setShowSaveIndicator(true);
+    loadGameData(false); // Refresh data without showing loader
+    // Hide the indicator after animation completes
+    setTimeout(() => {
+      setShowSaveIndicator(false);
+    }, 1500);
   };
 
   if (loading) {
@@ -271,6 +287,25 @@ const LiveGame: React.FC = () => {
 
   return (
     <IonPage>
+      <style>
+        {`
+          @keyframes shimmer {
+            0% {
+              opacity: 0;
+              transform: scale(0.8);
+            }
+            50% {
+              opacity: 1;
+              transform: scale(1.2);
+              box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+            }
+            100% {
+              opacity: 0;
+              transform: scale(0.8);
+            }
+          }
+        `}
+      </style>
       <IonHeader>
         <IonToolbar>
           <IonTitle>{courseName}</IonTitle>
@@ -284,6 +319,21 @@ const LiveGame: React.FC = () => {
               #{gameId.slice(0, 8)}
             </div>
           </IonButtons>
+          {showSaveIndicator && (
+            <div style={{
+              position: 'fixed',
+              top: 'calc(50% + 10px)',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '8px',
+              height: '8px',
+              backgroundColor: '#4CAF50',
+              borderRadius: '50%',
+              animation: 'shimmer 1.5s ease-in-out',
+              zIndex: 1000,
+              pointerEvents: 'none'
+            }} />
+          )}
           <IonButtons slot="end">
             {selectedTab === 'scorecard' && (
               <IonButton 
@@ -311,16 +361,6 @@ const LiveGame: React.FC = () => {
                 />
               </IonButton>
             )}
-            <IonButton 
-              onClick={toggleAutoRefresh}
-              fill="clear"
-              color={autoRefresh ? 'primary' : 'medium'}
-            >
-              <IonIcon 
-                icon={autoRefresh ? playOutline : pauseOutline} 
-                slot="icon-only"
-              />
-            </IonButton>
             <IonButton onClick={() => loadGameData()} fill="clear">
               <IonIcon icon={refreshOutline} slot="icon-only" />
             </IonButton>
@@ -329,20 +369,52 @@ const LiveGame: React.FC = () => {
         <IonToolbar color="light" style={{ minHeight: '44px' }}>
           <div style={{ 
             display: 'flex', 
-            justifyContent: 'space-between', 
             alignItems: 'center',
-            padding: '0 16px'
+            padding: '0 16px',
+            width: '100%'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              flex: '1', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              justifyContent: 'flex-start'
+            }}>
               <IonNote>Hole</IonNote>
               <IonBadge color="primary">{currentHole}</IonBadge>
             </div>
-            <IonNote style={{ fontSize: '12px' }}>
-              {game.game_description || game.scoring_format.replace('_', ' ').toUpperCase()}
-            </IonNote>
-            <IonNote style={{ fontSize: '12px' }}>
-              {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
-            </IonNote>
+            <div style={{ 
+              flex: '1', 
+              display: 'flex', 
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <IonNote style={{ fontSize: '12px' }}>
+                {game.game_description || game.scoring_format.replace('_', ' ').toUpperCase()}
+              </IonNote>
+            </div>
+            <div style={{ 
+              flex: '1', 
+              display: 'flex', 
+              justifyContent: 'flex-end',
+              alignItems: 'center'
+            }}>
+              <IonButton
+                fill="clear"
+                onClick={toggleAutoRefresh}
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  '--color': autoRefresh ? '#22c55e' : '#ef4444',
+                  '--padding-start': '8px',
+                  '--padding-end': '8px',
+                  minHeight: '24px',
+                  height: '24px'
+                }}
+              >
+                Auto-refresh {autoRefresh ? 'ON' : 'OFF'}
+              </IonButton>
+            </div>
           </div>
         </IonToolbar>
       </IonHeader>
@@ -360,6 +432,7 @@ const LiveGame: React.FC = () => {
               participants={participants}
               scores={scores}
               currentHole={currentHole}
+              game={game}
               onRefresh={() => loadGameData()}
               onEditHole={(hole) => {
                 setCurrentHole(hole);
@@ -372,7 +445,7 @@ const LiveGame: React.FC = () => {
             <Leaderboard
               participants={participants}
               scores={scores}
-              format={game.scoring_format}
+              game={game}
               currentHole={currentHole}
             />
           )}
@@ -383,12 +456,14 @@ const LiveGame: React.FC = () => {
               participants={participants}
               scores={scores}
               currentHole={currentHole}
+              game={game}
               onHoleChange={setCurrentHole}
-              onScoreUpdate={() => loadGameData(false)}
+              onScoreUpdate={handleSaveSuccess}
               onGameComplete={() => {
-                setSelectedTab('scorecard');
-                loadGameData(true);
+                // Navigate to the completed game view
+                history.replace(`/game/view/${gameId}`);
               }}
+              isLiveMatch={game.status === 'active'}
             />
           )}
 

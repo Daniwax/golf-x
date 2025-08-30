@@ -88,6 +88,19 @@ const ScorecardColorGuideModal: React.FC<ScorecardColorGuideModalProps> = ({ isO
                     <p>Birdie (1 stroke under par)</p>
                   </IonLabel>
                 </IonItem>
+                <IonItem>
+                  <div slot="start" style={{
+                    width: '40px',
+                    height: '30px',
+                    backgroundColor: '#FFA500',
+                    borderRadius: '4px',
+                    marginRight: '12px'
+                  }} />
+                  <IonLabel>
+                    <strong>Orange</strong>
+                    <p>Bogey (1 stroke over par)</p>
+                  </IonLabel>
+                </IonItem>
               </IonList>
             </IonCardContent>
           </IonCard>
@@ -164,7 +177,8 @@ const ScorecardColorGuideModal: React.FC<ScorecardColorGuideModalProps> = ({ isO
                   <li>Score 3 → <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>Green</span> (birdie)</li>
                   <li>Score 4 → <span style={{ color: '#4A90E2', fontWeight: 'bold' }}>Blue</span> (beat personal par)</li>
                   <li>Score 5 → <span style={{ fontWeight: 'bold' }}>Black</span> (made personal par)</li>
-                  <li>Score 6+ → <span style={{ color: '#E53E3E', fontWeight: 'bold' }}>Red</span> (over personal par)</li>
+                  <li>Score 6 → <span style={{ color: '#FFA500', fontWeight: 'bold' }}>Orange</span> (bogey - for completed games)</li>
+                  <li>Score 7+ → <span style={{ color: '#E53E3E', fontWeight: 'bold' }}>Red</span> (over personal par)</li>
                 </ul>
               </div>
             </IonCardContent>
@@ -187,6 +201,9 @@ const ScorecardColorGuideModal: React.FC<ScorecardColorGuideModalProps> = ({ isO
                 </p>
                 <p style={{ margin: '0 0 8px 0' }}>
                   <strong>Black</strong> = Met your personal par expectation
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  <strong>Orange</strong> = Bogey (only in completed games)
                 </p>
                 <p style={{ margin: 0 }}>
                   <strong>Red</strong> = Need improvement on this hole

@@ -1,461 +1,505 @@
+/**
+ * Profile page v2 - Modularized version using DataService
+ * Clean separation of concerns with reusable components
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   IonContent,
-  IonHeader,
   IonPage,
-  IonTitle,
-  IonToolbar,
   IonCard,
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonButton,
   IonIcon,
   IonItem,
   IonLabel,
-  IonInput,
-  IonTextarea,
-  IonAvatar,
-  IonActionSheet,
+  IonToggle,
   IonToast,
   IonSpinner,
-  IonList,
-  IonItemDivider,
-  IonNote,
-  IonToggle,
-  IonRange
+  IonNote
 } from '@ionic/react';
 import { 
-  cameraOutline,
-  createOutline,
   logOutOutline,
   golfOutline,
-  locationOutline,
-  trophyOutline,
   statsChartOutline,
   notificationsOutline,
   moonOutline,
   helpCircleOutline,
   shieldCheckmarkOutline,
-  peopleOutline
+  peopleOutline,
+  chevronForwardOutline,
+  timeOutline
 } from 'ionicons/icons';
 import { useAuth } from '../lib/useAuth';
 import { useHistory } from 'react-router-dom';
-import { profileGameService, type GameStats } from '../features/normal-game/services/profileGameService';
-import CompletedMatches from '../features/normal-game/components/CompletedMatches';
+import { useProfile } from '../hooks/useProfile';
+import { ProfileHeader } from '../components/profile/ProfileHeader';
+import { StatsGrid } from '../components/profile/StatsGrid';
 
 const Profile: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const history = useHistory();
+  
+  // Use our new hook for all data
+  const {
+    profile,
+    profileLoading,
+    gameStats,
+    statsLoading,
+    updateProfile
+  } = useProfile();
+
+  // UI state
   const [isEditing, setIsEditing] = useState(false);
-  const [showActionSheet, setShowActionSheet] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [gameStats, setGameStats] = useState<GameStats>({
-    totalGamesPlayed: 0,
-    bestScore: null,
-    averageScore: null,
-    recentHandicap: null,
-    preferredCourse: null
-  });
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
   
-  // Profile state
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
-  const [email] = useState(user?.email || '');
-  const [handicap, setHandicap] = useState(12.5);
-  const [preferredCourse, setPreferredCourse] = useState('-');
-  const [bio, setBio] = useState('Passionate golfer working to improve my game. Love playing different courses and meeting new people on the course.');
+  // Settings state (local only for now)
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
+  // Track when initial load is complete
   useEffect(() => {
-    const loadGameStats = async () => {
-      if (!user?.id) return;
-      setStatsLoading(true);
-      try {
-        const stats = await profileGameService.getUserGameStats(user.id);
-        setGameStats(stats);
-        // Update handicap from recent game if available
-        if (stats.recentHandicap !== null) {
-          setHandicap(stats.recentHandicap);
-        }
-        // Update preferred course from stats
-        if (stats.preferredCourse !== null) {
-          setPreferredCourse(stats.preferredCourse);
-        }
-      } catch (error) {
-        console.error('Error loading game stats:', error);
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-    
-    if (user?.id) {
-      loadGameStats();
+    if (!profileLoading && !statsLoading && profile) {
+      setHasInitiallyLoaded(true);
     }
-  }, [user?.id]);
-
+  }, [profileLoading, statsLoading, profile]);
 
   const handleSignOut = async () => {
-    setLoading(true);
+    setSigningOut(true);
     const { error } = await signOut();
     if (error) {
       setToastMessage('Error signing out');
       setShowToast(true);
+      setSigningOut(false);
     } else {
       history.replace('/login');
     }
-    setLoading(false);
   };
 
-  const handleSaveProfile = async () => {
-    setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsEditing(false);
-    setToastMessage('Profile updated successfully');
+  const handleSaveProfile = async (updates: { full_name?: string; bio?: string; handicap?: number; avatar_url?: string }) => {
+    const success = await updateProfile(updates);
+    if (success) {
+      setToastMessage('Profile updated successfully');
+      setIsEditing(false);
+    } else {
+      setToastMessage('Failed to save profile');
+    }
     setShowToast(true);
-    setLoading(false);
   };
 
-  const golfingStats = [
+  // Show loading skeleton while initial data loads or hasn't loaded yet
+  if (!hasInitiallyLoaded || profileLoading) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          <div style={{ padding: '0' }}>
+            {/* Profile Header Skeleton */}
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              padding: '48px 24px 24px',
+              borderRadius: '0 0 24px 24px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                {/* Avatar Skeleton */}
+                <div style={{
+                  width: '120px',
+                  height: '120px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }} />
+                
+                {/* Info Skeleton */}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    height: '28px',
+                    width: '150px',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    marginBottom: '8px',
+                    animation: 'pulse 1.5s ease-in-out infinite'
+                  }} />
+                  <div style={{
+                    height: '20px',
+                    width: '200px',
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    borderRadius: '6px',
+                    marginBottom: '6px',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    animationDelay: '0.1s'
+                  }} />
+                  <div style={{
+                    height: '18px',
+                    width: '120px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '6px',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    animationDelay: '0.2s'
+                  }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Card Skeleton */}
+            <IonCard style={{ margin: '16px', borderRadius: '12px' }}>
+              <IonCardHeader>
+                <div style={{
+                  height: '24px',
+                  width: '180px',
+                  background: '#e0e0e0',
+                  borderRadius: '8px',
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }} />
+              </IonCardHeader>
+              <IonCardContent>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                  {[1, 2, 3].map(i => (
+                    <div key={i} style={{ textAlign: 'center' }}>
+                      <div style={{
+                        height: '32px',
+                        width: '60px',
+                        background: '#e0e0e0',
+                        borderRadius: '8px',
+                        margin: '0 auto 8px',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                        animationDelay: `${i * 0.1}s`
+                      }} />
+                      <div style={{
+                        height: '16px',
+                        width: '80px',
+                        background: '#f0f0f0',
+                        borderRadius: '6px',
+                        margin: '0 auto',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                        animationDelay: `${i * 0.1}s`
+                      }} />
+                    </div>
+                  ))}
+                </div>
+              </IonCardContent>
+            </IonCard>
+
+            {/* Navigation Items Skeleton */}
+            <IonCard style={{ margin: '16px', borderRadius: '12px' }}>
+              <IonCardContent style={{ padding: '0' }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{
+                    padding: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    borderBottom: i < 3 ? '1px solid #f0f0f0' : 'none'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: '#e0e0e0',
+                      animation: 'pulse 1.5s ease-in-out infinite',
+                      animationDelay: `${i * 0.1}s`
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        height: '20px',
+                        width: '120px',
+                        background: '#e0e0e0',
+                        borderRadius: '6px',
+                        marginBottom: '4px',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                        animationDelay: `${i * 0.1}s`
+                      }} />
+                      <div style={{
+                        height: '16px',
+                        width: '200px',
+                        background: '#f0f0f0',
+                        borderRadius: '6px',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                        animationDelay: `${i * 0.1 + 0.05}s`
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </IonCardContent>
+            </IonCard>
+
+            {/* Settings Card Skeleton */}
+            <IonCard style={{ margin: '16px', borderRadius: '12px' }}>
+              <IonCardHeader>
+                <div style={{
+                  height: '24px',
+                  width: '100px',
+                  background: '#e0e0e0',
+                  borderRadius: '8px',
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }} />
+              </IonCardHeader>
+              <IonCardContent style={{ padding: '0' }}>
+                {[1, 2].map(i => (
+                  <div key={i} style={{
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: i < 2 ? '1px solid #f0f0f0' : 'none'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: '#e0e0e0',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                        animationDelay: `${i * 0.1}s`
+                      }} />
+                      <div style={{
+                        height: '18px',
+                        width: '100px',
+                        background: '#e0e0e0',
+                        borderRadius: '6px',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                        animationDelay: `${i * 0.1}s`
+                      }} />
+                    </div>
+                    <div style={{
+                      width: '48px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      background: '#f0f0f0',
+                      animation: 'pulse 1.5s ease-in-out infinite',
+                      animationDelay: `${i * 0.1}s`
+                    }} />
+                  </div>
+                ))}
+              </IonCardContent>
+            </IonCard>
+
+            <style>{`
+              @keyframes pulse {
+                0%, 100% {
+                  opacity: 1;
+                }
+                50% {
+                  opacity: 0.5;
+                }
+              }
+            `}</style>
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  // Career stats for the stats card
+  const careerStats = [
     { 
-      label: 'Rounds Played', 
-      value: statsLoading ? '...' : (gameStats.totalGamesPlayed || 0).toString(), 
-      icon: golfOutline, 
-      color: 'primary' 
+      value: statsLoading ? '...' : (gameStats.totalGamesPlayed || 0), 
+      label: 'Total Rounds',
+      color: 'var(--ion-color-primary)'
     },
     { 
-      label: 'Best Score', 
-      value: statsLoading ? '...' : (gameStats.bestScore !== null ? gameStats.bestScore.toString() : '-'), 
-      icon: trophyOutline, 
-      color: 'success' 
+      value: statsLoading ? '...' : (gameStats.bestScore !== null ? gameStats.bestScore : '-'), 
+      label: 'Best Round',
+      color: 'var(--ion-color-success)'
     },
     { 
-      label: 'Average Score', 
-      value: statsLoading ? '...' : (gameStats.averageScore !== null ? gameStats.averageScore.toString() : '-'), 
-      icon: statsChartOutline, 
-      color: 'secondary' 
-    },
-    { 
-      label: 'Handicap Index', 
-      value: handicap.toFixed(1), 
-      icon: golfOutline, 
-      color: 'warning' 
+      value: statsLoading ? '...' : (gameStats.averageScore !== null ? gameStats.averageScore.toFixed(1) : '-'), 
+      label: 'Average',
+      color: 'var(--ion-color-warning)'
     }
   ];
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Profile</IonTitle>
-          {!isEditing ? (
-            <IonButton
-              fill="clear"
-              slot="end"
-              onClick={() => setIsEditing(true)}
-            >
-              <IonIcon icon={createOutline} />
-            </IonButton>
-          ) : (
-            <>
-              <IonButton
-                fill="clear"
-                slot="end"
-                onClick={() => setIsEditing(false)}
-                color="medium"
-              >
-                Cancel
-              </IonButton>
-            </>
-          )}
-        </IonToolbar>
-      </IonHeader>
-      
       <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Profile</IonTitle>
-          </IonToolbar>
-        </IonHeader>
+        <div style={{ padding: '0' }}>
+          {/* Version indicator - small + in top corner */}
+          <div style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            backgroundColor: 'rgba(102, 126, 234, 0.9)',
+            color: 'white',
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            zIndex: 9999,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}>
+            +
+          </div>
+          
+          {/* Profile Header - Now a clean component */}
+          <ProfileHeader
+            profile={profile}
+            gameStats={gameStats}
+            isEditing={isEditing}
+            onEditToggle={setIsEditing}
+            onSave={handleSaveProfile}
+            statsLoading={statsLoading}
+          />
 
-        <div className="ion-padding">
-          {/* Profile Header Card */}
-          <IonCard>
-            <IonCardContent style={{ textAlign: 'center', paddingTop: '32px' }}>
-              <IonAvatar style={{ 
-                width: '120px', 
-                height: '120px', 
-                margin: '0 auto 16px auto',
-                position: 'relative'
+          {/* Career Statistics - Using StatsGrid component */}
+          <IonCard button onClick={() => history.push('/stats')} style={{ margin: '0 0 16px 0', borderRadius: '0px' }}>
+            <IonCardHeader style={{ paddingBottom: '8px' }}>
+              <IonCardTitle style={{ 
+                fontSize: '18px', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center' 
               }}>
-                <div style={{ 
-                  background: 'var(--ion-color-primary)',
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '48px',
-                  color: 'white',
-                  fontWeight: 'bold'
-                }}>
-                  {fullName?.[0] || email?.[0] || 'G'}
-                </div>
-                {isEditing && (
-                  <IonButton
-                    fill="solid"
-                    size="small"
-                    style={{
-                      position: 'absolute',
-                      bottom: '-8px',
-                      right: '-8px',
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%'
-                    }}
-                    onClick={() => setShowActionSheet(true)}
-                  >
-                    <IonIcon icon={cameraOutline} style={{ fontSize: '18px' }} />
-                  </IonButton>
-                )}
-              </IonAvatar>
-
-              {isEditing ? (
-                <>
-                  <IonItem>
-                    <IonLabel position="stacked">Full Name</IonLabel>
-                    <IonInput
-                      value={fullName}
-                      placeholder="Enter your full name"
-                      onIonInput={(e) => setFullName(e.detail.value!)}
-                    />
-                  </IonItem>
-                  <IonItem>
-                    <IonLabel position="stacked">Bio</IonLabel>
-                    <IonTextarea
-                      value={bio}
-                      placeholder="Tell us about yourself..."
-                      rows={3}
-                      onIonInput={(e) => setBio(e.detail.value!)}
-                    />
-                  </IonItem>
-                  <IonButton
-                    expand="block"
-                    fill="solid"
-                    onClick={handleSaveProfile}
-                    disabled={loading}
-                    style={{ marginTop: '16px' }}
-                  >
-                    {loading ? <IonSpinner name="crescent" /> : 'Save Changes'}
-                  </IonButton>
-                </>
-              ) : (
-                <>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '24px' }}>
-                    {fullName || 'Golf Enthusiast'}
-                  </h2>
-                  <IonNote color="medium" style={{ fontSize: '16px' }}>
-                    {email}
-                  </IonNote>
-                  <p style={{ 
-                    margin: '16px 0 0 0', 
-                    color: 'var(--ion-color-medium)',
-                    lineHeight: '1.4'
-                  }}>
-                    {bio}
-                  </p>
-                </>
-              )}
-            </IonCardContent>
-          </IonCard>
-
-          {/* Golf Stats */}
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Golf Statistics</IonCardTitle>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <IonIcon icon={statsChartOutline} color="primary" />
+                  Career Statistics
+                </span>
+                <IonIcon icon={chevronForwardOutline} color="medium" />
+              </IonCardTitle>
             </IonCardHeader>
-            <IonCardContent style={{ paddingTop: 0 }}>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr 1fr', 
-                gap: '16px' 
-              }}>
-                {golfingStats.map((stat, index) => (
-                  <div key={index} style={{ textAlign: 'center' }}>
-                    <IonIcon 
-                      icon={stat.icon} 
-                      style={{ 
-                        fontSize: '32px', 
-                        color: `var(--ion-color-${stat.color})`,
-                        marginBottom: '8px'
-                      }}
-                    />
-                    <h3 style={{ margin: '0', fontSize: '20px' }}>
-                      {stat.value}
-                    </h3>
-                    <IonNote color="medium" style={{ fontSize: '12px' }}>
-                      {stat.label}
-                    </IonNote>
-                  </div>
-                ))}
-              </div>
-            </IonCardContent>
-          </IonCard>
-
-          {/* Golf Details */}
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Golf Details</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent style={{ paddingTop: 0 }}>
-              {isEditing ? (
-                <>
-                  <IonItem>
-                    <IonIcon icon={golfOutline} slot="start" />
-                    <IonLabel position="stacked">Handicap Index</IonLabel>
-                    <IonRange
-                      value={handicap}
-                      min={0}
-                      max={36}
-                      step={0.1}
-                      snaps={true}
-                      pin={true}
-                      onIonInput={(e) => setHandicap(e.detail.value as number)}
-                    />
-                  </IonItem>
-                  <IonItem>
-                    <IonIcon icon={locationOutline} slot="start" />
-                    <IonLabel position="stacked">Preferred Course</IonLabel>
-                    <IonInput
-                      value={preferredCourse}
-                      placeholder="Enter your preferred course"
-                      onIonInput={(e) => setPreferredCourse(e.detail.value!)}
-                    />
-                  </IonItem>
-                </>
-              ) : (
-                <>
-                  <IonItem>
-                    <IonIcon icon={golfOutline} slot="start" />
-                    <IonLabel>
-                      <h3>Handicap Index</h3>
-                      <p>{handicap}</p>
-                    </IonLabel>
-                  </IonItem>
-                  <IonItem>
-                    <IonIcon icon={locationOutline} slot="start" />
-                    <IonLabel>
-                      <h3>Preferred Course</h3>
-                      <p>{preferredCourse}</p>
-                    </IonLabel>
-                  </IonItem>
-                </>
-              )}
-            </IonCardContent>
-          </IonCard>
-
-          {/* Friends Section */}
-          <IonCard>
             <IonCardContent>
-              <IonItem button onClick={() => history.push('/friends')}>
-                <IonIcon icon={peopleOutline} slot="start" color="primary" />
-                <IonLabel>
-                  <h2>Friends</h2>
-                  <p>Manage your golf buddies</p>
+              <StatsGrid 
+                stats={careerStats}
+                columns={3}
+                size="medium"
+                loading={statsLoading}
+                style={{ marginBottom: '16px' }}
+              />
+              <IonNote style={{ fontSize: '13px', display: 'block' }}>
+                View detailed performance analytics and hole-by-hole statistics
+              </IonNote>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Navigation Section */}
+          <IonCard style={{ margin: '0 0 16px 0', borderRadius: '0px' }}>
+            <IonCardContent style={{ padding: '0' }}>
+              <NavigationItem
+                icon={peopleOutline}
+                color="primary"
+                title="Friends"
+                subtitle="Manage your golf buddies and connections"
+                onClick={() => history.push('/friends')}
+              />
+              <NavigationItem
+                icon={timeOutline}
+                color="success"
+                title="Match History"
+                subtitle="View all your completed rounds and matches"
+                onClick={() => history.push('/profile/match-history')}
+              />
+              <NavigationItem
+                icon={golfOutline}
+                color="warning"
+                title="Golf Courses (Original)"
+                subtitle="Browse and explore golf courses"
+                onClick={() => history.push('/courses')}
+              />
+            </IonCardContent>
+          </IonCard>
+
+          {/* Settings */}
+          <IonCard style={{ margin: '0 0 16px 0', borderRadius: '0px' }}>
+            <IonCardHeader style={{ paddingBottom: '8px' }}>
+              <IonCardTitle style={{ fontSize: '18px' }}>Settings</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent style={{ padding: '0' }}>
+              <SettingsToggle
+                icon={notificationsOutline}
+                color="primary"
+                label="Push Notifications"
+                checked={notifications}
+                onChange={setNotifications}
+              />
+              <SettingsToggle
+                icon={moonOutline}
+                color="medium"
+                label="Dark Mode"
+                checked={darkMode}
+                onChange={setDarkMode}
+              />
+              <NavigationItem
+                icon={shieldCheckmarkOutline}
+                color="success"
+                title="Privacy & Security"
+                onClick={() => console.log('Privacy')}
+              />
+              <NavigationItem
+                icon={helpCircleOutline}
+                color="tertiary"
+                title="Help & Support"
+                onClick={() => console.log('Help')}
+              />
+            </IonCardContent>
+          </IonCard>
+
+          {/* Sign Out */}
+          <IonCard style={{ margin: '0 0 16px 0', borderRadius: '0px' }}>
+            <IonCardContent style={{ padding: '0' }}>
+              <IonItem button onClick={handleSignOut} disabled={signingOut}>
+                <IonIcon icon={logOutOutline} slot="start" color="danger" />
+                <IonLabel color="danger">
+                  {signingOut ? 'Signing Out...' : 'Sign Out'}
                 </IonLabel>
+                {signingOut && <IonSpinner slot="end" />}
               </IonItem>
             </IonCardContent>
           </IonCard>
-
-          {/* Completed Matches Section */}
-          {user?.id && <CompletedMatches userId={user.id} />}
-
-          {/* Settings */}
-          <IonList>
-            <IonItemDivider>
-              <IonLabel>Settings</IonLabel>
-            </IonItemDivider>
-            
-            <IonItem>
-              <IonIcon icon={notificationsOutline} slot="start" />
-              <IonLabel>Push Notifications</IonLabel>
-              <IonToggle
-                checked={notifications}
-                onIonChange={(e) => setNotifications(e.detail.checked)}
-              />
-            </IonItem>
-            
-            <IonItem>
-              <IonIcon icon={moonOutline} slot="start" />
-              <IonLabel>Dark Mode</IonLabel>
-              <IonToggle
-                checked={darkMode}
-                onIonChange={(e) => setDarkMode(e.detail.checked)}
-              />
-            </IonItem>
-            
-            <IonItem button>
-              <IonIcon icon={shieldCheckmarkOutline} slot="start" />
-              <IonLabel>Privacy & Security</IonLabel>
-            </IonItem>
-            
-            <IonItem button>
-              <IonIcon icon={helpCircleOutline} slot="start" />
-              <IonLabel>Help & Support</IonLabel>
-            </IonItem>
-            
-            <IonItem button onClick={handleSignOut} disabled={loading}>
-              <IonIcon icon={logOutOutline} slot="start" color="danger" />
-              <IonLabel color="danger">
-                {loading ? 'Signing Out...' : 'Sign Out'}
-              </IonLabel>
-            </IonItem>
-          </IonList>
         </div>
-
-        <IonActionSheet
-          isOpen={showActionSheet}
-          onDidDismiss={() => setShowActionSheet(false)}
-          cssClass="my-custom-class"
-          buttons={[
-            {
-              text: 'Take Photo',
-              icon: cameraOutline,
-              handler: () => {
-                // Photo capture functionality to be implemented
-              }
-            },
-            {
-              text: 'Choose from Gallery',
-              icon: 'image-outline',
-              handler: () => {
-                // Gallery selection functionality to be implemented
-              }
-            },
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              handler: () => {
-                // Action sheet will close automatically
-              }
-            }
-          ]}
-        />
 
         <IonToast
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}
           message={toastMessage}
           duration={3000}
-          color="success"
+          color={toastMessage.includes('success') ? 'success' : 'danger'}
         />
       </IonContent>
     </IonPage>
   );
 };
+
+// Reusable navigation item component
+const NavigationItem: React.FC<{
+  icon: string;
+  color: string;
+  title: string;
+  subtitle?: string;
+  onClick: () => void;
+}> = ({ icon, color, title, subtitle, onClick }) => (
+  <IonItem button onClick={onClick}>
+    <IonIcon icon={icon} slot="start" color={color} />
+    <IonLabel>
+      <h3>{title}</h3>
+      {subtitle && <p>{subtitle}</p>}
+    </IonLabel>
+  </IonItem>
+);
+
+// Reusable settings toggle component
+const SettingsToggle: React.FC<{
+  icon: string;
+  color: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}> = ({ icon, color, label, checked, onChange }) => (
+  <IonItem>
+    <IonIcon icon={icon} slot="start" color={color} />
+    <IonLabel>{label}</IonLabel>
+    <IonToggle
+      checked={checked}
+      onIonChange={(e) => onChange(e.detail.checked)}
+      slot="end"
+    />
+  </IonItem>
+);
 
 export default Profile;
