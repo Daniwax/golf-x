@@ -186,7 +186,7 @@ export class CourseDataService {
             id,
             course_id,
             hole_id,
-            image_data,
+            image_url,
             mime_type,
             file_size,
             image_type,

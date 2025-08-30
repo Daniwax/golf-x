@@ -233,49 +233,13 @@ const MatchHistory: React.FC = () => {
                 };
               });
               
-              // Debug: Check what we're getting from database
-              console.log(`📊 DB values for ${game.id}:`, {
-                handicap_type: game.handicap_type,
-                scoring_method: game.scoring_method,
-                numHoles: game.numHoles,
-                scoringFormat: (game as DbGameResponse & { scoringFormat?: string }).scoringFormat // old field
-              });
               
               // Calculate leaderboard using the game's scoring method
               const scoringMethod = (game.scoringMethod || 'stroke_play') as ScoringMethod;
               const includeHandicap = (participants as unknown as DbGameParticipant[]).some((p: DbGameParticipant) => p.handicap_index && p.handicap_index > 0);
               scoringType = includeHandicap ? 'Net' : 'Gross';
               
-              console.log(`🔧 Scoring params for ${game.id}:`, {
-                method: scoringMethod,
-                includeHandicap,
-                playersCount: engineScorecards.length,
-                gameHoles: game.numHoles || 18,
-                actualHolesUsed: engineScorecards[0]?.holes?.length || 0
-              });
               
-              console.log(`🚀 Calling ScoringEngine for ${game.id}:`, {
-                scoringMethod,
-                includeHandicap,
-                numPlayers: engineScorecards.length,
-                engineScorecards: engineScorecards.map(scorecard => ({
-                  gameId: scorecard.gameId,
-                  userId: scorecard.userId,
-                  playerName: scorecard.playerName,
-                  totalStrokes: scorecard.totalStrokes,
-                  totalPutts: scorecard.totalPutts,
-                  courseHandicap: scorecard.courseHandicap,
-                  playingHandicap: scorecard.playingHandicap,
-                  holesCount: scorecard.holes.length,
-                  firstFewHoles: scorecard.holes.slice(0, 3).map(h => ({
-                    holeNumber: h.holeNumber,
-                    par: h.par,
-                    strokes: h.strokes,
-                    putts: h.putts,
-                    strokeIndex: h.strokeIndex
-                  }))
-                }))
-              });
               
               leaderboard = ScoringEngine.calculateLeaderboard(
                 engineScorecards,
@@ -283,17 +247,6 @@ const MatchHistory: React.FC = () => {
                 includeHandicap
               );
               
-              console.log(`⚡ Engine Results for ${game.id}:`, {
-                totalEntries: leaderboard?.entries?.length || 0,
-                allEntries: leaderboard?.entries?.map(entry => ({
-                  position: entry.position,
-                  playerId: entry.playerId,
-                  playerName: entry.playerName,
-                  score: entry.score,
-                  details: entry.details
-                })) || [],
-                scoringMetadata: leaderboard?.metadata || {}
-              });
               
               // Get winner info and user's position
               if (leaderboard && leaderboard.entries.length > 0) {
@@ -304,17 +257,6 @@ const MatchHistory: React.FC = () => {
                 
                 // Find user's position and score
                 const userEntry = leaderboard.entries.find(entry => entry.playerId === user.id);
-                console.log(`👤 User lookup for ${game.id}:`, {
-                  userId: user.id,
-                  userEntryFound: !!userEntry,
-                  userEntry: userEntry ? {
-                    position: userEntry.position,
-                    playerId: userEntry.playerId,
-                    playerName: userEntry.playerName,
-                    score: userEntry.score,
-                    details: userEntry.details
-                  } : null
-                });
                 
                 if (userEntry) {
                   userPosition = userEntry.position;
@@ -405,7 +347,6 @@ const MatchHistory: React.FC = () => {
             console.error(`Error calculating leaderboard for game ${game.id}:`, err);
           }
           
-          console.log(`🎯 FIXED Game ${game.id}: userPos=${userPosition}, userScore=${userScore}`);
           
           return {
             id: game.id || `completed-${Date.now()}-${Math.random()}`,
@@ -455,7 +396,6 @@ const MatchHistory: React.FC = () => {
           participants: game.totalPlayers || 1,
           course_id: game.courseId
         }));
-        console.log('[MatchHistory] Fallback: Loading simple games without scoring details');
         setGames(simpleGames);
       } catch (fallbackError) {
         console.error('[MatchHistory] Fallback also failed:', fallbackError);
@@ -616,13 +556,7 @@ const MatchHistory: React.FC = () => {
               justifyContent: 'center', 
               gap: '8px'
             }}>
-              <IonIcon 
-                icon={trophyOutline} 
-                style={{ 
-                  fontSize: '20px', 
-                  color: 'var(--golf-gold)'
-                }} 
-              />
+              
               <span className="golf-font-serif" style={{
                 fontSize: '16px',
                 color: 'var(--golf-cream)',
@@ -632,13 +566,7 @@ const MatchHistory: React.FC = () => {
               }}>
                 Match History
               </span>
-              <IonIcon 
-                icon={trophyOutline} 
-                style={{ 
-                  fontSize: '20px', 
-                  color: 'var(--golf-gold)'
-                }} 
-              />
+              
             </div>
           </IonTitle>
         </IonToolbar>
@@ -711,7 +639,7 @@ const MatchHistory: React.FC = () => {
               return (
                 <div 
                   key={game.id} 
-                  className="ion-activatable golf-card"
+                  className="ion-activatable golf-card-no-padding"
                   onClick={() => handleGameClick(game)}
                   style={{
                     margin: '0',
@@ -746,7 +674,11 @@ const MatchHistory: React.FC = () => {
                           display: 'block'
                         }}
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/assets/golf-course-placeholder.jpg';
+                          const img = e.target as HTMLImageElement;
+                          if (!img.dataset.errorHandled) {
+                            img.dataset.errorHandled = 'true';
+                            img.style.display = 'none';
+                          }
                         }}
                       />
                     )}

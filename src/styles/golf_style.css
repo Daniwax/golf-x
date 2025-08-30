@@ -55,6 +55,14 @@
   overflow: hidden;
 }
 
+/* Main Golf Card */
+.golf-card-no-padding {
+  background: var(--golf-cream);
+  border: 1px solid var(--golf-tan-border);
+  position: relative;
+  overflow: hidden;
+}
+
 /* Elegant Letter-style Card */
 .golf-letter-card {
   background: var(--golf-white);

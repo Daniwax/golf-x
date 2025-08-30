@@ -165,11 +165,11 @@ export function useCourseList(): UseCourseListResult {
         average_score: stat.total_strokes
       }));
       setPlayerStats(mappedStats);
-      // Map the images data to the expected format
+      // Map the images data to the expected format - use image_url only
       const mappedImages = (imagesData || []).map((img: ImageData) => ({
         id: img.id,
         course_id: img.course_id,
-        image_url: img.image_data || img.image_url || '',
+        image_url: img.image_url || '',
         is_primary: img.is_primary
       }));
       setCourseImages(mappedImages);
@@ -292,11 +292,11 @@ export function useCourseDetail(courseId: string): UseCourseDetailResult {
       setTeeBoxes(teeData || []);
       setHoles(holesData || []);
       setAmenities(amenitiesData);
-      // Map the images data to the expected format
+      // Map the images data to the expected format - use image_url only
       const mappedImages = (imagesData || []).map((img: ImageData) => ({
         id: img.id,
         course_id: img.course_id,
-        image_url: img.image_data || img.image_url || '',
+        image_url: img.image_url || '',
         is_primary: img.is_primary
       }));
       setCourseImages(mappedImages);

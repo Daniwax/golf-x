@@ -655,7 +655,7 @@ const ViewCompletedGame: React.FC = () => {
                   textTransform: 'uppercase',
                   textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)'
                 }}>
-                  {game.golf_courses.name}
+                  {game.golf_courses?.name || 'Unknown Course'}
                 </h1>
                 <div style={{
                   position: 'absolute',
@@ -676,7 +676,7 @@ const ViewCompletedGame: React.FC = () => {
                 fontStyle: 'italic',
                 letterSpacing: '1px'
               }}>
-                ~ {game.golf_courses.golf_clubs?.name} ~
+                ~ {game.golf_courses?.golf_clubs?.name || 'Unknown Club'} ~
               </p>
             </div>
 
@@ -950,8 +950,8 @@ const ViewCompletedGame: React.FC = () => {
               participants={participants}
               scores={scores}
               holes={holes}
-              courseName={game.golf_courses.name}
-              coursePar={game.golf_courses.par}
+              courseName={game.golf_courses?.name || 'Unknown Course'}
+              coursePar={game.golf_courses?.par || 72}
               isReadOnly={true}
             />
           ) : (

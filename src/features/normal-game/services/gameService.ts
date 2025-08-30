@@ -459,7 +459,15 @@ class GameService {
           notes_updated_by,
           notes_updated_at,
           handicap_type,
-          num_holes
+          num_holes,
+          golf_courses!inner (
+            id,
+            name,
+            par,
+            golf_clubs!inner (
+              name
+            )
+          )
         `)
         .eq('id', gameId)
         .single(),
