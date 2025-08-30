@@ -19,8 +19,13 @@ export interface LiveGame {
 }
 
 // Cache for active games data
-const activeGamesCache = new Map<string, { data: LiveGame[]; timestamp: number }>();
+export const activeGamesCache = new Map<string, { data: LiveGame[]; timestamp: number }>();
 const CACHE_DURATION = 30000; // 30 seconds
+
+// Export cache to window for external access
+if (typeof window !== 'undefined') {
+  (window as unknown as { __activeGamesCache?: typeof activeGamesCache }).__activeGamesCache = activeGamesCache;
+}
 
 /**
  * Hook for fetching user's active/live games with intelligent caching
@@ -148,11 +153,9 @@ export function useLiveGamesWithNavigation(history: IonicHistory) {
         const now = Date.now();
         // Only refresh if we haven't navigated to home recently (avoid rapid navigation refreshes)
         if (now - lastNavigationRef.current > 2000) {
-          // Only refresh if cache is stale or no data exists
-          if (!liveGamesResult.data || liveGamesResult.data.length === 0) {
-            console.log('Navigated to home - no active games data, refreshing');
-            setTimeout(() => liveGamesResult.refresh(), 100);
-          }
+          // Always refresh when returning to home to catch game deletions
+          console.log('Navigated to home - refreshing live games');
+          setTimeout(() => liveGamesResult.refresh(), 100);
         }
         lastNavigationRef.current = now;
       }

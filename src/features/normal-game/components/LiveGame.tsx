@@ -30,6 +30,7 @@ import {
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import { gameService } from '../services/gameService';
+import { useAuth } from '../../../lib/useAuth';
 import type { Game, GameParticipant, GameHoleScore } from '../types';
 import ScorecardMobile from './ScorecardMobile';
 import Leaderboard from './Leaderboard';
@@ -72,6 +73,7 @@ const getGameFormatDescription = (handicapType: string, scoringFormat: string): 
 const LiveGame: React.FC = () => {
   const { gameId } = useParams<LiveGameParams>();
   const history = useHistory();
+  const { user } = useAuth();
   
   const [selectedTab, setSelectedTab] = useState<'scorecard' | 'leaderboard' | 'hole-entry' | 'exit'>('scorecard');
   const [game, setGame] = useState<Game | null>(null);
@@ -170,6 +172,18 @@ const LiveGame: React.FC = () => {
     try {
       setLoading(true);
       await gameService.cancelGame(gameId);
+      
+      // Invalidate the live games cache to force refresh on home page
+      if (user?.id) {
+        const { dataService } = await import('../../../services/data/DataService');
+        dataService.games.invalidateUserGames(user.id);
+        // Also clear the cache directly
+        const activeGamesCache = (window as unknown as { __activeGamesCache?: Map<string, unknown> }).__activeGamesCache;
+        if (activeGamesCache && activeGamesCache.delete) {
+          activeGamesCache.delete(user.id);
+        }
+      }
+      
       history.replace('/home');
     } catch (error) {
       console.error('Error canceling game:', error);

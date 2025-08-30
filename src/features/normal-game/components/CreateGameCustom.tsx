@@ -57,11 +57,11 @@ const SCORING_METHODS = {
   },
   match_play: {
     displayName: 'Match Play',
-    description: 'Points for each hole won - win hole = 1 point, most points wins match'
+    description: 'Each hole is its own little battle.Points for each hole won/tied, most points wins match'
   },
   stableford: {
     displayName: 'Stableford',
-    description: 'Points based on score vs par - higher points better, bad holes limited damage'
+    description: 'PStableford awards points per hole based on score versus par; highest points wins.'
   },
   skins: {
     displayName: 'Skins Game',
