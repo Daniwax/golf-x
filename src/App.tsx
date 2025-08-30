@@ -13,40 +13,49 @@ import { Redirect, Route, useLocation } from 'react-router-dom';
 import { 
   homeOutline, 
   personOutline, 
-  statsChartOutline, 
-  trophyOutline,
-  bugOutline 
+  trophyOutline
 } from 'ionicons/icons';
 
 // Import pages
-import Home from './pages/Home';
+import Home from './pages/Home';  // Reverted to original
 import Profile from './pages/Profile';
 import Stats from './pages/Stats';
-import Tournaments from './pages/Tournaments';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Debug from './pages/Debug';
-import Templates from './pages/debug/Templates';
-import IonicShowcase from './pages/debug/templates/IonicShowcase';
-import CoursesList from './pages/debug/CoursesList';
-import CourseDetail from './pages/debug/CourseDetail';
+import CoursesList from './pages/courses/CoursesList';
+import CourseDetail from './pages/courses/CourseDetail';
+
 import ConfigError from './pages/ConfigError';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
 
 // Import Normal Game components
 import CreateGame from './features/normal-game/components/CreateGame';
+import CreateGameCustom from './features/normal-game/components/CreateGameCustom';
+import GhostConfig from './features/normal-game/components/GhostConfig';
 import AddParticipants from './features/normal-game/components/AddParticipants';
 import PlayerConfiguration from './features/normal-game/components/PlayerConfiguration';
 import GameSummary from './features/normal-game/components/GameSummary';
+
+// Import Tournament components
+import TournamentHub from './features/tournament/TournamentHub';
+import TournamentLeaderboard from './features/tournament/TournamentLeaderboard';
 import LiveGame from './features/normal-game/components/LiveGame';
 import ViewCompletedGame from './features/normal-game/components/ViewCompletedGame';
+import HoleStats from './pages/HoleStats';
+
+// Import Test pages
+import HandicapEngineTest from './pages/test/HandicapEngineTest';
+import ScoringEngineTest from './pages/test/ScoringEngineTest';
+import MatchHistory from './pages/MatchHistory';
+import TestCompletedScorecard from './pages/TestCompletedScorecard';
 
 // Import Supabase config check
 import { isConfigured } from './lib/supabase';
 
 // Import authentication hook
 import { useAuth } from './lib/useAuth';
+import { DevAuthWarning } from './components/DevAuthWarning';
 
 setupIonicReact({
   mode: 'ios'
@@ -55,32 +64,43 @@ setupIonicReact({
 // Component that conditionally shows tab bar
 const AppWithTabs: React.FC = () => {
   const location = useLocation();
-  const hideTabBar = location.pathname.startsWith('/game/live/');
+  const hideTabBar = location.pathname.startsWith('/game/live/') || 
+    location.pathname.startsWith('/game/view/') || 
+    location.pathname.startsWith('/course') || 
+    location.pathname === '/courses';
 
   return (
     <IonTabs>
       <IonRouterOutlet>
         <Route exact path="/home" component={Home} />
         <Route exact path="/profile" component={Profile} />
+        <Route exact path="/profile/match-history" component={MatchHistory} />
         <Route exact path="/stats" component={Stats} />
-        <Route exact path="/tournaments" component={Tournaments} />
+        <Route exact path="/stats/holes" component={HoleStats} />
+        <Route exact path="/tournaments" component={TournamentHub} />
+        <Route exact path="/tournament" component={TournamentHub} />
+        <Route exact path="/tournament/leaderboard" component={TournamentLeaderboard} />
         <Route exact path="/friends" component={Friends} />
         <Route exact path="/friend/:id" component={FriendProfile} />
         
         {/* Normal Game Routes */}
         <Route exact path="/game/create" component={CreateGame} />
+        <Route exact path="/game/create-custom" component={CreateGameCustom} />
+        <Route exact path="/game/ghost-config" component={GhostConfig} />
         <Route exact path="/game/add-participants" component={AddParticipants} />
         <Route exact path="/game/configure-players" component={PlayerConfiguration} />
         <Route exact path="/game/summary" component={GameSummary} />
         <Route exact path="/game/live/:gameId" component={LiveGame} />
         <Route exact path="/game/view/:gameId" component={ViewCompletedGame} />
         
-        {/* Debug Routes */}
-        <Route exact path="/debug" component={Debug} />
-        <Route exact path="/debug/templates" component={Templates} />
-        <Route exact path="/debug/templates/ionic-showcase" component={IonicShowcase} />
-        <Route exact path="/debug/courses" component={CoursesList} />
-        <Route exact path="/debug/course/:id" component={CourseDetail} />
+        {/* Course Routes */}
+        <Route exact path="/courses" component={CoursesList} />
+        <Route exact path="/course/:id" component={CourseDetail} />
+        
+        {/* Test Routes - Only for development */}
+        <Route exact path="/test/handicap-engine" component={HandicapEngineTest} />
+        <Route exact path="/test/scoring-engine" component={ScoringEngineTest} />
+        <Route exact path="/test/completed-scorecard" component={TestCompletedScorecard} />
         
         <Route exact path="/">
           <Redirect to="/home" />
@@ -94,11 +114,6 @@ const AppWithTabs: React.FC = () => {
             <IonLabel>Home</IonLabel>
           </IonTabButton>
           
-          <IonTabButton tab="stats" href="/stats">
-            <IonIcon icon={statsChartOutline} />
-            <IonLabel>Stats</IonLabel>
-          </IonTabButton>
-          
           <IonTabButton tab="tournaments" href="/tournaments">
             <IonIcon icon={trophyOutline} />
             <IonLabel>Tournaments</IonLabel>
@@ -109,10 +124,6 @@ const AppWithTabs: React.FC = () => {
             <IonLabel>Profile</IonLabel>
           </IonTabButton>
           
-          <IonTabButton tab="debug" href="/debug">
-            <IonIcon icon={bugOutline} />
-            <IonLabel>Debug</IonLabel>
-          </IonTabButton>
         </IonTabBar>
       )}
     </IonTabs>
@@ -152,6 +163,7 @@ function App() {
 
   return (
     <IonApp>
+      <DevAuthWarning />
       <IonReactRouter>
         <AppWithTabs />
       </IonReactRouter>

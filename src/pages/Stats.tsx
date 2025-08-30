@@ -26,12 +26,16 @@ import {
   statsChartOutline,
   golfOutline,
   trophyOutline,
-  timeOutline
+  timeOutline,
+  flagOutline,
+  arrowForwardOutline
 } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import { useState } from 'react';
 
 const Stats: React.FC = () => {
   const [selectedSegment, setSelectedSegment] = useState<string>('overview');
+  const history = useHistory();
 
   const overviewStats = [
     { label: 'Total Rounds', value: '42', trend: '+5', isPositive: true },
@@ -140,6 +144,24 @@ const Stats: React.FC = () => {
 
   const renderPerformance = () => (
     <div>
+      {/* Hole Statistics Card */}
+      <IonCard button onClick={() => history.push('/stats/holes')}>
+        <IonCardHeader>
+          <IonCardTitle style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <IonIcon icon={flagOutline} color="primary" />
+              Hole-by-Hole Analysis
+            </div>
+            <IonIcon icon={arrowForwardOutline} color="medium" />
+          </IonCardTitle>
+        </IonCardHeader>
+        <IonCardContent>
+          <p style={{ color: 'var(--ion-color-medium)' }}>
+            View detailed statistics for each hole including scoring distribution, averages, and performance by par.
+          </p>
+        </IonCardContent>
+      </IonCard>
+
       {/* Skills Breakdown */}
       <IonCard>
         <IonCardHeader>

@@ -1,1 +1,0 @@
- You have to change the home screen. The first thing is to remove the title of the application above.  Above you will see the welcome message and to the right your photo in a compact way.   ││   and then you will see two buttons you have to remove the one of Log New Round. Casual Game or Ranked Game. for now rannked will appear as disled.

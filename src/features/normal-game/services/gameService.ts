@@ -8,6 +8,8 @@ import type {
   TeeBox,
   PlayerConfig
 } from '../types';
+import type { MatchHandicapResult } from '../engines/MatchHandicapEngine';
+// PlayerMatchPar type available from '../engines/PMPEngine' if needed
 import { 
   calculateCourseHandicap, 
   calculatePlayingHandicap, 
@@ -126,6 +128,9 @@ class GameService {
         game_description: gameData.description,
         scoring_format: gameData.format,
         weather_condition: gameData.weather,
+        handicap_type: gameData.handicap_type || 'match_play',
+        scoring_method: gameData.scoring_method || 'match_play',
+        num_holes: gameData.num_holes || 18,
         status: 'setup'
       })
       .select()
@@ -176,6 +181,138 @@ class GameService {
     if (updateError) {
       console.error('Error updating game status:', updateError);
       return game; // Return game with setup status if update fails
+    }
+
+    return updatedGame || game;
+  }
+
+  // Create a new game using engine-calculated handicap data
+  async createGameWithEngines(
+    gameData: CreateGameData,
+    matchHandicapResults: MatchHandicapResult[]
+    // pmpResults: Map<string, PlayerMatchPar[]>,
+    // holes: Array<{
+    //   hole_number: number;
+    //   par: number;
+    //   handicap_index: number;
+    // }>
+  ): Promise<Game> {
+    if (!supabase) throw new Error('Supabase not configured');
+    
+    // Get authenticated user
+    let userId: string | null = null;
+    
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData?.user) {
+      userId = userData.user.id;
+    }
+    
+    if (!userId) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user) {
+        userId = sessionData.session.user.id;
+      }
+    }
+    
+    if (!userId) {
+      throw new Error('Authentication failed. Please sign out and sign in again.');
+    }
+
+    // Create the game
+    const { data: game, error: gameError } = await supabase
+      .from('games')
+      .insert({
+        course_id: gameData.course_id,
+        creator_user_id: userId,
+        game_description: gameData.description,
+        scoring_format: gameData.format,
+        weather_condition: gameData.weather,
+        handicap_type: gameData.handicap_type || 'match_play',
+        scoring_method: gameData.scoring_method || 'match_play',
+        num_holes: gameData.num_holes || 18,
+        status: 'setup'
+      })
+      .select()
+      .single();
+    
+    if (gameError) throw gameError;
+
+    // Get course par for handicap calculations
+    const { data: course } = await supabase
+      .from('golf_courses')
+      .select('par')
+      .eq('id', gameData.course_id)
+      .single();
+    
+    if (!course) throw new Error('Course not found');
+
+    // Use engine-calculated match handicaps combined with calculated course/playing handicaps
+    const participants = await Promise.all(
+      matchHandicapResults.map(async (result) => {
+        const originalPlayer = gameData.participants.find(p => p.user_id === result.userId);
+        if (!originalPlayer) {
+          throw new Error(`Original player data not found for userId: ${result.userId}`);
+        }
+        
+        // Get tee box data for handicap calculations
+        if (!supabase) {
+          throw new Error('Supabase client is not initialized');
+        }
+        const { data: teeBox } = await supabase
+          .from('tee_boxes')
+          .select('slope_rating, course_rating')
+          .eq('id', originalPlayer.tee_box_id)
+          .single();
+        
+        if (!teeBox) {
+          throw new Error(`Tee box data not found for tee_box_id: ${originalPlayer.tee_box_id}`);
+        }
+        
+        // Calculate course handicap using official formula
+        const courseHandicap = calculateCourseHandicap(
+          originalPlayer.handicap_index,
+          teeBox.slope_rating,
+          teeBox.course_rating,
+          course.par
+        );
+        
+        // Calculate playing handicap (100% for match play, 95% for stroke play)
+        const playingHandicap = calculatePlayingHandicap(courseHandicap, gameData.format);
+        
+        return {
+          game_id: game.id,
+          user_id: result.userId,
+          tee_box_id: originalPlayer.tee_box_id,
+          handicap_index: originalPlayer.handicap_index,
+          course_handicap: courseHandicap,
+          playing_handicap: playingHandicap,
+          match_handicap: result.matchHandicap
+        };
+      })
+    );
+
+    const { error: participantError } = await supabase
+      .from('game_participants')
+      .insert(participants);
+    
+    if (participantError) {
+      // Rollback game creation if participants fail
+      await supabase.from('games').delete().eq('id', game.id);
+      throw participantError;
+    }
+
+
+    // Update game status to 'active' now that setup is complete
+    const { data: updatedGame, error: updateError } = await supabase
+      .from('games')
+      .update({ status: 'active' })
+      .eq('id', game.id)
+      .select()
+      .single();
+    
+    if (updateError) {
+      console.error('Error updating game status:', updateError);
+      return game;
     }
 
     return updatedGame || game;
@@ -312,11 +449,17 @@ class GameService {
           creator_user_id,
           game_description,
           scoring_format,
+          scoring_method,
           weather_condition,
           status,
           created_at,
           started_at,
-          completed_at
+          completed_at,
+          notes,
+          notes_updated_by,
+          notes_updated_at,
+          handicap_type,
+          num_holes
         `)
         .eq('id', gameId)
         .single(),
@@ -329,7 +472,12 @@ class GameService {
           handicap_index,
           course_handicap,
           playing_handicap,
-          match_handicap
+          match_handicap,
+          total_strokes,
+          total_putts,
+          net_score,
+          front_nine_strokes,
+          back_nine_strokes
         `)
         .eq('game_id', gameId),
       supabase.from('game_hole_scores')
@@ -344,7 +492,8 @@ class GameService {
           hole_handicap_strokes,
           net_score,
           score_vs_par,
-          updated_at
+          updated_at,
+          player_match_par
         `)
         .eq('game_id', gameId)
     ]);
@@ -353,20 +502,29 @@ class GameService {
     if (participantsResult.error) throw participantsResult.error;
     if (scoresResult.error) throw scoresResult.error;
 
-    // Get participant names separately
+    // Get participant names and tee box info separately
     const participants = participantsResult.data || [];
     const participantsWithNames = await Promise.all(
       participants.map(async (participant) => {
-        if (!supabase) return { ...participant, full_name: 'Unknown' };
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', participant.user_id)
-          .single();
+        if (!supabase) return { ...participant, profiles: { full_name: 'Unknown' }, tee_boxes: null };
+        
+        const [profileResult, teeBoxResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', participant.user_id)
+            .single(),
+          participant.tee_box_id ? supabase
+            .from('tee_boxes')
+            .select('name')
+            .eq('id', participant.tee_box_id)
+            .single() : Promise.resolve({ data: null })
+        ]);
         
         return {
           ...participant,
-          profiles: profile ? { full_name: profile.full_name } : null
+          profiles: profileResult.data ? { full_name: profileResult.data.full_name } : { full_name: 'Unknown' },
+          tee_boxes: teeBoxResult.data ? { name: teeBoxResult.data.name } : null
         };
       })
     );
@@ -386,14 +544,25 @@ class GameService {
     strokes: number,
     putts?: number
   ): Promise<void> {
+    console.log('=== updateHoleScore DEBUG ===');
+    console.log('gameId:', gameId);
+    console.log('userId:', userId);
+    console.log('holeNumber:', holeNumber);
+    console.log('strokes:', strokes);
+    console.log('putts:', putts);
+    console.log('supabase exists?', !!supabase);
+    
     if (!supabase) throw new Error('Supabase not configured');
     
     // Get game and hole data
-    const { data: gameData } = await supabase
+    const { data: gameData, error: gameError } = await supabase
       .from('games')
       .select('course_id')
       .eq('id', gameId)
       .single();
+    
+    console.log('Game data:', gameData);
+    console.log('Game error:', gameError);
     
     if (!gameData) throw new Error('Game not found');
 
@@ -423,21 +592,37 @@ class GameService {
       participant.match_handicap
     );
 
+    // Prepare the score data
+    const scoreData = {
+      game_id: gameId,
+      user_id: userId,
+      hole_number: holeNumber,
+      strokes,
+      putts,
+      hole_par: holeData.par,
+      hole_handicap_strokes: handicapStrokes,
+      updated_at: new Date().toISOString()
+    };
+    
+    console.log('Score data to upsert:', scoreData);
+    
+    // Check auth session before upsert
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('Current session:', session?.user?.id);
+    
+    if (!session) {
+      console.error('No active session!');
+      throw new Error('Authentication session expired. Please refresh the page and sign in again.');
+    }
+    
     // Upsert the score with calculated handicap strokes
     const { error } = await supabase
       .from('game_hole_scores')
-      .upsert({
-        game_id: gameId,
-        user_id: userId,
-        hole_number: holeNumber,
-        strokes,
-        putts,
-        hole_par: holeData.par,
-        hole_handicap_strokes: handicapStrokes,
-        updated_at: new Date().toISOString()
-      }, {
+      .upsert(scoreData, {
         onConflict: 'game_id,user_id,hole_number'
       });
+    
+    console.log('Upsert error:', error);
     
     if (error) throw error;
     

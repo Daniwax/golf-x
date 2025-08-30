@@ -51,9 +51,6 @@ export interface Database {
           net_score: number | null;
           front_nine_strokes: number | null;
           back_nine_strokes: number | null;
-          holes_won: number;
-          holes_lost: number;
-          holes_halved: number;
         };
         Insert: Partial<Database['public']['Tables']['game_participants']['Row']>;
         Update: Partial<Database['public']['Tables']['game_participants']['Row']>;

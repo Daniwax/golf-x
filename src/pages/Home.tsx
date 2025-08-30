@@ -2,15 +2,11 @@ import React from 'react';
 import {
   IonContent,
   IonPage,
-  IonButton,
-  IonIcon
+  IonButton
 } from '@ionic/react';
-import { 
-  playCircleOutline,
-  trophyOutline
-} from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import LiveMatchCard from '../features/normal-game/components/LiveMatchCard';
+import '../styles/golf_style.css';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -44,23 +40,23 @@ const Home: React.FC = () => {
               flexDirection: 'column',
               gap: '16px'
             }}>
-              {/* Normal Game Button */}
+              {/* Start Game Button - Simple Green */}
               <IonButton
                 expand="block"
                 size="default"
-                onClick={() => history.push('/game/create')}
+                onClick={() => history.push('/game/create-custom')}
                 style={{
                   height: '50px',
                   fontSize: '16px',
                   fontWeight: '600',
-                  '--background': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  '--background-activated': 'linear-gradient(135deg, #5a67d8 0%, #6b4299 100%)',
+                  '--background': '#2a5434',
+                  '--background-activated': '#3d7c47',
+                  '--background-hover': '#3d7c47',
                   '--border-radius': '12px',
                   letterSpacing: '0.5px'
                 }}
               >
-                <IonIcon icon={playCircleOutline} slot="start" style={{ fontSize: '20px' }} />
-                Normal Game
+                Start Game
               </IonButton>
 
               {/* Ranked Game Button */}
@@ -80,7 +76,6 @@ const Home: React.FC = () => {
                   position: 'relative'
                 }}
               >
-                <IonIcon icon={trophyOutline} slot="start" style={{ fontSize: '20px' }} />
                 Ranked Game
                 <span style={{
                   position: 'absolute',

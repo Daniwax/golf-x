@@ -1,15 +1,29 @@
-# Normal Game Feature Specification
+# Normal Game Feature Specification - Multi-Game Architecture
 
 ## Overview
-The Normal Game mode allows players to create casual golf matches with friends, track scores in real-time, and maintain game history. Only friend-based matches are supported with 2-6 players maximum.
+The Normal Game mode supports flexible game combinations through modular handicap and scoring systems, allowing players to mix different handicap methods with various scoring formats. Supports 2-6 players in friend-based matches.
+
+## Architecture Components
+
+### Handicap Engine
+Determines Player Match Par (PMP) for each player on each hole:
+- **None**: No handicap (PMP = Course Par)
+- **Match Play**: Relative handicap (lowest plays scratch)
+- **Stroke Play**: Full handicap strokes
+- **Random**: Fun randomized stroke distribution
+
+### Scoring Engine
+Calculates points/standings from scorecard data:
+- **Net Score**: Total strokes minus PMP
+- **Match Play**: Points from hole-by-hole wins
+- **Stableford**: Points based on performance vs par
+- **Skins**: Winner takes all per hole
 
 ## User Flow
 
 ### 1. Game Creation Flow
 
 #### 1.1 Initial Setup Screen
-When user taps "Normal Game" from home:
-
 ```
 ┌─────────────────────────┐
 │     Create New Game     │
@@ -25,13 +39,19 @@ When user taps "Normal Game" from home:
 │ Weather Conditions:     │
 │ ┌────┬────┬────┬────┐  │
 │ │ ☀️ │ ⛅ │ 🌧️ │ 💨 │  │
-│ │Sun │Part│Rain│Wind│  │
 │ └────┴────┴────┴────┘  │
-│     [✓ Sunny]           │
 │                         │
-│ Scoring Format:         │
-│ ◉ Match Play           │
-│ ○ Stroke Play (Soon)   │
+│ Handicap System:        │
+│ ◉ Match Play (Relative) │
+│ ○ Stroke Play (Full)    │
+│ ○ No Handicap           │
+│ ○ Random Fun            │
+│                         │
+│ Scoring Method:         │
+│ ◉ Match Play Points     │
+│ ○ Net Score Total       │
+│ ○ Stableford Points     │
+│ ○ Skins Game            │
 │                         │
 │ [Add Participants →]    │
 └─────────────────────────┘
@@ -57,8 +77,6 @@ When user taps "Normal Game" from home:
 ```
 
 #### 1.3 Player Configuration Screen
-For each selected participant:
-
 ```
 ┌─────────────────────────┐
 │   Player Configuration  │
@@ -69,13 +87,14 @@ For each selected participant:
 │ [-] 12.5 [+]           │
 │                         │
 │ Select Tee:             │
-│ ○ Black (Champion)      │
 │ ◉ Blue (Men's)         │
 │ ○ White (Senior)        │
 │ ○ Red (Ladies')         │
 │                         │
-│ Course Handicap: 14     │
-│ Match Handicap: 0       │
+│ Calculated Values:      │
+│ • Course HCP: 14        │
+│ • Playing HCP: 14       │
+│ • Match HCP: 0          │
 ├─────────────────────────┤
 │ Mike Johnson            │
 │                         │
@@ -83,318 +102,294 @@ For each selected participant:
 │ [-] 18.0 [+]           │
 │                         │
 │ Select Tee:             │
-│ ○ Black (Champion)      │
-│ ○ Blue (Men's)         │
 │ ◉ White (Senior)        │
-│ ○ Red (Ladies')         │
 │                         │
-│ Course Handicap: 21     │
-│ Match Handicap: 7       │
-├─────────────────────────┤
-│                         │
-│ [Back]    [Review & Start] │
+│ Calculated Values:      │
+│ • Course HCP: 21        │
+│ • Playing HCP: 21       │
+│ • Match HCP: 7          │
 └─────────────────────────┘
 ```
 
 #### 1.4 Game Summary Screen
-After configuration, players review the match setup:
-
 ```
 ┌─────────────────────────┐
 │     Game Summary        │
 ├─────────────────────────┤
 │ La Moraleja             │
-│ Match Play • Sunny ☀️   │
-│ "Loser pays dinner! 🍽️" │
+│ Match Play Handicap     │
+│ Match Play Scoring      │
+│ Sunny ☀️                │
 ├─────────────────────────┤
-│ Players & Handicaps     │
+│ Player Match Pars       │
 │                         │
-│ John Smith 🏆           │
-│ HCP: 12.5 → 14 → 14 → 0 │
+│ John Smith              │
+│ Personal Par: 72        │
+│ (0 strokes received)    │
 │                         │
 │ Mike Johnson            │
-│ HCP: 18.0 → 21 → 21 → 7 │
+│ Personal Par: 79        │
+│ (7 strokes on SI 1-7)   │
 │                         │
 │ Sarah Williams          │
-│ HCP: 22.0 → 25 → 25 → 11│
+│ Personal Par: 83        │
+│ (11 strokes on SI 1-11) │
 ├─────────────────────────┤
-│   Stroke Distribution   │
-│                         │
-│ Hole  1 2 3 4...16 17 18│  ^this table transposed* as no need of horizontal scroll
-│ Par   4 4 3 5... 3  4  4│
-│ HCP   7 3 15 1...12  8  2│
-│ ─────────────────────── │
-│ John  - - -  -... -  -  -│
-│ Mike  +1- -  +1...- -  +1│
-│ Sarah +1+1- +1...+1 +1 +1│
-│                         │
-│ Legend:                 │
-│ [+1] = 1 stroke given   │
-│ [+2] = 2 strokes given  │
-│                         │
 │ [Back]    [Start Game]  │
 └─────────────────────────┘
 ```
 
-**Key Features:**
-- **Game Details**: Shows course, format, weather, and description
-- **Player Summary**: Lists all players with handicap progression
-  - Trophy icon (🏆) marks the lowest playing handicap
-  - Shows: Index → Course → Playing → Match handicaps
-- **Stroke Distribution Table** (Match Play only):
-  - 18-hole grid showing par and handicap index
-  - Visual indication of strokes per hole per player
-  - Color-coded: Blue (+1), Yellow (+2)
-  - Total strokes shown for each player
-- **Navigation**: Back to edit or Start Game to begin
+### 2. Live Game Interface
 
-### 2. Home Page - Live Match Display
-When a live match is active, it appears above the game buttons:
-
-```
-┌─────────────────────────┐
-│     🔴 LIVE MATCH       │
-├─────────────────────────┤
-│ "Loser pays dinner! 🍽️" │
-│                         │
-│ La Moraleja • Hole 4/18 │
-│ John vs Mike vs Sarah   │
-│                         │
-│ Leading: John (-2)      │
-│                         │
-│ [Continue Match →]      │
-└─────────────────────────┘
-
-    Normal Game Button
-    Ranked Game Button
-```
-
-### 3. Live Game Interface
-
-The live game has a different navigation structure with 4 tabs:
-
-#### 3.1 Scorecard View (Tab 1)
+#### 2.1 Scorecard View with Multi-Scoring
 ```
 ┌─────────────────────────────────────┐
-│         Match Scorecard             │
+│      Live Scorecard                 │
+│   [Match Play] [Net Score] [Stats]  │
 ├────┬───────┬───────┬────────┬───┬───┤
-│Hole│ John  │ Mike  │ Sarah  │PAR│HCP│
+│Hole│ John  │ Mike  │ Sarah  │PAR│PMP│
 ├────┼───────┼───────┼────────┼───┼───┤
-│ 1  │ 5(5)  │ 6(5)  │   -    │ 4 │ 7 │
-│ 2  │ 4(4)  │ 5(4)  │   -    │ 4 │ 3 │
-│ 3  │ 3(4)  │ 4(5)  │   -    │ 3 │15 │
-│ 4  │   -   │   -   │   -    │ 5 │ 1 │
-│ .. │  ...  │  ...  │  ...   │...│...│
-│ 18 │   -   │   -   │   -    │ 4 │ 9 │
+│ 1  │ 5(5)  │ 6(5)  │ 7(6)   │ 4 │4/5│
+│ 2  │ 4(4)  │ 5(4)  │ 6(5)   │ 4 │4/4│
+│ 3  │ 3(3)  │ 4(4)  │ 5(5)   │ 3 │3/4│
 ├────┼───────┼───────┼────────┼───┼───┤
-│OUT │  12   │  15   │   0    │36 │   │
-│ IN │   0   │   0   │   0    │36 │   │
-│TOT │  12   │  15   │   0    │72 │   │
+│NET │  12   │  13   │  16    │   │   │
+│PTS │   2   │   1   │   0    │   │   │
 └────┴───────┴───────┴────────┴───┴───┘
 
-Format: strokes(par_adjusted)
-
-[📝 Notes] [Refresh] [Close Game] [Cancel]
+Format: strokes(net_score)
+PMP: Course_Par/Player_Match_Par
 ```
 
-#### Notes Modal (When tapped)
+#### 2.2 Dynamic Leaderboard
 ```
 ┌─────────────────────────┐
-│      Match Notes        │
+│   Current Standings     │
+│   Format: Match Play    │
 ├─────────────────────────┤
 │                         │
-│ "Great birdie on 3!     │
-│ Mike's putting is 🔥    │
-│ Wind picked up on 4"    │
+│ Match Play Points:      │
+│ 1. John    6 pts        │
+│ 2. Mike    3 pts        │
+│ 3. Sarah   0 pts        │
 │                         │
-│ [________________]      │
-│                         │
-│ Last updated: 2m ago    │
-│ by: John                │
-│                         │
-│ [Cancel]      [Save]    │
-└─────────────────────────┘
-```
-
-#### 2.2 Leaderboard View (Tab 2)
-```
-┌─────────────────────────┐
-│     Match Status        │
-├─────────────────────────┤
-│                         │
-│ Gross Leaderboard:      │
-│ 1. John    +2 (38)      │
-│ 2. Mike    +5 (41)      │
-│ 3. Sarah   -- (--)      │
+│ Alternative View:       │
+│ [Switch to Net Score ▼] │
 │                         │
 │ Net Performance:        │
-│ (vs Personal Par)       │
-│ 1. Mike    -2           │
-│ 2. John    +2           │
-│ 3. Sarah   --           │
+│ 1. John    -2           │
+│ 2. Mike    +1           │
+│ 3. Sarah   +3           │
 │                         │
-│ Holes Completed: 9/18   │
-│                         │
-│ [Auto-refresh: ON] 30s  │
+│ Holes: 3/18 completed   │
 └─────────────────────────┘
 ```
 
-#### 2.3 Hole Entry View (Tab 3) - Landscape Mode
+#### 2.3 Universal Hole Entry
 ```
 ┌───────────────────────────────────────────────────┐
-│ < Hole 4 - Par 5 - 485 yards >      [Save] [Exit]│
+│ < Hole 4 - Par 5 - HCP 1 - 485 yards >           │
 ├───────────────────────────────────────────────────┤
-│ Blue Tee: 485y | SI: 1 | Par: 5                  │
-├───────────────────────────────────────────────────┤
-│     John      │     Mike      │     Sarah        │
-│               │               │                  │
-│    [-] 0 [+]  │   [-] 0 [+]   │   [-] 0 [+]     │
-│               │               │                  │
-│   Par: 5      │   Par: 6      │   Par: 5        │
-│   (HC: 0)     │   (HC: 1)     │   (HC: 0)       │
+│     John          Mike           Sarah            │
+│   PMP: 5         PMP: 6         PMP: 6           │
+│                                                   │
+│  [-] 5 [+]      [-] 6 [+]      [-] 7 [+]        │
+│   Strokes        Strokes        Strokes          │
+│                                                   │
+│  [-] 2 [+]      [-] 2 [+]      [-] 3 [+]        │
+│    Putts          Putts          Putts           │
+│                                                   │
+│  Net: Par       Net: Par       Net: +1           │
+│                                                   │
+│              [Save & Next →]                      │
 └───────────────────────────────────────────────────┘
+
+PMP = Player Match Par (personal expected score)
+Net = Strokes - PMP
 ```
 
-#### 2.4 Exit Tab (Tab 4)
-Returns to home page and exits live match view.
+### 3. Scoring Display Modes
 
-### 3. Game States
+#### Match Play Points View
+```
+Current Hole Results:
+John vs Mike: John wins (1 pt)
+John vs Sarah: John wins (1 pt)
+Mike vs Sarah: Mike wins (1 pt)
 
-```mermaid
-graph TD
-    A[Game Created] -->|Add Players| B[Setup]
-    B -->|Start Game| C[Active]
-    C -->|Close Game| D[Completed]
-    C -->|Cancel Game| E[Cancelled]
-    D -->|Archive| F[History]
-    E -->|Delete| G[Deleted]
+Total Points: John 2, Mike 1, Sarah 0
 ```
 
-## Data Management
-
-### Real-time Updates
-- **Push**: Score updates are sent immediately when saved
-- **Pull**: Auto-refresh every 30 seconds when enabled
-- **Manual Refresh**: Available at any time
-- **Conflict Resolution**: Last write wins, auto-refresh shows latest
-
-### Permissions
-- **Active Players**: Can edit any score in the game
-- **Spectators**: Friends can view live games (tabs 1 & 2 only)
-- **Creator**: Can close or cancel the game
-
-### Historical Access
-After game completion:
-- Full scorecard preserved
-- Accessible from player profiles
-- View-only mode (tabs 1 & 2)
-- Statistics calculated and stored
-
-## Handicap Calculations
-
-### Course Handicap Formula
+#### Net Score View
 ```
-CH = HI × (Slope/113) + (CR - Par)
+Net Scores (vs Personal Par):
+John: -2 (70 vs 72)
+Mike: +1 (80 vs 79)
+Sarah: +3 (86 vs 83)
 ```
 
-### Match Handicap Allocation
-1. Calculate Course Handicap for each player
-2. Playing Handicap = Course Handicap (100% for singles)
-3. Match Handicap = PH - min(all PH values)
-4. Distribute strokes to holes based on Stroke Index
+#### Stableford View
+```
+Points This Hole:
+John: 2 pts (Par)
+Mike: 2 pts (Net Par)
+Sarah: 1 pt (Net Bogey)
 
-### Example
-- Player A: HI 12.5, Blue Tee (Slope 132, CR 71.5)
-  - CH = 12.5 × (132/113) + (71.5 - 72) = 14
-  - Match Handicap = 0 (lowest)
-  
-- Player B: HI 18.0, White Tee (Slope 128, CR 69.5)
-  - CH = 18.0 × (128/113) + (69.5 - 72) = 18
-  - Match Handicap = 4
+Total: John 18, Mike 16, Sarah 12
+```
 
-Player B gets strokes on holes with SI 1-4.
+## Database Structure
 
-## UI Components
+### games Table
+- `handicap_type`: 'none' | 'match_play' | 'stroke_play' | 'random'
+- `scoring_method`: 'net_score' | 'match_play' | 'stableford' | 'skins'
 
-### Common Elements
-- **Score Input**: +/- buttons with validation (0-25)
-- **Handicap Input**: +/- buttons (0.0-54.0)
-- **Tee Selector**: Radio buttons with color indicators
-- **Refresh Button**: Manual data sync
-- **Auto-refresh Toggle**: 30-second interval
+### game_participants Table
+- `course_handicap`: Adjusted for course difficulty
+- `playing_handicap`: Format-specific adjustment
+- `match_handicap`: Relative handicap for stroke allocation
 
-### Mobile Optimizations
-- **Portrait Mode**: Tabs 1, 2, 4
-- **Landscape Mode**: Tab 3 (hole entry)
-- **Swipe Navigation**: Between holes in Tab 3
-- **Pull-to-Refresh**: On scorecard and leaderboard
+### game_hole_scores Table
+- `strokes`: Actual strokes taken (user input)
+- `putts`: Putts taken (optional)
+- `hole_par`: Course par for hole
+- `hole_handicap_strokes`: Strokes received on hole
+- `player_match_par`: Personal par (auto-calculated)
+- `net_score`: Strokes - handicap strokes (auto-calculated)
+- `score_vs_par`: Strokes - hole par (auto-calculated)
 
-## Error Handling
+## Handicap Engine Implementation
 
-### Network Issues
-- Offline mode: Queue updates locally
-- Retry logic: Exponential backoff
-- User notification: Toast messages
+```typescript
+interface HandicapEngine {
+  calculatePlayerMatchPar(
+    players: Player[],
+    holes: Hole[],
+    handicapType: HandicapType
+  ): PlayerMatchPar[][]
+}
 
-### Data Validation
-- Score range: 0-25 per hole
-- Handicap range: 0.0-54.0
-- Required fields: All players must have tee selection
-- Confirmation dialogs: Close/Cancel game actions
+// Example: Match Play Handicap
+function matchPlayHandicap(players, holes) {
+  // 1. Calculate course handicaps
+  // 2. Find lowest handicap
+  // 3. Adjust all relative to lowest
+  // 4. Distribute strokes by hole SI
+  return playerMatchPars;
+}
+```
 
-## Performance Considerations
+## Scoring Engine Implementation
 
-### Data Loading
-- Lazy load historical games
-- Cache course/tee data locally
-- Batch score updates when possible
+```typescript
+interface ScoringEngine {
+  calculateScoring(
+    scorecard: Scorecard,
+    scoringMethod: ScoringMethod
+  ): GameResults
+}
 
-### UI Responsiveness
-- Optimistic updates (show immediately, sync later)
-- Debounced inputs (handicap adjustment)
-- Virtual scrolling for long scorecards
+// Example: Match Play Scoring
+function matchPlayScoring(scorecard) {
+  // For each hole, compare net scores
+  // Award points for wins
+  // Sum total points
+  return standings;
+}
+```
 
-## Future Enhancements
+## Benefits of Multi-Game Architecture
 
-### Phase 2
-- Stroke Play format
-- 9-hole games
-- GPS integration
-- Photo attachments
+1. **Flexibility**: Any handicap × any scoring = unique game
+2. **Fairness**: Multiple ways to level playing field
+3. **Variety**: Same round, different winners possible
+4. **Simplicity**: One scorecard, multiple interpretations
+5. **Extensibility**: Easy to add new methods
 
-### Phase 3
-- Ranked Games
-- Tournaments
-- Team formats
-- Statistics dashboard
+## Common Game Combinations
 
-## Testing Requirements
+### Traditional Match Play
+- Handicap: Match Play (relative)
+- Scoring: Match Play (hole wins)
+- Best for: Head-to-head competition
+
+### Net Stroke Play
+- Handicap: Stroke Play (full)
+- Scoring: Net Score (total)
+- Best for: Tournament style
+
+### Skins Game
+- Handicap: None
+- Scoring: Skins (winner takes hole)
+- Best for: High stakes fun
+
+### Fun Scramble
+- Handicap: Random
+- Scoring: Stableford
+- Best for: Social rounds
+
+## Migration from Single to Multi-Game
+
+### Phase 1: Database Ready ✅
+- Added handicap_type and scoring_method fields
+- Created auto-calculation triggers
+- Cleaned up redundant columns
+
+### Phase 2: Engine Development
+- Create HandicapEngine service
+- Create ScoringEngine service
+- Unit test all combinations
+
+### Phase 3: UI Updates
+- Add game type selectors
+- Multiple scoring views
+- Real-time switching
+
+### Phase 4: Advanced Features
+- Custom handicap rules
+- Team competitions
+- Tournament modes
+
+## Testing Strategy
 
 ### Unit Tests
-- Handicap calculations
-- Score validations
-- Data transformations
+- Each handicap method
+- Each scoring method
+- Edge cases (0 handicap, max handicap)
 
 ### Integration Tests
-- Game creation flow
-- Real-time sync
-- RLS policies
+- Game creation with types
+- Score entry and calculations
+- Leaderboard updates
 
 ### E2E Tests
 - Complete game flow
+- Scoring method switching
 - Multi-player scenarios
-- Network interruption handling
 
-## Accessibility
+## Performance Optimizations
 
-- **Screen Reader**: Proper ARIA labels
-- **Color Blind**: Not rely solely on tee colors
-- **Font Size**: Adjustable in settings
-- **Touch Targets**: Minimum 44x44px
+1. **Calculate Once**: PMP at game start
+2. **Cache Results**: Store calculations
+3. **Lazy Load**: Calculate scoring on demand
+4. **Background**: Heavy calculations in workers
 
 ## Security Considerations
 
-- **RLS**: Row-level security on all tables
-- **Input Sanitization**: Prevent SQL injection
-- **Rate Limiting**: API calls throttled
-- **Data Privacy**: Friends-only visibility
+- Validate handicap ranges (0-54)
+- Prevent score tampering via RLS
+- Audit trail for changes
+- Rate limit updates
+
+## Future Enhancements
+
+### Near Term
+- More handicap methods (9-hole, progressive)
+- Additional scoring (Nassau, Vegas)
+- Team formats (Best Ball, Scramble)
+
+### Long Term
+- AI-suggested handicaps
+- Historical performance analysis
+- Tournament management
+- Live streaming scores

@@ -1,256 +1,46 @@
 /**
- * Golf Handicap Calculations following USGA/R&A World Handicap System
- * Critical for accurate game scoring
+ * Handicap calculations utility functions
+ * Used for calculating stroke allocations and personal pars
  */
 
-/**
- * Calculate Course Handicap from Handicap Index
- * Formula: CH = HI × (Slope Rating / 113) + (Course Rating - Par)
- * 
- * @param handicapIndex - Player's official handicap index (0.0 to 54.0)
- * @param slopeRating - Tee box slope rating (55 to 155)
- * @param courseRating - Tee box course rating
- * @param coursePar - Total par for the course
- * @returns Rounded course handicap
- */
-export function calculateCourseHandicap(
-  handicapIndex: number,
-  slopeRating: number,
-  courseRating: number,
-  coursePar: number
-): number {
-  // Validate inputs
-  if (handicapIndex < 0 || handicapIndex > 54) {
-    throw new Error('Handicap index must be between 0 and 54');
-  }
-  if (slopeRating < 55 || slopeRating > 155) {
-    throw new Error('Slope rating must be between 55 and 155');
-  }
+export interface HoleInfo {
+  hole_number: number;
+  par: number;
+  handicap_index: number;
+}
 
-  // Standard slope is always 113
-  const STANDARD_SLOPE = 113;
-  
-  // Calculate course handicap
-  const courseHandicap = (handicapIndex * (slopeRating / STANDARD_SLOPE)) + 
-                        (courseRating - coursePar);
-  
-  // Round to nearest integer (.5 rounds up)
-  return Math.round(courseHandicap);
+export interface PersonalParInfo {
+  holeNumber: number;
+  basePar: number;
+  strokesReceived: number;
+  personalPar: number;
 }
 
 /**
- * Calculate Playing Handicap from Course Handicap
- * For singles match play: 100% of course handicap
- * For singles stroke play: 95% of course handicap
+ * Calculates how many strokes a player receives on a specific hole
+ * based on their playing handicap and the hole's stroke index
  * 
- * @param courseHandicap - Calculated course handicap
- * @param format - 'match_play' or 'stroke_play'
- * @returns Rounded playing handicap
- */
-export function calculatePlayingHandicap(
-  courseHandicap: number,
-  format: 'match_play' | 'stroke_play'
-): number {
-  const percentage = format === 'match_play' ? 1.0 : 0.95;
-  return Math.round(courseHandicap * percentage);
-}
-
-/**
- * Calculate Match Handicap (strokes given/received relative to lowest)
- * In match play, the lowest handicap plays to 0
- * 
- * @param playingHandicaps - Array of all players' playing handicaps
- * @param playerIndex - Index of the player to calculate for
- * @returns Match handicap (0 for lowest, positive for others)
- */
-export function calculateMatchHandicap(
-  playingHandicaps: number[],
-  playerIndex: number
-): number {
-  if (playingHandicaps.length === 0) return 0;
-  
-  const lowestHandicap = Math.min(...playingHandicaps);
-  return playingHandicaps[playerIndex] - lowestHandicap;
-}
-
-/**
- * Determine which holes a player receives strokes on
- * Based on hole handicap index (stroke index)
- * 
- * @param matchHandicap - Number of strokes player receives
- * @param totalHoles - Number of holes (usually 18)
- * @returns Array of hole numbers where player gets strokes
- */
-export function getStrokeHoles(
-  matchHandicap: number,
-  totalHoles: number = 18
-): number[] {
-  const strokeHoles: number[] = [];
-  
-  if (matchHandicap <= 0) return strokeHoles;
-  
-  // For 18 holes:
-  // 1-18 strokes: holes with SI 1 through matchHandicap
-  // 19-36 strokes: all holes get 1, holes SI 1-(matchHandicap-18) get 2
-  // And so on...
-  
-  const fullRounds = Math.floor(matchHandicap / totalHoles);
-  const remainingStrokes = matchHandicap % totalHoles;
-  
-  // All holes get at least 'fullRounds' strokes
-  for (let hole = 1; hole <= totalHoles; hole++) {
-    if (fullRounds > 0) {
-      strokeHoles.push(hole);
-    }
-  }
-  
-  // Additional strokes on holes with lowest SI
-  for (let si = 1; si <= remainingStrokes; si++) {
-    strokeHoles.push(si);
-  }
-  
-  return strokeHoles;
-}
-
-/**
- * Calculate net score for a hole
- * Gross score minus handicap strokes received
- * 
- * @param grossScore - Actual strokes taken
- * @param handicapStrokes - Strokes received on this hole
- * @returns Net score
- */
-export function calculateNetScore(
-  grossScore: number,
-  handicapStrokes: number
-): number {
-  return grossScore - handicapStrokes;
-}
-
-/**
- * Calculate Stableford points for a hole
- * Used in Stableford competitions
- * 
- * @param netScore - Net score for the hole
- * @param par - Par for the hole
- * @returns Stableford points
- */
-export function calculateStablefordPoints(
-  netScore: number,
-  par: number
-): number {
-  const scoreToPar = netScore - par;
-  
-  if (scoreToPar <= -3) return 5; // Albatross or better
-  if (scoreToPar === -2) return 4; // Eagle
-  if (scoreToPar === -1) return 3; // Birdie
-  if (scoreToPar === 0) return 2;  // Par
-  if (scoreToPar === 1) return 1;  // Bogey
-  return 0; // Double bogey or worse
-}
-
-/**
- * Determine match play hole result
- * 
- * @param player1NetScore - Player 1's net score
- * @param player2NetScore - Player 2's net score
- * @returns 'won', 'lost', or 'halved' from player 1's perspective
- */
-export function getMatchPlayResult(
-  player1NetScore: number,
-  player2NetScore: number
-): 'won' | 'lost' | 'halved' {
-  if (player1NetScore < player2NetScore) return 'won';
-  if (player1NetScore > player2NetScore) return 'lost';
-  return 'halved';
-}
-
-/**
- * Calculate match status (e.g., "2 up", "All Square", "3&2")
- * 
- * @param holesWon - Holes won by player
- * @param holesLost - Holes lost by player
- * @param holesPlayed - Total holes played
- * @param totalHoles - Total holes in match (usually 18)
- * @returns Match status string
- */
-export function getMatchStatus(
-  holesWon: number,
-  holesLost: number,
-  holesPlayed: number,
-  totalHoles: number = 18
-): string {
-  const differential = holesWon - holesLost;
-  const holesRemaining = totalHoles - holesPlayed;
-  
-  if (differential === 0) return 'All Square';
-  
-  const leader = differential > 0 ? 'Up' : 'Down';
-  const margin = Math.abs(differential);
-  
-  // Check if match is over (dormie or won)
-  if (margin > holesRemaining) {
-    // Match is won
-    const winMargin = margin;
-    const holesLeftWhenWon = holesRemaining + 1;
-    return `${winMargin} & ${holesLeftWhenWon}`;
-  }
-  
-  if (margin === holesRemaining && holesRemaining > 0) {
-    // Dormie (can't lose, worst case is tie)
-    return `${margin} ${leader} (Dormie)`;
-  }
-  
-  return `${margin} ${leader}`;
-}
-
-/**
- * Validate handicap index
- * 
- * @param handicapIndex - Handicap to validate
- * @returns true if valid
- */
-export function isValidHandicapIndex(handicapIndex: number): boolean {
-  return handicapIndex >= -10.0 && handicapIndex <= 54.0;
-}
-
-/**
- * Format handicap for display
- * Plus handicaps shown as "+X.X", others as "X.X"
- * 
- * @param handicap - Handicap to format
- * @returns Formatted string
- */
-export function formatHandicap(handicap: number): string {
-  if (handicap < 0) {
-    return `+${Math.abs(handicap).toFixed(1)}`;
-  }
-  return handicap.toFixed(1);
-}
-
-/**
- * Calculate strokes received on a specific hole
- * Based on hole's stroke index and player's match handicap
- * 
- * @param holeStrokeIndex - Hole's difficulty ranking (1-18, 1 is hardest)
- * @param matchHandicap - Player's match handicap
+ * @param playingHandicap - The player's total playing handicap (match handicap)
+ * @param holeStrokeIndex - The stroke index of the hole (1-18, where 1 is hardest)
  * @returns Number of strokes received on this hole
  */
-export function getStrokesOnHole(
-  holeStrokeIndex: number,
-  matchHandicap: number
-): number {
-  if (matchHandicap <= 0) return 0;
+export function calculateHoleStrokes(playingHandicap: number, holeStrokeIndex: number): number {
+  if (playingHandicap <= 0) return 0;
   
-  // How many full rounds of 18 strokes?
-  const fullRounds = Math.floor(matchHandicap / 18);
-  const remainingStrokes = matchHandicap % 18;
+  let strokesRemaining = playingHandicap;
+  let strokes = 0;
   
-  // Base strokes from full rounds
-  let strokes = fullRounds;
+  // First, give 1 stroke to all holes if handicap >= 18
+  // This handles players with handicaps 18-36 (1 stroke on all holes)
+  // and 36-54 (2 strokes on all holes), etc.
+  while (strokesRemaining >= 18) {
+    strokes++;
+    strokesRemaining -= 18;
+  }
   
-  // Additional stroke if this hole's SI is within remaining strokes
-  if (holeStrokeIndex <= remainingStrokes) {
+  // Then distribute remaining strokes based on stroke index
+  // Strokes go to the hardest holes first (SI 1, then SI 2, etc.)
+  if (strokesRemaining > 0 && holeStrokeIndex <= strokesRemaining) {
     strokes++;
   }
   
@@ -258,149 +48,206 @@ export function getStrokesOnHole(
 }
 
 /**
- * Calculate total score relative to par
+ * Calculates the personal par for each hole for a player
+ * Personal par = course par + handicap strokes received
  * 
- * @param totalStrokes - Total strokes taken
- * @param coursePar - Course par
- * @returns Score relative to par (negative is under par)
+ * @param holes - Array of hole information with par and stroke index
+ * @param playingHandicap - The player's total playing handicap
+ * @returns Array of personal par information for each hole
  */
-export function getScoreToPar(
-  totalStrokes: number,
-  coursePar: number
+export function calculatePersonalPars(holes: HoleInfo[], playingHandicap: number): PersonalParInfo[] {
+  return holes.map(hole => {
+    const strokesReceived = calculateHoleStrokes(playingHandicap, hole.handicap_index);
+    return {
+      holeNumber: hole.hole_number,
+      basePar: hole.par,
+      strokesReceived,
+      personalPar: hole.par + strokesReceived
+    };
+  });
+}
+
+/**
+ * Calculates the total personal par for a player over all holes
+ * 
+ * @param holes - Array of hole information
+ * @param playingHandicap - The player's total playing handicap
+ * @returns Total personal par (e.g., 72 + handicap strokes = 95)
+ */
+export function calculateTotalPersonalPar(holes: HoleInfo[], playingHandicap: number): number {
+  const personalPars = calculatePersonalPars(holes, playingHandicap);
+  return personalPars.reduce((sum, pp) => sum + pp.personalPar, 0);
+}
+
+/**
+ * For match play: calculates relative handicap after reducing by the lowest handicap
+ * This ensures at least one player plays off scratch (0 handicap)
+ * 
+ * @param playingHandicaps - Array of all players' playing handicaps
+ * @returns Array of adjusted match play handicaps
+ */
+export function calculateMatchPlayHandicaps(playingHandicaps: number[]): number[] {
+  const lowestHandicap = Math.min(...playingHandicaps);
+  return playingHandicaps.map(hc => hc - lowestHandicap);
+}
+
+/**
+ * Calculates net score for a hole (gross score minus strokes received)
+ * 
+ * @param grossScore - The actual strokes taken
+ * @param strokesReceived - Handicap strokes received on this hole
+ * @returns Net score
+ */
+export function calculateNetScore(grossScore: number, strokesReceived: number): number {
+  return grossScore - strokesReceived;
+}
+
+/**
+ * Determines the color coding for personal par display
+ * 
+ * @param strokesReceived - Number of strokes received on a hole
+ * @returns Color identifier for UI display
+ */
+export function getPersonalParColor(strokesReceived: number): 'normal' | 'primary' | 'warning' {
+  if (strokesReceived === 0) return 'normal';
+  if (strokesReceived === 1) return 'primary';
+  return 'warning'; // 2+ strokes
+}
+
+/**
+ * Calculates Course Handicap from Handicap Index
+ * CH = HI × (Slope/113) + (CR - Par)
+ * 
+ * @param handicapIndex - The player's handicap index
+ * @param slopeRating - The slope rating of the tee
+ * @param courseRating - The course rating of the tee
+ * @param par - The course par
+ * @returns Course handicap (rounded to nearest whole number)
+ */
+export function calculateCourseHandicap(
+  handicapIndex: number, 
+  slopeRating: number, 
+  courseRating: number, 
+  par: number
 ): number {
-  return totalStrokes - coursePar;
+  const courseHandicap = (handicapIndex * (slopeRating / 113)) + (courseRating - par);
+  return Math.round(courseHandicap);
 }
 
 /**
- * Format score relative to par for display
+ * Calculates Playing Handicap from Course Handicap
+ * For singles stroke play: PH = CH × 1.0 (100%)
  * 
- * @param scoreToPar - Score relative to par
- * @returns Formatted string (e.g., "-2", "E", "+5")
+ * @param courseHandicap - The calculated course handicap
+ * @param formatOrAllowance - Game format string ('stroke_play', 'match_play') or allowance percentage
+ * @returns Playing handicap
  */
-export function formatScoreToPar(scoreToPar: number): string {
-  if (scoreToPar === 0) return 'E';
-  if (scoreToPar > 0) return `+${scoreToPar}`;
-  return scoreToPar.toString();
+export function calculatePlayingHandicap(
+  courseHandicap: number, 
+  formatOrAllowance: string | number = 100
+): number {
+  // Handle both old (format string) and new (percentage) signatures
+  let allowancePercentage = 100;
+  
+  if (typeof formatOrAllowance === 'string') {
+    // Old signature: format string
+    // For singles stroke play and match play, use 100% allowance
+    allowancePercentage = 100;
+  } else {
+    // New signature: direct percentage
+    allowancePercentage = formatOrAllowance;
+  }
+  
+  return Math.round(courseHandicap * (allowancePercentage / 100));
 }
 
 /**
- * Calculate match play results for all players in a game
- * Analyzes each hole to determine who won, lost, or halved
+ * Calculates Match Handicap (for match play)
+ * Reduces all handicaps so the lowest plays off scratch
  * 
- * @param participants - Array of participants with their match handicaps
- * @param scores - Array of all scores for the game
- * @param holes - Array of hole information with handicap indexes
- * @returns Array of participants with match play results added
+ * @param allPlayingHandicaps - Array of all players' playing handicaps OR a single playing handicap
+ * @param playerIndexOrLowestHC - Index of the current player OR the lowest handicap
+ * @returns Match handicap
  */
-export function calculateMatchPlayResults(
-  participants: Array<{
-    user_id: string;
-    match_handicap?: number;
-    handicap_index: number;
-    course_handicap: number;
-    playing_handicap: number;
-    total_strokes: number | null;
-    net_score: number | null;
-    profiles?: {
-      full_name: string;
-    };
-    tee_boxes?: {
-      name: string;
-    };
-  }>,
-  scores: Array<{
-    user_id: string;
-    hole_number: number;
-    strokes: number | null;
-  }>,
-  holes: Array<{
-    hole_number: number;
-    handicap_index: number;
-    par: number;
-  }>
-) {
-  // Initialize results for each participant
-  const results = participants.map(p => ({
-    ...p,
+export function calculateMatchHandicap(
+  allPlayingHandicaps: number[] | number, 
+  playerIndexOrLowestHC: number
+): number {
+  // Handle both signatures for backwards compatibility
+  if (Array.isArray(allPlayingHandicaps)) {
+    // New signature: array of handicaps and player index
+    if (allPlayingHandicaps.length === 0) return 0;
+    
+    const lowestHandicap = Math.min(...allPlayingHandicaps);
+    const playerHandicap = allPlayingHandicaps[playerIndexOrLowestHC];
+    
+    if (isNaN(playerHandicap) || isNaN(lowestHandicap)) return 0;
+    
+    return playerHandicap - lowestHandicap;
+  } else {
+    // Old signature: two numbers (playingHandicap, lowestHandicap)
+    const playingHandicap = allPlayingHandicaps;
+    const lowestHandicap = playerIndexOrLowestHC;
+    
+    if (isNaN(playingHandicap) || isNaN(lowestHandicap)) return 0;
+    
+    return playingHandicap - lowestHandicap;
+  }
+}
+
+/**
+ * Determines if a player gets strokes on a specific hole
+ * 
+ * @param holeStrokeIndex - The stroke index of the hole
+ * @param playerHandicap - The player's match/playing handicap
+ * @returns Number of strokes received on this hole
+ */
+export function getStrokesOnHole(holeStrokeIndex: number, playerHandicap: number): number {
+  return calculateHoleStrokes(playerHandicap, holeStrokeIndex);
+}
+
+/**
+ * Calculate hole difficulty ranking based on handicap index
+ * Lower handicap index means harder hole (gets strokes first)
+ * 
+ * @param holes - Array of holes with handicap_index
+ * @param targetHoleNumber - The hole number to get ranking for
+ * @returns The difficulty ranking (1 = hardest, 18 = easiest)
+ */
+export function getHoleDifficultyRanking(
+  holes: Array<{ hole_number: number; handicap_index: number }>,
+  targetHoleNumber: number
+): number {
+  if (!holes || holes.length === 0) return 1;
+  
+  // Sort holes by handicap_index (ascending - lower index = harder hole)
+  const sortedByDifficulty = [...holes].sort((a, b) => a.handicap_index - b.handicap_index);
+  
+  // Find position of target hole in sorted array
+  const rankIndex = sortedByDifficulty.findIndex(h => h.hole_number === targetHoleNumber);
+  
+  // Return rank (1-based index), default to 1 if not found
+  return rankIndex !== -1 ? rankIndex + 1 : 1;
+}
+
+/**
+ * Calculate match play results (for completed games)
+ * This is a placeholder for ViewCompletedGame component
+ */
+export function calculateMatchPlayResults(participants: Array<{ user_id: string; profiles?: { full_name: string }; total_strokes?: number }>): Array<{ user_id: string; total_strokes: number; holes_won: number; holes_halved: number; holes_lost: number }> {
+  if (!Array.isArray(participants) || participants.length === 0) {
+    return [];
+  }
+  
+  // For now, just return the participants with basic match play stats
+  // TODO: Implement proper hole-by-hole match play calculations
+  const participantsWithMatchPlay = participants.map(participant => ({
+    user_id: participant.user_id,
+    total_strokes: participant.total_strokes || 0,
     holes_won: 0,
     holes_halved: 0,
     holes_lost: 0
   }));
-
-  // Process each hole
-  for (const hole of holes) {
-    // Get scores for this hole
-    const holeScores = participants.map(participant => {
-      const score = scores.find(
-        s => s.user_id === participant.user_id && s.hole_number === hole.hole_number
-      );
-      
-      if (!score || score.strokes === null) {
-        return { user_id: participant.user_id, netScore: null, grossScore: null };
-      }
-
-      // Calculate net score (gross - handicap strokes)
-      const handicapStrokes = getStrokesOnHole(
-        hole.handicap_index,
-        participant.match_handicap || 0
-      );
-      const netScore = score.strokes - handicapStrokes;
-      
-      return { user_id: participant.user_id, netScore, grossScore: score.strokes };
-    });
-
-    // Skip holes where not all players have scores
-    const validScores = holeScores.filter(s => s.netScore !== null);
-    if (validScores.length !== participants.length) continue;
-
-    // For match play with 2+ players, we need to compare each player against each other
-    // In multi-player match play, each player's result is calculated against every other player
-    
-    if (participants.length === 2) {
-      // Simple 2-player match play
-      const player1Score = holeScores[0];
-      const player2Score = holeScores[1];
-      
-      if (player1Score.netScore === player2Score.netScore) {
-        // Hole is halved
-        results[0].holes_halved++;
-        results[1].holes_halved++;
-      } else if (player1Score.netScore! < player2Score.netScore!) {
-        // Player 1 wins
-        results[0].holes_won++;
-        results[1].holes_lost++;
-      } else {
-        // Player 2 wins
-        results[0].holes_lost++;
-        results[1].holes_won++;
-      }
-    } else {
-      // Multi-player match play: each player gets a result based on the best score
-      const bestScore = Math.min(...validScores.map(s => s.netScore!));
-      const winners = validScores.filter(s => s.netScore === bestScore);
-      
-      for (const participant of results) {
-        const playerScore = holeScores.find(s => s.user_id === participant.user_id);
-        if (!playerScore || playerScore.netScore === null) continue;
-
-        if (winners.length === participants.length) {
-          // Everyone has the same score - all halved
-          participant.holes_halved++;
-        } else if (playerScore.netScore === bestScore) {
-          if (winners.length === 1) {
-            // This player is the sole winner
-            participant.holes_won++;
-          } else {
-            // Multiple players tied for best score - halved among them
-            participant.holes_halved++;
-          }
-        } else {
-          // This player lost the hole
-          participant.holes_lost++;
-        }
-      }
-    }
-  }
-
-  return results;
+  
+  return participantsWithMatchPlay;
 }

@@ -21,8 +21,8 @@ import { informationCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import WeatherSelector from './WeatherSelector';
 import CourseSelector from './CourseSelector';
-import ScoringFormatModal from './ScoringFormatModal';
-import type { WeatherCondition, ScoringFormat } from '../types';
+import GameRulesModal from './GameRulesModal';
+import type { WeatherCondition, ScoringFormat, HandicapType, ScoringMethod } from '../types';
 
 const CreateGame: React.FC = () => {
   const history = useHistory();
@@ -31,10 +31,15 @@ const CreateGame: React.FC = () => {
   
   // Form state
   const [description, setDescription] = useState('');
-  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [showHandicapModal, setShowHandicapModal] = useState(false);
+  const [showScoringModal, setShowScoringModal] = useState(false);
   const [courseId, setCourseId] = useState<number | null>(null);
   const [weather, setWeather] = useState<WeatherCondition>('sunny');
-  const [format, setFormat] = useState<ScoringFormat>('match_play');
+  const format: ScoringFormat = 'match_play'; // Legacy - kept for compatibility
+  
+  // New multi-game fields
+  const [handicapType, setHandicapType] = useState<HandicapType>('match_play');
+  const [scoringMethod, setScoringMethod] = useState<ScoringMethod>('match_play');
 
   const handleNext = () => {
     // Validate inputs
@@ -55,7 +60,9 @@ const CreateGame: React.FC = () => {
         description,
         courseId,
         weather,
-        format
+        format,
+        handicapType,
+        scoringMethod
       }
     });
   };
@@ -143,7 +150,7 @@ const CreateGame: React.FC = () => {
           </div>
         </div>
 
-        {/* Scoring Format Section */}
+        {/* Handicap Type Section */}
         <div style={{ paddingTop: '24px' }}>
           <div style={{ padding: '0 16px', marginBottom: '8px' }}>
             <h3 style={{ 
@@ -157,11 +164,11 @@ const CreateGame: React.FC = () => {
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <span>SCORING FORMAT</span>
+              <span>HANDICAP TYPE</span>
               <IonButton
                 fill="clear"
                 size="small"
-                onClick={() => setShowRulesModal(true)}
+                onClick={() => setShowHandicapModal(true)}
                 style={{
                   '--padding-start': '8px',
                   '--padding-end': '8px',
@@ -179,23 +186,106 @@ const CreateGame: React.FC = () => {
               </IonButton>
             </h3>
           </div>
-          <IonRadioGroup
-            value={format}
-            onIonChange={e => setFormat(e.detail.value)}
-          >
-            <IonItem lines="inset" disabled={loading}>
-              <IonLabel>Match Play</IonLabel>
-              <IonRadio slot="start" value="match_play" />
+          <IonRadioGroup value={handicapType}>
+            <IonItem lines="inset" button={true} detail={false} onClick={() => setHandicapType('match_play')}>
+              <IonLabel>
+                <div>Match Play</div>
+                <IonNote>Relative handicap - lowest plays off scratch</IonNote>
+              </IonLabel>
+              <IonRadio slot="end" value="match_play" />
             </IonItem>
-            <IonItem lines="full">
+            <IonItem lines="inset" button={true} detail={false} onClick={() => setHandicapType('stroke_play')}>
               <IonLabel>
                 <div>Stroke Play</div>
-                <IonNote>Coming Soon</IonNote>
+                <IonNote>Full handicap for all players</IonNote>
               </IonLabel>
-              <IonRadio slot="start" value="stroke_play" disabled />
+              <IonRadio slot="end" value="stroke_play" />
+            </IonItem>
+            <IonItem lines="inset" button={true} detail={false} onClick={() => setHandicapType('none')}>
+              <IonLabel>
+                <div>No Handicap</div>
+                <IonNote>All players play to course par</IonNote>
+              </IonLabel>
+              <IonRadio slot="end" value="none" />
+            </IonItem>
+            <IonItem lines="full" button={true} detail={false} onClick={() => setHandicapType('random')}>
+              <IonLabel>
+                <div>Random</div>
+                <IonNote>Fun mode - strokes distributed randomly</IonNote>
+              </IonLabel>
+              <IonRadio slot="end" value="random" />
             </IonItem>
           </IonRadioGroup>
         </div>
+
+        {/* Scoring Method Section */}
+        <div style={{ paddingTop: '24px' }}>
+          <div style={{ padding: '0 16px', marginBottom: '8px' }}>
+            <h3 style={{ 
+              fontSize: '13px', 
+              fontWeight: '600', 
+              color: 'var(--ion-color-medium)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              margin: '0 0 8px 0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span>SCORING METHOD</span>
+              <IonButton
+                fill="clear"
+                size="small"
+                onClick={() => setShowScoringModal(true)}
+                style={{
+                  '--padding-start': '8px',
+                  '--padding-end': '8px',
+                  height: '28px'
+                }}
+              >
+                <IonIcon 
+                  icon={informationCircleOutline} 
+                  slot="icon-only" 
+                  style={{ 
+                    fontSize: '20px',
+                    color: 'var(--ion-color-primary)'
+                  }}
+                />
+              </IonButton>
+            </h3>
+          </div>
+          <IonRadioGroup value={scoringMethod}>
+            <IonItem lines="inset" button={true} detail={false} onClick={() => setScoringMethod('match_play')}>
+              <IonLabel>
+                <div>Match Play</div>
+                <IonNote>Points for each hole won</IonNote>
+              </IonLabel>
+              <IonRadio slot="end" value="match_play" />
+            </IonItem>
+            <IonItem lines="inset" button={true} detail={false} onClick={() => setScoringMethod('stroke_play')}>
+              <IonLabel>
+                <div>Stroke Play</div>
+                <IonNote>Total strokes minus handicap</IonNote>
+              </IonLabel>
+              <IonRadio slot="end" value="stroke_play" />
+            </IonItem>
+            <IonItem lines="inset" button={true} detail={false} onClick={() => setScoringMethod('stableford')}>
+              <IonLabel>
+                <div>Stableford</div>
+                <IonNote>Points based on score vs par</IonNote>
+              </IonLabel>
+              <IonRadio slot="end" value="stableford" />
+            </IonItem>
+            <IonItem lines="full" button={true} detail={false} onClick={() => setScoringMethod('skins')}>
+              <IonLabel>
+                <div>Skins</div>
+                <IonNote>Winner takes all on each hole</IonNote>
+              </IonLabel>
+              <IonRadio slot="end" value="skins" />
+            </IonItem>
+          </IonRadioGroup>
+        </div>
+
 
         {/* Error Message */}
         {error && (
@@ -234,11 +324,20 @@ const CreateGame: React.FC = () => {
         </div>
       </IonContent>
       
-      {/* Scoring Format Rules Modal */}
-      <ScoringFormatModal
-        isOpen={showRulesModal}
-        onDismiss={() => setShowRulesModal(false)}
-        initialFormat={format}
+      {/* Handicap Rules Modal */}
+      <GameRulesModal
+        isOpen={showHandicapModal}
+        onDismiss={() => setShowHandicapModal(false)}
+        mode="handicap"
+        initialSelection={handicapType}
+      />
+      
+      {/* Scoring Rules Modal */}
+      <GameRulesModal
+        isOpen={showScoringModal}
+        onDismiss={() => setShowScoringModal(false)}
+        mode="scoring"
+        initialSelection={scoringMethod}
       />
     </IonPage>
   );
