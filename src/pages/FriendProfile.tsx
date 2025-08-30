@@ -67,9 +67,9 @@ interface RecentGame {
 
 interface GameWithCourse {
   games: Array<{
-    id: any;
-    status?: any;
-    course_id: any;
+    id: string;
+    status?: string;
+    course_id: number;
     created_at: string;
     golf_courses: Array<{
       name: string;
