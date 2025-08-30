@@ -20,10 +20,21 @@ import { useHistory } from 'react-router-dom';
 import { useCourseList } from '../../hooks/useCourses';
 import { Trophy, Target, ChevronRight, Star, BarChart3, Play } from 'lucide-react';
 
+interface CourseWithClub {
+  golf_clubs?: {
+    name: string;
+    city: string;
+  };
+}
+
+interface TeeBoxWithYards {
+  total_yards?: number;
+}
+
 const CoursesList: React.FC = () => {
   const history = useHistory();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchText] = useState(''); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [searchText] = useState('');
 
   // Use our DataService hook for all data
   const { 
@@ -69,7 +80,7 @@ const CoursesList: React.FC = () => {
       return {
         ...course,
         course_rating: selectedTee?.rating,
-        total_distance: (selectedTee as any)?.total_yards, // Type cast to handle missing property
+        total_distance: (selectedTee as TeeBoxWithYards)?.total_yards,
         completed_matches: completedMatches,
         best_score: bestScore,
         average_score: averageScore,
@@ -226,7 +237,7 @@ const CoursesList: React.FC = () => {
                       fontWeight: '400',
                       letterSpacing: '0.5px'
                     }}>
-                      {(course as any).golf_clubs?.name} • {(course as any).golf_clubs?.city}
+                      {(course as CourseWithClub).golf_clubs?.name} • {(course as CourseWithClub).golf_clubs?.city}
                     </p>
                   </div>
                 </div>
