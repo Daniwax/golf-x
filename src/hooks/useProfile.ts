@@ -8,6 +8,11 @@ import { dataService } from '../services/data/DataService';
 import { useAuth } from '../lib/useAuth';
 import type { Profile, ProfileUpdate, GameStats } from '../services/data/types';
 
+// Extended profile interface for data with potential custom_avatar_url
+interface ExtendedProfileData extends Omit<Profile, 'custom_avatar_url'> {
+  custom_avatar_url?: string | null;
+}
+
 interface UseProfileResult {
   // Profile data
   profile: Profile | null;
@@ -74,7 +79,19 @@ export function useProfile(): UseProfileResult {
           updated_at: new Date().toISOString()
         });
       } else {
-        setProfile(profileData);
+        // Map the data to proper types
+        setProfile({
+          id: profileData.id,
+          full_name: profileData.full_name,
+          email: profileData.email,
+          bio: profileData.bio,
+          handicap: profileData.handicap,
+          avatar_url: profileData.avatar_url,
+          custom_avatar_url: (profileData as ExtendedProfileData).custom_avatar_url || null,
+          home_course: profileData.home_course,
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at
+        });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -194,7 +211,23 @@ export function useProfileData(userId?: string) {
       setLoading(true);
       try {
         const data = await dataService.profiles.getUserProfile(targetUserId);
-        setProfile(data);
+        if (data) {
+          // Map the data to proper types
+          setProfile({
+            id: data.id,
+            full_name: data.full_name,
+            email: data.email,
+            bio: data.bio,
+            handicap: data.handicap,
+            avatar_url: data.avatar_url,
+            custom_avatar_url: (data as ExtendedProfileData).custom_avatar_url || null,
+            home_course: data.home_course,
+            created_at: data.created_at,
+            updated_at: data.updated_at
+          });
+        } else {
+          setProfile(null);
+        }
       } catch (err) {
         setError(err as Error);
       } finally {

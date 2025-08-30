@@ -193,7 +193,7 @@ const TournamentLeaderboard: React.FC = () => {
         {/* Segment control */}
         <IonSegment 
           value={selectedSegment} 
-          onIonChange={e => setSelectedSegment(e.detail.value!)}
+          onIonChange={e => setSelectedSegment(e.detail.value as string)}
           style={{
             padding: '16px',
             '--background': '#f8f6f0'

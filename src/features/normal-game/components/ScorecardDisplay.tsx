@@ -135,7 +135,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
         justifyContent: 'center',
         width: '28px',
         height: '28px',
-        position: 'relative'
+        position: 'relative' as const
       };
     }
     if (diffFromPar === -1) {
@@ -251,7 +251,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
       <div className="scorecard-elite-header" style={{
         background: 'linear-gradient(135deg, var(--champ-green-dark) 0%, var(--champ-green) 100%)',
         padding: '20px',
-        position: 'relative',
+        position: 'relative' as const,
         overflow: 'hidden'
       }}>
         {/* Decorative pattern overlay */}
@@ -446,7 +446,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
                       borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
                       alignItems: 'center',
                       cursor: isReadOnly ? 'default' : 'pointer',
-                      position: 'relative',
+                      position: 'relative' as const,
                       backgroundColor: isCurrentHole ? 'var(--champ-gold-soft)' : 'transparent',
                       borderRadius: isCurrentHole ? '8px' : '0',
                       transition: 'background-color 0.2s'
@@ -635,7 +635,7 @@ const ScorecardDisplay: React.FC<ScorecardDisplayProps> = ({
                       borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
                       alignItems: 'center',
                       cursor: isReadOnly ? 'default' : 'pointer',
-                      position: 'relative',
+                      position: 'relative' as const,
                       backgroundColor: isCurrentHole ? 'var(--champ-gold-soft)' : 'transparent',
                       borderRadius: isCurrentHole ? '8px' : '0',
                       transition: 'background-color 0.2s'

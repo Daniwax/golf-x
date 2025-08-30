@@ -6,6 +6,21 @@ import { dataService } from '../../services/data/DataService';
 import type { Player, Hole, HandicapContext, MatchHandicapResult } from '../../features/normal-game/engines/MatchHandicapEngine';
 import type { PlayerMatchPar } from '../../features/normal-game/engines/PMPEngine';
 
+// Local types for the test data structures
+interface CourseWithPar {
+  id: number;
+  name: string;
+  par: number;
+}
+
+interface TeeBoxData {
+  id: number;
+  name: string;
+  color: string;
+  course_rating: number;
+  slope_rating: number;
+}
+
 // Define the actual game types we support
 const TEST_GAME_TYPES = {
   match_play: {
@@ -45,7 +60,7 @@ const HandicapEngineTest: React.FC = () => {
   const [courseRecordMatches, setCourseRecordMatches] = useState<Array<{ id: number; course_id: number; teebox_id: number; status: string }>>([]);
   
   // Available Data
-  const [courses, setCourses] = useState<Array<{ id: number; name: string }>>([]);
+  const [courses, setCourses] = useState<CourseWithPar[]>([]);
   const [teeBoxes, setTeeBoxes] = useState<Array<{ id: number; name: string; color: string; slope: number; rating: number }>>([]);
   const [loading, setLoading] = useState(false);
   
@@ -93,7 +108,7 @@ const HandicapEngineTest: React.FC = () => {
       const selectedCourse = courses.find(c => c.id === courseId);
       if (selectedTee && selectedCourse) {
         // Update current user's handicap
-        calculateRealHandicaps([currentUser], selectedTee, selectedCourse.par).then(updatedPlayers => {
+        calculateRealHandicaps([currentUser], { slope_rating: selectedTee.slope, course_rating: selectedTee.rating }, (selectedCourse as CourseWithPar).par).then(updatedPlayers => {
           if (updatedPlayers.length > 0) {
             setCurrentUser(updatedPlayers[0]);
             // Update test players with new current user data
@@ -104,7 +119,7 @@ const HandicapEngineTest: React.FC = () => {
         // Update friends' handicaps
         if (friendsData.size > 0) {
           const friendPlayers = Array.from(friendsData.values());
-          calculateRealHandicaps(friendPlayers, selectedTee, selectedCourse.par).then(updatedFriends => {
+          calculateRealHandicaps(friendPlayers, { slope_rating: selectedTee.slope, course_rating: selectedTee.rating }, (selectedCourse as CourseWithPar).par).then(updatedFriends => {
             const newFriendsData = new Map<string, Player>();
             updatedFriends.forEach(friend => {
               newFriendsData.set(friend.userId, friend);
@@ -233,12 +248,18 @@ const HandicapEngineTest: React.FC = () => {
           // Load tee boxes for first course using data service
           const teesData = await dataService.courses.getCourseTeeBoxes(coursesData[0].id);
           if (teesData && teesData.length > 0) {
-            setTeeBoxes(teesData);
+            setTeeBoxes(teesData.map((tb: TeeBoxData) => ({
+              id: tb.id,
+              name: tb.name,
+              color: tb.color,
+              slope: tb.slope_rating,
+              rating: tb.course_rating
+            })));
             setTeeBoxId(teesData[0].id);
             
             // Update player handicaps based on actual tee data
             if (testPlayers.length > 0) {
-              const updatedPlayers = await calculateRealHandicaps(testPlayers, teesData[0], coursesData[0].par);
+              const updatedPlayers = await calculateRealHandicaps(testPlayers, { slope_rating: teesData[0].slope_rating, course_rating: teesData[0].course_rating }, (coursesData[0] as CourseWithPar).par);
               setTestPlayers(updatedPlayers);
             }
           }
@@ -303,11 +324,10 @@ const HandicapEngineTest: React.FC = () => {
       
       // Format matches for display in dropdown
       const matches = games.map(g => ({
-        id: g.id,
-        name: g.name,
-        date: g.date,
-        totalStrokes: g.totalStrokes,
-        netScore: g.netScore
+        id: parseInt(g.id),
+        course_id: g.courseId,
+        teebox_id: g.teeBoxId || 0,
+        status: 'completed' as const
       }));
       
       if (userId === currentUserId) {
@@ -335,14 +355,10 @@ const HandicapEngineTest: React.FC = () => {
       const games = await dataService.games.getTopCompletedGames(courseId, teeBoxId, 10, [9, 18]);
       
       const matches = games.map(g => ({
-        id: g.id,
-        name: `${g.playerName} - ${g.name}`,
-        date: g.date,
-        totalStrokes: g.totalStrokes,
-        netScore: g.netScore,
-        userId: g.userId,
-        playerName: g.playerName,
-        numHoles: g.numHoles
+        id: parseInt(g.id),
+        course_id: g.courseId,
+        teebox_id: g.teeBoxId || 0,
+        status: 'completed' as const
       }));
       
       setCourseRecordMatches(matches);
@@ -399,7 +415,7 @@ const HandicapEngineTest: React.FC = () => {
       return {
         ...player,
         courseHandicap,
-        teeBoxId: teeBox.id
+        teeBoxId
       };
     });
   };
@@ -755,11 +771,11 @@ const HandicapEngineTest: React.FC = () => {
                           style={{ marginRight: '10px' }}
                         />
                         <span style={{ color: '#e0e0e0' }}>
-                          {match.name} - {match.date}
+                          Game #{match.id}
                         </span>
-                        {match.totalStrokes && (
+                        {match.status === 'completed' && (
                           <span style={{ color: '#4a9eff', marginLeft: '10px' }}>
-                            ({match.totalStrokes} strokes)
+                            (Completed)
                           </span>
                         )}
                       </label>
@@ -853,11 +869,11 @@ const HandicapEngineTest: React.FC = () => {
                               style={{ marginRight: '10px' }}
                             />
                             <span style={{ color: '#e0e0e0' }}>
-                              {match.name} - {match.date}
+                              Game #{match.id}
                             </span>
-                            {match.totalStrokes && (
+                            {match.status === 'completed' && (
                               <span style={{ color: '#4a9eff', marginLeft: '10px' }}>
-                                ({match.totalStrokes} strokes)
+                                (Completed)
                               </span>
                             )}
                           </label>
@@ -925,10 +941,10 @@ const HandicapEngineTest: React.FC = () => {
                           style={{ marginRight: '10px' }}
                         />
                         <span style={{ color: '#e0e0e0' }}>
-                          {match.name} - {match.date}
+                          Game #{match.id}
                         </span>
                         <span style={{ color: '#4a9eff', marginLeft: '10px' }}>
-                          ({match.totalStrokes} strokes, {match.numHoles} holes)
+                          (Completed)
                         </span>
                       </label>
                     ))}
@@ -1462,7 +1478,7 @@ const HandicapEngineTest: React.FC = () => {
                 <thead>
                   <tr>
                     <th style={{ border: '1px solid #000', padding: '5px' }}>Player</th>
-                    {Array.from(pmpResults.values())[0]?.map((pmp, idx) => {
+                    {Array.from(pmpResults.values())[0]?.map((_, idx) => {
                       const hole = testHoles[idx];
                       return hole ? (
                         <th key={hole.holeNumber} style={{ border: '1px solid #000', padding: '5px', minWidth: '40px' }}>
@@ -1474,7 +1490,7 @@ const HandicapEngineTest: React.FC = () => {
                   </tr>
                   <tr>
                     <td style={{ border: '1px solid #555', color: '#e0e0e0', padding: '5px', fontWeight: 'bold' }}>Par</td>
-                    {Array.from(pmpResults.values())[0]?.map((pmp, idx) => {
+                    {Array.from(pmpResults.values())[0]?.map((_, idx) => {
                       const hole = testHoles[idx];
                       return hole ? (
                         <td key={hole.holeNumber} style={{ border: '1px solid #000', padding: '5px', textAlign: 'center' }}>
@@ -1483,12 +1499,12 @@ const HandicapEngineTest: React.FC = () => {
                       ) : null;
                     })}
                     <td style={{ border: '1px solid #555', color: '#e0e0e0', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>
-                      {Array.from(pmpResults.values())[0]?.reduce((sum, pmp, idx) => sum + (testHoles[idx]?.par || 0), 0) || 0}
+                      {Array.from(pmpResults.values())[0]?.reduce((sum, _, idx) => sum + (testHoles[idx]?.par || 0), 0) || 0}
                     </td>
                   </tr>
                   <tr>
                     <td style={{ border: '1px solid #555', color: '#e0e0e0', padding: '5px' }}>SI</td>
-                    {Array.from(pmpResults.values())[0]?.map((pmp, idx) => {
+                    {Array.from(pmpResults.values())[0]?.map((_, idx) => {
                       const hole = testHoles[idx];
                       return hole ? (
                         <td key={hole.holeNumber} style={{ border: '1px solid #000', padding: '5px', textAlign: 'center', fontSize: '10px' }}>

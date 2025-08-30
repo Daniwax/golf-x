@@ -63,7 +63,7 @@ const ScorecardMobile: React.FC<ScorecardProps> = ({
           .single();
           
         if (!loadedGame) return;
-        gameData = loadedGame;
+        gameData = loadedGame as Game;
       }
       
       if (!gameData) return;

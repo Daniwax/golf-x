@@ -18,12 +18,19 @@ import {
   IonButton,
   IonButtons,
   IonBackButton,
-  IonText
+  IonText,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonItem,
+  IonNote
 } from '@ionic/react';
 import { 
   statsChartOutline,
   golfOutline,
   trophyOutline,
+  flagOutline
 } from 'ionicons/icons';
 import { useAuth } from '../lib/useAuth';
 import { useRefresher } from '../lib/useRefresher';

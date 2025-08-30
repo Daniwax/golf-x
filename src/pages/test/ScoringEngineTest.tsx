@@ -42,6 +42,33 @@ interface Scorecard {
   totalPutts: number;
 }
 
+// Details types for different scoring methods
+interface StrokePlayDetails {
+  grossScore: number;
+  netScore: number;
+  holesPlayed: number;
+}
+
+interface StablefordDetails {
+  grossScore: number;
+  holesPlayed: number;
+}
+
+interface MatchPlayDetails {
+  holesWon: number;
+  holesLost: number;
+  holesTied: number;
+  matchStatus: string;
+  record?: string;
+}
+
+interface SkinDetails {
+  holesWon: number[];
+  skinValues: Array<{ hole: number; value: number }>;
+  grossScore: number;
+}
+
+
 interface HoleScore {
   holeNumber: number;
   par: number;
@@ -646,7 +673,7 @@ const ScoringEngineTest: React.FC = () => {
                       fontSize: '16px',
                       color: '#e0e0e0'
                     }}>
-                      {scorecard?.totalStrokes || entry.details?.grossScore || '-'}
+                      {scorecard?.totalStrokes || (entry.details as unknown as StrokePlayDetails | StablefordDetails | SkinDetails)?.grossScore || '-'}
                     </td>
                     <td style={{ 
                       border: '1px solid #555', 
@@ -667,39 +694,39 @@ const ScoringEngineTest: React.FC = () => {
                     }}>
                       {selectedScoringMethod === 'stroke_play' && entry.details && (
                         <div>
-                          <div>{entry.details.holesPlayed} holes played</div>
+                          <div>{(entry.details as unknown as StrokePlayDetails).holesPlayed} holes played</div>
                           <div style={{ color: '#7f7', marginTop: '4px' }}>
                             Personal Par: {personalPar}
                           </div>
-                          {entry.details.netScore !== entry.details.grossScore && (
+                          {(entry.details as unknown as StrokePlayDetails).netScore !== (entry.details as unknown as StrokePlayDetails).grossScore && (
                             <div style={{ color: '#4a9eff', marginTop: '4px' }}>
-                              Net Score: {entry.details.netScore}
+                              Net Score: {(entry.details as unknown as StrokePlayDetails).netScore}
                             </div>
                           )}
                         </div>
                       )}
                     {selectedScoringMethod === 'stableford' && entry.details && (
                       <div>
-                        {entry.details.holesPlayed} holes played
+                        {(entry.details as unknown as StablefordDetails).holesPlayed} holes played
                         <div style={{ marginTop: '4px' }}>
-                          Gross: {entry.details.grossScore}
+                          Gross: {(entry.details as unknown as StablefordDetails).grossScore}
                         </div>
                       </div>
                     )}
                     {selectedScoringMethod === 'match_play' && entry.details && (
                       <div>
-                        {entry.details.record ? (
+                        {(entry.details as unknown as MatchPlayDetails).record ? (
                           <>
-                            Record: {entry.details.record}
+                            Record: {(entry.details as unknown as MatchPlayDetails).record}
                             <div style={{ marginTop: '4px', color: '#4a9eff' }}>
-                              Status: {entry.details.matchStatus || 'In Progress'}
+                              Status: {(entry.details as unknown as MatchPlayDetails).matchStatus || 'In Progress'}
                             </div>
                           </>
                         ) : (
                           <>
-                            <div>W:{entry.details.holesWon} L:{entry.details.holesLost} T:{entry.details.holesTied}</div>
+                            <div>W:{(entry.details as unknown as MatchPlayDetails).holesWon} L:{(entry.details as unknown as MatchPlayDetails).holesLost} T:{(entry.details as unknown as MatchPlayDetails).holesTied}</div>
                             <div style={{ marginTop: '4px', color: '#4a9eff' }}>
-                              {entry.details.matchStatus}
+                              {(entry.details as unknown as MatchPlayDetails).matchStatus}
                             </div>
                           </>
                         )}
@@ -707,14 +734,14 @@ const ScoringEngineTest: React.FC = () => {
                     )}
                     {selectedScoringMethod === 'skins' && entry.details && (
                       <div>
-                        {entry.details.holesWon?.length > 0 ? (
+                        {(entry.details as unknown as SkinDetails).holesWon?.length > 0 ? (
                           <>
-                            Won holes: {entry.details.holesWon.join(', ')}
-                            {entry.details.skinValues && entry.details.skinValues.some(sv => sv.value > 1) && (
+                            Won holes: {(entry.details as unknown as SkinDetails).holesWon.join(', ')}
+                            {(entry.details as unknown as SkinDetails).skinValues && (entry.details as unknown as SkinDetails).skinValues.some((sv) => sv.value > 1) && (
                               <div style={{ marginTop: '4px', color: '#ffd700' }}>
-                                Carryovers: {entry.details.skinValues
-                                  .filter(sv => sv.value > 1)
-                                  .map(sv => `#${sv.hole}(${sv.value})`)
+                                Carryovers: {(entry.details as unknown as SkinDetails).skinValues
+                                  .filter((sv) => sv.value > 1)
+                                  .map((sv) => `#${sv.hole}(${sv.value})`)
                                   .join(', ')}
                               </div>
                             )}

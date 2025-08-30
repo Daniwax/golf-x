@@ -52,7 +52,7 @@ export interface HandicapStrategy {
   requiresHistoricalData?: boolean;
   calculate(
     players: Player[],
-    context: HandicapContext
+    context?: HandicapContext
   ): Promise<MatchHandicapResult[]>;
 }
 
@@ -67,7 +67,7 @@ class MatchPlayStrategy implements HandicapStrategy {
   name = 'match_play';
   description = 'Relative handicap - lowest plays off scratch';
 
-  async calculate(players: Player[]): Promise<MatchHandicapResult[]> {
+  async calculate(players: Player[], _?: HandicapContext): Promise<MatchHandicapResult[]> {
     // Match play uses 100% allowance
     const lowestHandicap = Math.min(...players.map(p => p.courseHandicap));
     return players.map(player => ({
@@ -85,7 +85,7 @@ class StrokePlayStrategy implements HandicapStrategy {
   name = 'stroke_play';
   description = 'Full handicap for all players';
 
-  async calculate(players: Player[]): Promise<MatchHandicapResult[]> {
+  async calculate(players: Player[], _context?: HandicapContext): Promise<MatchHandicapResult[]> {
     // Stroke play uses 95% allowance, no relative adjustment
     return players.map(player => ({
       userId: player.userId,
@@ -207,11 +207,11 @@ class PersonalParStrategy implements HandicapStrategy {
 
   async calculate(
     players: Player[],
-    context: HandicapContext
+    _context?: HandicapContext
   ): Promise<MatchHandicapResult[]> {
     // TODO: Calculate based on average scores per hole
     // For now, fallback to stroke play
-    return new StrokePlayStrategy().calculate(players, context);
+    return new StrokePlayStrategy().calculate(players, _context);
   }
 }
 
@@ -272,7 +272,7 @@ export class MatchHandicapEngine {
     } catch (error) {
       console.error(`Error calculating handicaps with ${handicapType}:`, error);
       // Fallback to simple match play on error
-      return new MatchPlayStrategy().calculate(players, context);
+      return new MatchPlayStrategy().calculate(players, {} as HandicapContext);
     }
   }
 
@@ -299,5 +299,4 @@ export class MatchHandicapEngine {
   }
 }
 
-// Export types for use in other modules
-export type { HandicapStrategy, HandicapContext };
+// Types are already exported at declaration

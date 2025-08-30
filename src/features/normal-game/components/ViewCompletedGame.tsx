@@ -38,6 +38,8 @@ interface GameData {
     id: string;
     game_description?: string;
     scoring_format: 'match_play' | 'stroke_play';
+    scoring_method?: string;
+    handicap_type?: string;
     weather_condition?: string;
     completed_at: string;
     golf_courses: {
@@ -68,10 +70,15 @@ interface GameData {
     user_id: string;
     hole_number: number;
     strokes: number | null;
+    player_match_par?: number;
+    hole_par?: number;
+    putts?: number;
   }>;
   holes: Array<{
     hole_number: number;
     par: number;
+    handicap?: number;
+    handicap_index?: number;
   }>;
 }
 
@@ -321,29 +328,20 @@ const ViewCompletedGame: React.FC = () => {
         // Use gameService like LiveGame does - it returns clean arrays
         const gameData = await gameService.getGameDetails(gameId);
         
-        // Load hole and course information separately if needed
-        let holes: any[] = [];
-        let courseInfo = null;
+        // Load hole information separately if needed
+        let holes: { hole_number: number; par: number; handicap_index: number }[] = [];
         if (gameData && gameData.game && gameData.game.course_id && supabase) {
-          const [holesResult, courseResult] = await Promise.all([
-            supabase
-              .from('holes')
-              .select('hole_number, par, handicap_index')
-              .eq('course_id', gameData.game.course_id)
-              .order('hole_number'),
-            supabase
-              .from('golf_courses')
-              .select('id, name, par, golf_clubs(name)')
-              .eq('id', gameData.game.course_id)
-              .single()
-          ]);
+          const { data: holesResult } = await supabase
+            .from('holes')
+            .select('hole_number, par, handicap_index')
+            .eq('course_id', gameData.game.course_id)
+            .order('hole_number');
           
           // Filter holes based on game.num_holes if specified
-          const allHoles = holesResult.data || [];
+          const allHoles = holesResult || [];
           holes = gameData.game.num_holes && gameData.game.num_holes < 18 
             ? allHoles.slice(0, gameData.game.num_holes)
             : allHoles;
-          courseInfo = courseResult.data;
         }
         
         if (gameData) {
@@ -351,10 +349,7 @@ const ViewCompletedGame: React.FC = () => {
           const safeData = {
             ...gameData,
             holes: holes,
-            game: {
-              ...gameData.game,
-              golf_courses: courseInfo || gameData.game.golf_courses || { name: 'Unknown Course', par: 72, golf_clubs: { name: 'Unknown Club' } }
-            }
+            game: gameData.game
           };
           
           // Calculate match play results if it's a match play game
@@ -362,7 +357,7 @@ const ViewCompletedGame: React.FC = () => {
             const validParticipants = safeData.participants.filter(p => p.profiles).map(p => ({
               ...p,
               profiles: p.profiles || { full_name: 'Unknown' },
-              tee_boxes: p.tee_boxes || { name: 'Default' }
+              tee_boxes: (p as { tee_boxes?: { name: string } }).tee_boxes || { name: 'Default' }
             }));
             const participantsWithMatchPlay = calculateMatchPlayResults(
               validParticipants
@@ -494,8 +489,8 @@ const ViewCompletedGame: React.FC = () => {
     name: p.profiles?.full_name,
     handicap_index: p.handicap_index
   })));
-  console.log('getGameTypeLabel result:', getGameTypeLabel(game.handicap_type));
-  console.log('getScoringTypeLabel result:', getScoringTypeLabel(game.scoring_method));
+  console.log('getGameTypeLabel result:', getGameTypeLabel(game.handicap_type || 'none'));
+  console.log('getScoringTypeLabel result:', getScoringTypeLabel(game.scoring_method || 'stroke_play'));
   console.log('=== END DETAILED DEBUG ===');
   
   // const winner = participants && Array.isArray(participants) && participants.length > 0
@@ -824,7 +819,7 @@ const ViewCompletedGame: React.FC = () => {
                   color: 'var(--champ-green-dark)',
                   fontWeight: '600'
                 }}>
-                  {getGameTypeLabel(game.handicap_type)}
+                  {getGameTypeLabel(game.handicap_type || 'none')}
                 </div>
               </div>
 
@@ -859,7 +854,7 @@ const ViewCompletedGame: React.FC = () => {
                   color: 'var(--champ-green-dark)',
                   fontWeight: '600'
                 }}>
-                  {getScoringTypeLabel(game.scoring_method)}
+                  {getScoringTypeLabel(game.scoring_method || 'stroke_play')}
                 </div>
               </div>
             </div>
@@ -964,9 +959,15 @@ const ViewCompletedGame: React.FC = () => {
               {/* Leaderboard Component */}
               <CompletedLeaderboard
                 participants={participants}
-                scores={scores}
-                holes={holes}
-                gameFormat={game.scoring_method}
+                scores={scores.map(s => ({ 
+                  ...s, 
+                  strokes: s.strokes || 0 
+                }))}
+                holes={holes.map(h => ({ 
+                  ...h, 
+                  handicap: h.handicap || h.handicap_index || 0 
+                }))}
+                gameFormat={game.scoring_method || 'stroke_play'}
               />
               
               {/* Golf Club Style Rules Card - Below Leaderboard */}
@@ -1000,7 +1001,7 @@ const ViewCompletedGame: React.FC = () => {
                   fontFamily: 'serif',
                   fontStyle: 'italic'
                 }}>
-                  {getGameTypeLabel(game.handicap_type)}
+                  {getGameTypeLabel(game.handicap_type || 'none')}
                 </div>
                 
                 {/* Title */}
@@ -1045,7 +1046,7 @@ const ViewCompletedGame: React.FC = () => {
                       padding: '0 0 0 16px',
                       listStyleType: 'none'
                     }}>
-                      {getHandicapRules(game.handicap_type).map((rule, index) => (
+                      {getHandicapRules(game.handicap_type || 'none').map((rule, index) => (
                         <li key={index} style={{
                           fontSize: '11px',
                           color: '#2a5434',
@@ -1093,7 +1094,7 @@ const ViewCompletedGame: React.FC = () => {
                       padding: '0 0 0 16px',
                       listStyleType: 'none'
                     }}>
-                      {getScoringRules(game.scoring_method).map((rule, index) => (
+                      {getScoringRules(game.scoring_method || 'stroke_play').map((rule, index) => (
                         <li key={index} style={{
                           fontSize: '11px',
                           color: '#2a5434',

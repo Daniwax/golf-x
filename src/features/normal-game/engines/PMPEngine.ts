@@ -248,6 +248,8 @@ class ControlledRandomDistribution implements PMPDistributionStrategy {
     return 3; // Cap at 3 for all higher handicaps
   }
   
+  // Unused method - commented out to fix TypeScript warning
+  /*
   private getMinHolesNeeded(matchHandicap: number, maxPerHole: number, totalHoles: number = 18): number {
     // Calculate base minimum holes needed
     let minHoles: number;
@@ -268,6 +270,7 @@ class ControlledRandomDistribution implements PMPDistributionStrategy {
     // Cap minimum holes by actual holes being played
     return Math.min(minHoles, totalHoles);
   }
+  */
 }
 
 /**
@@ -278,10 +281,14 @@ class GhostDistribution implements PMPDistributionStrategy {
   name = 'ghost';
   description = 'Actual scores from past game';
 
-  constructor(private scorecard?: Map<number, { strokes: number; putts: number }>) {}
+  private scorecard?: Map<number, { strokes: number; putts: number }>;
+
+  constructor(scorecard?: Map<number, { strokes: number; putts: number }>) {
+    this.scorecard = scorecard;
+  }
 
   distribute(
-    matchHandicap: number,  // Not used for ghosts
+    _matchHandicap: number,  // Not used for ghosts (prefixed with _ to indicate unused)
     holes: Hole[],
     userId: string
   ): PlayerMatchPar[] {
@@ -584,5 +591,4 @@ export function getGameTypeInfo(typeId: string) {
   };
 }
 
-// Export types
-export type { PMPDistributionStrategy };
+// Types are already exported at declaration

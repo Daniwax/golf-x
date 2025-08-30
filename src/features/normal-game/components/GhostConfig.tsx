@@ -18,6 +18,30 @@ import { dataService } from '../../../services/data/DataService';
 import type { WeatherCondition } from '../types';
 import '../../../styles/golf_style.css';
 
+interface TeeBoxData {
+  id: number;
+  course_id: number;
+  name: string;
+  color?: string;
+  color_hex?: string;
+  gender?: string;
+  total_yards?: number;
+  total_meters?: number;
+  course_rating?: number;
+  slope_rating?: number;
+  bogey_rating?: number;
+  front_nine_rating?: number;
+  front_nine_slope?: number;
+  front_nine_bogey?: number;
+  back_nine_rating?: number;
+  back_nine_slope?: number;
+  back_nine_bogey?: number;
+  display_order?: number;
+  is_default?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface LocationState {
   gameData: {
     description?: string;
@@ -111,8 +135,16 @@ const GhostConfig: React.FC = () => {
     try {
       const teesData = await dataService.courses.getCourseTeeBoxes(courseId);
       if (teesData && teesData.length > 0) {
-        setTeeBoxes(teesData);
-        setTeeBoxId(teesData[0].id);
+        // Map the data to match our state type
+        const mappedTees = teesData.map((tee: TeeBoxData) => ({
+          id: tee.id,
+          name: tee.name || '',
+          color: tee.color || '',
+          slope_rating: tee.slope_rating || 113,
+          course_rating: tee.course_rating || 72
+        }));
+        setTeeBoxes(mappedTees);
+        setTeeBoxId(mappedTees[0].id);
       }
     } catch (err) {
       console.error('Error loading tee boxes:', err);
@@ -292,7 +324,7 @@ const GhostConfig: React.FC = () => {
                       {(tee.name || tee.color || '').charAt(0).toUpperCase()}
                     </div>
                     <div className="golf-tee-box-details">
-                      {`CR ${tee.rating}`}
+                      {`CR ${tee.course_rating}`}
                     </div>
                   </div>
                 ))}

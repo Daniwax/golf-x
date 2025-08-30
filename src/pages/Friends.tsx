@@ -266,7 +266,7 @@ const Friends: React.FC = () => {
                   <div className="friend-avatar">
                     {(friend.custom_avatar_url || friend.avatar_url) ? (
                       <img 
-                        src={friend.custom_avatar_url || friend.avatar_url} 
+                        src={friend.custom_avatar_url || friend.avatar_url || undefined} 
                         alt={friend.full_name || 'Friend'}
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';

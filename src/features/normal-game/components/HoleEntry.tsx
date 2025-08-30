@@ -29,7 +29,7 @@ interface HoleEntryProps {
   participants: GameParticipant[];
   scores: GameHoleScore[];
   currentHole: number;
-  game: { id: string; course_id?: string; teebox_id?: string; status?: string; name?: string; format?: string }; // Add game prop to match Scorecard and Leaderboard
+  game: { id: string; course_id?: string; teebox_id?: string; status?: string; name?: string; format?: string; num_holes?: number }; // Add game prop to match Scorecard and Leaderboard
   onHoleChange: (hole: number) => void;
   onScoreUpdate: () => void;
   onGameComplete?: () => void;
@@ -145,13 +145,15 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
       console.error('Error loading hole data:', error);
       // Fallback to just basic hole info without distance
       try {
+        if (!supabase) return;
+        
         const { data: game } = await supabase
           .from('games')
           .select('course_id')
           .eq('id', gameId)
           .single();
           
-        if (game) {
+        if (game && supabase) {
           const { data: hole } = await supabase
             .from('holes')
             .select('hole_number, par, handicap_index')

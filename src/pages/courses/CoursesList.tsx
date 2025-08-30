@@ -23,6 +23,7 @@ import { Trophy, Target, ChevronRight, Star, BarChart3, Play } from 'lucide-reac
 const CoursesList: React.FC = () => {
   const history = useHistory();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchText] = useState(''); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   // Use our DataService hook for all data
   const { 
@@ -46,13 +47,13 @@ const CoursesList: React.FC = () => {
       
       // Get player stats for this course
       const courseStats = playerStats.filter(stat => 
-        stat.games?.course_id === course.id
+        stat.course_id === course.id
       );
       
       // Calculate aggregated stats
       const completedMatches = courseStats.length;
       const scores = courseStats
-        .map(s => s.total_strokes)
+        .map(s => s.best_score)
         .filter(s => s !== null && s !== undefined);
       
       const bestScore = scores.length > 0 ? Math.min(...scores) : null;
@@ -62,13 +63,13 @@ const CoursesList: React.FC = () => {
       
       // Get course image
       const courseImage = courseImages.find(img => 
-        img.course_id === course.id && img.image_type === 'default'
+        img.course_id === course.id
       );
       
       return {
         ...course,
-        course_rating: selectedTee?.course_rating,
-        total_distance: selectedTee?.total_meters,
+        course_rating: selectedTee?.rating,
+        total_distance: (selectedTee as any)?.total_yards, // Type cast to handle missing property
         completed_matches: completedMatches,
         best_score: bestScore,
         average_score: averageScore,
@@ -127,36 +128,6 @@ const CoursesList: React.FC = () => {
   //   );
   // };
 
-  const processImageData = (imageData: string | undefined, mimeType: string | undefined) => {
-    if (!imageData) return '/assets/golf-course-placeholder.jpg';
-    
-    try {
-      if (imageData.startsWith('\\x')) {
-        // Hex-encoded bytea from PostgreSQL
-        const hexString = imageData.slice(2);
-        const hexMatches = hexString.match(/.{1,2}/g);
-        if (hexMatches && hexMatches.length < 500000) {
-          const bytes = new Uint8Array(hexMatches.map((byte: string) => parseInt(byte, 16)));
-          let binaryString = '';
-          const chunkSize = 8192;
-          for (let i = 0; i < bytes.length; i += chunkSize) {
-            const chunk = bytes.slice(i, i + chunkSize);
-            binaryString += String.fromCharCode(...chunk);
-          }
-          const base64String = btoa(binaryString);
-          return `data:${mimeType || 'image/jpeg'};base64,${base64String}`;
-        }
-      } else {
-        // Assume it's already base64
-        const cleanBase64 = imageData.replace(/[\s\n\r]/g, '');
-        return `data:${mimeType || 'image/jpeg'};base64,${cleanBase64}`;
-      }
-    } catch (error) {
-      console.error('Error processing image:', error);
-    }
-    
-    return '/assets/golf-course-placeholder.jpg';
-  };
 
   if (error) {
     return (
@@ -223,7 +194,7 @@ const CoursesList: React.FC = () => {
                 >
                   {course.image && (
                     <img
-                      src={processImageData(course.image.image_data, course.image.mime_type)}
+                      src={course.image.image_url}
                       alt={course.name}
                       className="course-image"
                       style={{
@@ -255,7 +226,7 @@ const CoursesList: React.FC = () => {
                       fontWeight: '400',
                       letterSpacing: '0.5px'
                     }}>
-                      {course.golf_clubs?.name} • {course.golf_clubs?.city}
+                      {(course as any).golf_clubs?.name} • {(course as any).golf_clubs?.city}
                     </p>
                   </div>
                 </div>

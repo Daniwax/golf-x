@@ -5,6 +5,7 @@
 
 import { CacheService } from '../cache/CacheService';
 import { getCacheKey, getTTL } from '../../config/cache.config';
+import { supabase } from '../../lib/supabase';
 
 export class CourseDataService {
   private cache: CacheService;
@@ -22,7 +23,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         let query = supabase.from('golf_courses').select(`
           id,
@@ -102,7 +102,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -179,7 +178,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -219,7 +217,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -265,7 +262,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -312,7 +308,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -366,7 +361,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -411,7 +405,6 @@ export class CourseDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         let query = supabase

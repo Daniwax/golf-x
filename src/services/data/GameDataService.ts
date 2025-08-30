@@ -5,6 +5,7 @@
 
 import { CacheService } from '../cache/CacheService';
 import { getCacheKey, getTTL, getInvalidationPatterns } from '../../config/cache.config';
+import { supabase } from '../../lib/supabase';
 
 export class GameDataService {
   private cache: CacheService;
@@ -38,7 +39,6 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data: games, error } = await supabase
@@ -109,7 +109,6 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         // First get participants
@@ -173,7 +172,6 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         // Build query
@@ -245,7 +243,6 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         // Query for best scores across ALL users on this course/tee
@@ -316,7 +313,6 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         // Query all completed games for this user on this course
@@ -381,7 +377,6 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -419,7 +414,6 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase

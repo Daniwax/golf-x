@@ -5,6 +5,7 @@
 
 import { CacheService } from '../cache/CacheService';
 import { getCacheKey, getTTL } from '../../config/cache.config';
+import { supabase } from '../../lib/supabase';
 
 // Types from holeStatsService
 export interface HoleStatistic {
@@ -54,7 +55,7 @@ export interface RecentHoleScore {
 }
 
 export class StatsDataService {
-  private cache: CacheService;
+  private cache!: CacheService;
   
   constructor(cache: CacheService) {
     this.cache = cache;
@@ -68,7 +69,6 @@ export class StatsDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         
         if (!supabase) {
           console.error('Supabase not initialized');
@@ -205,7 +205,6 @@ export class StatsDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         
         if (!supabase) {
           console.error('Supabase not initialized');
@@ -319,7 +318,6 @@ export class StatsDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         
         if (!supabase) {
           console.error('Supabase not initialized');
@@ -428,7 +426,6 @@ export class StatsDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         
         if (!supabase) throw new Error('Supabase client not initialized');
         
@@ -477,7 +474,6 @@ export class StatsDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
@@ -563,7 +559,6 @@ export class StatsDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         
         if (!supabase) {
           console.error('Supabase not initialized');

@@ -5,9 +5,10 @@
 
 import { CacheService } from '../cache/CacheService';
 import { getCacheKey, getTTL, getInvalidationPatterns } from '../../config/cache.config';
+import { supabase } from '../../lib/supabase';
 
 export class ProfileDataService {
-  private cache: CacheService;
+  private cache!: CacheService;
   
   constructor(cache: CacheService) {
     this.cache = cache;
@@ -21,7 +22,6 @@ export class ProfileDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
         if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
@@ -51,7 +51,6 @@ export class ProfileDataService {
    * Update user profile
    */
   async updateUserProfile(userId: string, updates: { full_name?: string; bio?: string; handicap?: number; avatar_url?: string }) {
-    const { supabase } = await import('../../lib/supabase');
     if (!supabase) throw new Error('Supabase client not initialized');
     
     const { data, error } = await supabase
@@ -160,8 +159,7 @@ export class ProfileDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
-        
+            
         if (!supabase) return {};
         
         // Get all completed games where current user participated

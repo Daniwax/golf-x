@@ -620,12 +620,6 @@ Time: ${debugInfo.timestamp}
         </IonCard>
         
         {/* Stroke Distribution Table - Show for all games except scratch */}
-        {console.log('Show hole table?', {
-          handicapType: gameData.handicapType,
-          scoringMethod: gameData.scoringMethod, 
-          holesLength: holes.length,
-          shouldShow: (gameData.handicapType !== 'none' || gameData.scoringMethod === 'match_play') && holes.length > 0
-        })}
         {(gameData.handicapType !== 'none' || gameData.scoringMethod === 'match_play') && holes.length > 0 && (
           <>
             <div style={{ 
