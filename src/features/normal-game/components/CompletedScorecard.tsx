@@ -2,8 +2,11 @@ import React from 'react';
 import {
   IonCard,
   IonCardContent,
-  IonNote
+  IonNote,
+  IonIcon
 } from '@ionic/react';
+import { flagOutline, trophyOutline } from 'ionicons/icons';
+import '../../../styles/championship.css';
 
 interface Participant {
   user_id: string;
@@ -44,15 +47,51 @@ const CompletedScorecard: React.FC<CompletedScorecardProps> = ({
     return score?.strokes || null;
   };
 
-  // Helper function to get score color
-  const getScoreColor = (strokes: number | null, par: number) => {
-    if (strokes === null) return 'var(--ion-color-medium)';
-    if (strokes === par - 2) return 'var(--ion-color-warning)'; // Eagle
-    if (strokes === par - 1) return 'var(--ion-color-primary)'; // Birdie
-    if (strokes === par) return 'var(--ion-text-color)'; // Par
-    if (strokes === par + 1) return 'var(--ion-color-danger-shade)'; // Bogey
-    if (strokes > par + 1) return 'var(--ion-color-danger)'; // Double bogey+
-    return 'var(--ion-text-color)';
+  // Helper function to get score style based on performance
+  const getScoreStyle = (strokes: number | null, par: number) => {
+    if (strokes === null) return { color: 'var(--champ-gray-light)', fontWeight: '400' };
+    
+    const diff = strokes - par;
+    
+    if (diff <= -2) {
+      // Eagle or better
+      return {
+        color: 'var(--champ-eagle)',
+        fontWeight: '700',
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        borderRadius: '50%',
+        display: 'inline-block',
+        width: '24px',
+        height: '24px',
+        lineHeight: '24px'
+      };
+    }
+    if (diff === -1) {
+      // Birdie
+      return {
+        color: 'var(--champ-birdie)',
+        fontWeight: '600'
+      };
+    }
+    if (diff === 0) {
+      // Par
+      return {
+        color: 'var(--champ-green-dark)',
+        fontWeight: '500'
+      };
+    }
+    if (diff === 1) {
+      // Bogey
+      return {
+        color: 'var(--champ-bogey)',
+        fontWeight: '500'
+      };
+    }
+    // Double bogey or worse
+    return {
+      color: 'var(--champ-double)',
+      fontWeight: '600'
+    };
   };
 
   // Calculate totals for each player
@@ -76,186 +115,378 @@ const CompletedScorecard: React.FC<CompletedScorecardProps> = ({
     return {
       frontNine: frontNine || '-',
       backNine: backNine || '-',
-      total: total || '-'
+      total: total || '-',
+      toPar: total ? (total - coursePar > 0 ? `+${total - coursePar}` : total - coursePar === 0 ? 'E' : `${total - coursePar}`) : '-'
     };
   };
 
-  // Mobile view - simplified scorecard
+  // Get abbreviated player names for mobile
+  const getAbbreviatedName = (fullName: string) => {
+    const names = fullName.split(' ');
+    if (names.length === 1) return names[0].substring(0, 8);
+    return `${names[0].charAt(0)}. ${names[names.length - 1].substring(0, 6)}`;
+  };
+
+  // Mobile view - Championship scorecard
   return (
-    <IonCard>
-      <IonCardContent style={{ padding: '8px' }}>
-        {/* Header */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '60px repeat(' + participants.length + ', 1fr)',
-          gap: '4px',
-          marginBottom: '8px',
-          fontSize: '12px',
-          fontWeight: '600'
-        }}>
-          <div>Hole</div>
-          {participants.map(p => (
-            <div key={p.user_id} style={{ textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {p.profiles.full_name.split(' ')[0]}
-            </div>
-          ))}
+    <div className="scorecard-elite" style={{ marginTop: '20px' }}>
+      {/* Scorecard Header */}
+      <div className="scorecard-elite-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <IonIcon icon={flagOutline} style={{ fontSize: '20px', color: 'var(--champ-gold)' }} />
+          <h3 className="champ-font-display" style={{
+            fontSize: '16px',
+            color: 'var(--champ-cream)',
+            margin: 0,
+            letterSpacing: '2px',
+            textTransform: 'uppercase'
+          }}>
+            Official Scorecard
+          </h3>
+          <IonIcon icon={flagOutline} style={{ fontSize: '20px', color: 'var(--champ-gold)' }} />
         </div>
+      </div>
 
-        {/* Front Nine */}
-        <div style={{ fontSize: '11px' }}>
-          {holes.slice(0, 9).map((hole) => (
-            <div 
-              key={hole.hole_number}
-              style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '60px repeat(' + participants.length + ', 1fr)',
-                gap: '4px',
-                padding: '4px 0',
-                borderBottom: '1px solid var(--ion-color-light)'
-              }}
-            >
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                <span style={{ fontWeight: '600' }}>{hole.hole_number}</span>
-                <IonNote style={{ fontSize: '10px' }}>({hole.par})</IonNote>
-              </div>
-              {participants.map(p => {
-                const score = getScore(p.user_id, hole.hole_number);
-                return (
-                  <div 
-                    key={p.user_id} 
-                    style={{ 
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: getScoreColor(score, hole.par)
-                    }}
-                  >
-                    {score || '-'}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-          
-          {/* OUT Total */}
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ minWidth: participants.length > 3 ? '500px' : 'auto', padding: '12px' }}>
+          {/* Player Names Header */}
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: '60px repeat(' + participants.length + ', 1fr)',
+            gridTemplateColumns: `48px 24px repeat(${participants.length}, 1fr)`,
             gap: '4px',
-            padding: '4px 0',
-            borderBottom: '2px solid var(--ion-color-medium)',
-            fontWeight: '700',
-            backgroundColor: 'var(--ion-color-light)'
+            marginBottom: '12px',
+            paddingBottom: '8px',
+            borderBottom: '2px solid var(--champ-gold)'
           }}>
-            <div>OUT</div>
+            <div className="champ-font-impact" style={{ 
+              fontSize: '11px',
+              color: 'var(--champ-gray)',
+              letterSpacing: '1px',
+              textTransform: 'uppercase'
+            }}>
+              Hole
+            </div>
+            <div className="champ-font-impact" style={{ 
+              fontSize: '11px',
+              color: 'var(--champ-gray)',
+              letterSpacing: '1px',
+              textTransform: 'uppercase'
+            }}>
+              Par
+            </div>
             {participants.map(p => (
               <div key={p.user_id} style={{ textAlign: 'center' }}>
-                {calculateTotals(p.user_id).frontNine}
+                <div className="champ-font-sans" style={{ 
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  color: 'var(--champ-green-dark)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {getAbbreviatedName(p.profiles.full_name)}
+                </div>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Back Nine */}
-        <div style={{ fontSize: '11px', marginTop: '8px' }}>
-          {holes.slice(9, 18).map((hole) => (
-            <div 
-              key={hole.hole_number}
-              style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '60px repeat(' + participants.length + ', 1fr)',
-                gap: '4px',
-                padding: '4px 0',
-                borderBottom: '1px solid var(--ion-color-light)'
-              }}
-            >
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                <span style={{ fontWeight: '600' }}>{hole.hole_number}</span>
-                <IonNote style={{ fontSize: '10px' }}>({hole.par})</IonNote>
-              </div>
-              {participants.map(p => {
-                const score = getScore(p.user_id, hole.hole_number);
-                return (
-                  <div 
-                    key={p.user_id} 
-                    style={{ 
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: getScoreColor(score, hole.par)
-                    }}
-                  >
-                    {score || '-'}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-          
-          {/* IN Total */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '60px repeat(' + participants.length + ', 1fr)',
-            gap: '4px',
-            padding: '4px 0',
-            borderBottom: '2px solid var(--ion-color-medium)',
-            fontWeight: '700',
-            backgroundColor: 'var(--ion-color-light)'
-          }}>
-            <div>IN</div>
-            {participants.map(p => (
-              <div key={p.user_id} style={{ textAlign: 'center' }}>
-                {calculateTotals(p.user_id).backNine}
+          {/* Front Nine */}
+          <div style={{ marginBottom: '8px' }}>
+            {holes.slice(0, 9).map((hole) => (
+              <div 
+                key={hole.hole_number}
+                style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: `48px 24px repeat(${participants.length}, 1fr)`,
+                  gap: '4px',
+                  padding: '6px 0',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+                  alignItems: 'center'
+                }}
+              >
+                <div className="champ-font-impact" style={{ 
+                  fontSize: '14px',
+                  color: 'var(--champ-green-dark)',
+                  fontWeight: '400'
+                }}>
+                  {hole.hole_number}
+                </div>
+                <div className="champ-font-sans" style={{ 
+                  fontSize: '11px',
+                  color: 'var(--champ-gray)',
+                  fontWeight: '500'
+                }}>
+                  {hole.par}
+                </div>
+                {participants.map(p => {
+                  const score = getScore(p.user_id, hole.hole_number);
+                  const style = getScoreStyle(score, hole.par);
+                  return (
+                    <div 
+                      key={p.user_id} 
+                      style={{ 
+                        textAlign: 'center',
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontSize: '13px'
+                      }}
+                    >
+                      <span style={style}>
+                        {score || '-'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             ))}
+            
+            {/* OUT Total */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: `48px 24px repeat(${participants.length}, 1fr)`,
+              gap: '4px',
+              padding: '8px 0',
+              marginTop: '4px',
+              backgroundColor: 'var(--champ-green-soft)',
+              borderRadius: '4px'
+            }}>
+              <div className="champ-font-impact" style={{
+                fontSize: '12px',
+                color: 'var(--champ-green-dark)',
+                letterSpacing: '1px'
+              }}>
+                OUT
+              </div>
+              <div className="champ-font-sans" style={{
+                fontSize: '11px',
+                color: 'var(--champ-green-dark)',
+                fontWeight: '600'
+              }}>
+                {holes.slice(0, 9).reduce((sum, h) => sum + h.par, 0)}
+              </div>
+              {participants.map(p => (
+                <div key={p.user_id} className="champ-font-impact" style={{ 
+                  textAlign: 'center',
+                  fontSize: '16px',
+                  color: 'var(--champ-green-dark)'
+                }}>
+                  {calculateTotals(p.user_id).frontNine}
+                </div>
+              ))}
+            </div>
           </div>
-          
-          {/* Total */}
+
+          {/* Back Nine */}
+          <div style={{ marginBottom: '8px' }}>
+            {holes.slice(9, 18).map((hole) => (
+              <div 
+                key={hole.hole_number}
+                style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: `48px 24px repeat(${participants.length}, 1fr)`,
+                  gap: '4px',
+                  padding: '6px 0',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+                  alignItems: 'center'
+                }}
+              >
+                <div className="champ-font-impact" style={{ 
+                  fontSize: '14px',
+                  color: 'var(--champ-green-dark)',
+                  fontWeight: '400'
+                }}>
+                  {hole.hole_number}
+                </div>
+                <div className="champ-font-sans" style={{ 
+                  fontSize: '11px',
+                  color: 'var(--champ-gray)',
+                  fontWeight: '500'
+                }}>
+                  {hole.par}
+                </div>
+                {participants.map(p => {
+                  const score = getScore(p.user_id, hole.hole_number);
+                  const style = getScoreStyle(score, hole.par);
+                  return (
+                    <div 
+                      key={p.user_id} 
+                      style={{ 
+                        textAlign: 'center',
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontSize: '13px'
+                      }}
+                    >
+                      <span style={style}>
+                        {score || '-'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            
+            {/* IN Total */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: `48px 24px repeat(${participants.length}, 1fr)`,
+              gap: '4px',
+              padding: '8px 0',
+              marginTop: '4px',
+              backgroundColor: 'var(--champ-green-soft)',
+              borderRadius: '4px'
+            }}>
+              <div className="champ-font-impact" style={{
+                fontSize: '12px',
+                color: 'var(--champ-green-dark)',
+                letterSpacing: '1px'
+              }}>
+                IN
+              </div>
+              <div className="champ-font-sans" style={{
+                fontSize: '11px',
+                color: 'var(--champ-green-dark)',
+                fontWeight: '600'
+              }}>
+                {holes.slice(9, 18).reduce((sum, h) => sum + h.par, 0)}
+              </div>
+              {participants.map(p => (
+                <div key={p.user_id} className="champ-font-impact" style={{ 
+                  textAlign: 'center',
+                  fontSize: '16px',
+                  color: 'var(--champ-green-dark)'
+                }}>
+                  {calculateTotals(p.user_id).backNine}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Total Score */}
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: '60px repeat(' + participants.length + ', 1fr)',
+            gridTemplateColumns: `48px 24px repeat(${participants.length}, 1fr)`,
             gap: '4px',
-            padding: '4px 0',
-            fontWeight: '700',
-            fontSize: '13px',
-            backgroundColor: 'var(--ion-color-primary-tint)',
-            color: 'var(--ion-color-primary-contrast)'
+            padding: '12px 0',
+            background: 'linear-gradient(90deg, var(--champ-gold-soft) 0%, transparent 100%)',
+            borderRadius: '6px',
+            border: '2px solid var(--champ-gold)',
+            marginTop: '12px'
           }}>
-            <div>TOTAL</div>
+            <div className="champ-font-impact" style={{
+              fontSize: '14px',
+              color: 'var(--champ-green-dark)',
+              letterSpacing: '2px'
+            }}>
+              TOTAL
+            </div>
+            <div className="champ-font-sans" style={{
+              fontSize: '12px',
+              color: 'var(--champ-green-dark)',
+              fontWeight: '700'
+            }}>
+              {coursePar}
+            </div>
             {participants.map(p => {
-              const total = calculateTotals(p.user_id).total;
-              const diff = typeof total === 'number' ? total - coursePar : null;
+              const totals = calculateTotals(p.user_id);
               return (
                 <div key={p.user_id} style={{ textAlign: 'center' }}>
-                  {total}
-                  {diff !== null && (
-                    <span style={{ fontSize: '10px', marginLeft: '4px' }}>
-                      ({diff > 0 ? '+' : ''}{diff})
-                    </span>
-                  )}
+                  <div className="champ-font-impact" style={{ 
+                    fontSize: '20px',
+                    color: 'var(--champ-green-dark)',
+                    lineHeight: '1'
+                  }}>
+                    {totals.total}
+                  </div>
+                  <div className="champ-font-sans" style={{
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: totals.toPar === 'E' ? 'var(--champ-par)' :
+                           totals.toPar?.startsWith('+') ? 'var(--champ-bogey)' :
+                           'var(--champ-birdie)',
+                    marginTop: '2px'
+                  }}>
+                    {totals.toPar}
+                  </div>
                 </div>
               );
             })}
           </div>
-        </div>
 
-        {/* Legend */}
-        <div style={{ 
-          marginTop: '12px', 
-          padding: '8px', 
-          backgroundColor: 'var(--ion-color-light)',
-          borderRadius: '4px',
-          fontSize: '10px'
-        }}>
-          <div style={{ marginBottom: '4px', fontWeight: '600' }}>Score Colors:</div>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <span><span style={{ color: 'var(--ion-color-warning)' }}>●</span> Eagle</span>
-            <span><span style={{ color: 'var(--ion-color-primary)' }}>●</span> Birdie</span>
-            <span><span style={{ color: 'var(--ion-text-color)' }}>●</span> Par</span>
-            <span><span style={{ color: 'var(--ion-color-danger-shade)' }}>●</span> Bogey</span>
-            <span><span style={{ color: 'var(--ion-color-danger)' }}>●</span> Double+</span>
+          {/* Legend */}
+          <div style={{ 
+            marginTop: '20px',
+            padding: '12px',
+            background: 'var(--champ-pearl)',
+            borderRadius: '8px',
+            border: '1px solid var(--champ-gold-light)'
+          }}>
+            <div className="champ-font-impact" style={{
+              fontSize: '10px',
+              color: 'var(--champ-gray)',
+              letterSpacing: '1px',
+              marginBottom: '8px',
+              textTransform: 'uppercase'
+            }}>
+              Scoring Legend
+            </div>
+            <div style={{ 
+              display: 'flex',
+              gap: '16px',
+              fontSize: '10px',
+              fontFamily: 'Montserrat, sans-serif',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                  border: '1px solid var(--champ-eagle)'
+                }}></span>
+                <span style={{ color: 'var(--champ-gray)' }}>Eagle</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: 'var(--champ-birdie)'
+                }}></span>
+                <span style={{ color: 'var(--champ-gray)' }}>Birdie</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: 'var(--champ-green-dark)'
+                }}></span>
+                <span style={{ color: 'var(--champ-gray)' }}>Par</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: 'var(--champ-bogey)'
+                }}></span>
+                <span style={{ color: 'var(--champ-gray)' }}>Bogey</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: 'var(--champ-double)'
+                }}></span>
+                <span style={{ color: 'var(--champ-gray)' }}>Double+</span>
+              </div>
+            </div>
           </div>
         </div>
-      </IonCardContent>
-    </IonCard>
+      </div>
+    </div>
   );
 };
 

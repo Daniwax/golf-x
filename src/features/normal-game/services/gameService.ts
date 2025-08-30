@@ -8,6 +8,8 @@ import type {
   TeeBox,
   PlayerConfig
 } from '../types';
+import type { MatchHandicapResult } from '../engines/MatchHandicapEngine';
+import type { PlayerMatchPar } from '../engines/PMPEngine';
 import { 
   calculateCourseHandicap, 
   calculatePlayingHandicap, 
@@ -179,6 +181,135 @@ class GameService {
     if (updateError) {
       console.error('Error updating game status:', updateError);
       return game; // Return game with setup status if update fails
+    }
+
+    return updatedGame || game;
+  }
+
+  // Create a new game using engine-calculated handicap data
+  async createGameWithEngines(
+    gameData: CreateGameData,
+    matchHandicapResults: MatchHandicapResult[],
+    pmpResults: Map<string, PlayerMatchPar[]>,
+    holes: Array<{
+      hole_number: number;
+      par: number;
+      handicap_index: number;
+    }>
+  ): Promise<Game> {
+    if (!supabase) throw new Error('Supabase not configured');
+    
+    // Get authenticated user
+    let userId: string | null = null;
+    
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData?.user) {
+      userId = userData.user.id;
+    }
+    
+    if (!userId) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user) {
+        userId = sessionData.session.user.id;
+      }
+    }
+    
+    if (!userId) {
+      throw new Error('Authentication failed. Please sign out and sign in again.');
+    }
+
+    // Create the game
+    const { data: game, error: gameError } = await supabase
+      .from('games')
+      .insert({
+        course_id: gameData.course_id,
+        creator_user_id: userId,
+        game_description: gameData.description,
+        scoring_format: gameData.format,
+        weather_condition: gameData.weather,
+        handicap_type: gameData.handicap_type || 'match_play',
+        scoring_method: gameData.scoring_method || 'match_play',
+        num_holes: gameData.num_holes || 18,
+        status: 'setup'
+      })
+      .select()
+      .single();
+    
+    if (gameError) throw gameError;
+
+    // Get course par for handicap calculations
+    const { data: course } = await supabase
+      .from('golf_courses')
+      .select('par')
+      .eq('id', gameData.course_id)
+      .single();
+    
+    if (!course) throw new Error('Course not found');
+
+    // Use engine-calculated match handicaps combined with calculated course/playing handicaps
+    const participants = await Promise.all(
+      matchHandicapResults.map(async (result) => {
+        const originalPlayer = gameData.participants.find(p => p.user_id === result.userId);
+        if (!originalPlayer) {
+          throw new Error(`Original player data not found for userId: ${result.userId}`);
+        }
+        
+        // Get tee box data for handicap calculations
+        const { data: teeBox } = await supabase
+          .from('tee_boxes')
+          .select('slope_rating, course_rating')
+          .eq('id', originalPlayer.tee_box_id)
+          .single();
+        
+        if (!teeBox) {
+          throw new Error(`Tee box data not found for tee_box_id: ${originalPlayer.tee_box_id}`);
+        }
+        
+        // Calculate course handicap using official formula
+        const courseHandicap = calculateCourseHandicap(
+          originalPlayer.handicap_index,
+          teeBox.slope_rating,
+          teeBox.course_rating,
+          course.par
+        );
+        
+        // Calculate playing handicap (100% for match play, 95% for stroke play)
+        const playingHandicap = calculatePlayingHandicap(courseHandicap, gameData.format);
+        
+        return {
+          game_id: game.id,
+          user_id: result.userId,
+          tee_box_id: originalPlayer.tee_box_id,
+          handicap_index: originalPlayer.handicap_index,
+          course_handicap: courseHandicap,
+          playing_handicap: playingHandicap,
+          match_handicap: result.matchHandicap
+        };
+      })
+    );
+
+    const { error: participantError } = await supabase
+      .from('game_participants')
+      .insert(participants);
+    
+    if (participantError) {
+      // Rollback game creation if participants fail
+      await supabase.from('games').delete().eq('id', game.id);
+      throw participantError;
+    }
+
+
+    // Update game status to 'active' now that setup is complete
+    const { data: updatedGame, error: updateError } = await supabase
+      .from('games')
+      .update({ status: 'active' })
+      .eq('id', game.id)
+      .select()
+      .single();
+    
+    if (updateError) {
+      console.error('Error updating game status:', updateError);
+      return game;
     }
 
     return updatedGame || game;

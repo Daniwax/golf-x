@@ -21,7 +21,6 @@ import {
 import Home from './pages/Home';  // Reverted to original
 import Profile from './pages/Profile';
 import Stats from './pages/Stats';
-import Tournaments from './pages/Tournaments';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import CoursesList from './pages/courses/CoursesList';
@@ -50,6 +49,7 @@ import HoleStats from './pages/HoleStats';
 import HandicapEngineTest from './pages/test/HandicapEngineTest';
 import ScoringEngineTest from './pages/test/ScoringEngineTest';
 import MatchHistory from './pages/MatchHistory';
+import TestCompletedScorecard from './pages/TestCompletedScorecard';
 
 // Import Supabase config check
 import { isConfigured } from './lib/supabase';
@@ -65,7 +65,10 @@ setupIonicReact({
 // Component that conditionally shows tab bar
 const AppWithTabs: React.FC = () => {
   const location = useLocation();
-  const hideTabBar = location.pathname.startsWith('/game/live/') || location.pathname.startsWith('/course') || location.pathname === '/courses';
+  const hideTabBar = location.pathname.startsWith('/game/live/') || 
+    location.pathname.startsWith('/game/view/') || 
+    location.pathname.startsWith('/course') || 
+    location.pathname === '/courses';
 
   return (
     <IonTabs>
@@ -75,7 +78,7 @@ const AppWithTabs: React.FC = () => {
         <Route exact path="/profile/match-history" component={MatchHistory} />
         <Route exact path="/stats" component={Stats} />
         <Route exact path="/stats/holes" component={HoleStats} />
-        <Route exact path="/tournaments" component={Tournaments} />
+        <Route exact path="/tournaments" component={TournamentHub} />
         <Route exact path="/tournament" component={TournamentHub} />
         <Route exact path="/tournament/leaderboard" component={TournamentLeaderboard} />
         <Route exact path="/friends" component={Friends} />
@@ -98,6 +101,7 @@ const AppWithTabs: React.FC = () => {
         {/* Test Routes - Only for development */}
         <Route exact path="/test/handicap-engine" component={HandicapEngineTest} />
         <Route exact path="/test/scoring-engine" component={ScoringEngineTest} />
+        <Route exact path="/test/completed-scorecard" component={TestCompletedScorecard} />
         
         <Route exact path="/">
           <Redirect to="/home" />
@@ -109,11 +113,6 @@ const AppWithTabs: React.FC = () => {
           <IonTabButton tab="home" href="/home">
             <IonIcon icon={homeOutline} />
             <IonLabel>Home</IonLabel>
-          </IonTabButton>
-          
-          <IonTabButton tab="stats" href="/stats">
-            <IonIcon icon={statsChartOutline} />
-            <IonLabel>Stats</IonLabel>
           </IonTabButton>
           
           <IonTabButton tab="tournaments" href="/tournaments">

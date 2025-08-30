@@ -19,10 +19,14 @@ import {
   IonAvatar
 } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { checkmark, trophy } from 'ionicons/icons';
+import { checkmark, refresh } from 'ionicons/icons';
 import { supabase } from '../../../lib/supabase';
 import { gameService } from '../services/gameService';
 import type { TeeBox, CreateGameData } from '../types';
+import { MatchHandicapEngine } from '../engines/MatchHandicapEngine';
+import { PMPEngine } from '../engines/PMPEngine';
+import type { Player as EnginePlayer, HandicapContext, MatchHandicapResult } from '../engines/MatchHandicapEngine';
+import type { Hole as EngineHole, PlayerMatchPar } from '../engines/PMPEngine';
 
 interface LocationState {
   gameData: {
@@ -32,6 +36,7 @@ interface LocationState {
     format: 'match_play' | 'stroke_play';
     handicapType?: string;
     scoringMethod?: string;
+    numberOfHoles?: number;
   };
   players: Array<{
     userId: string;
@@ -61,6 +66,9 @@ const GameSummary: React.FC = () => {
   const [courseName, setCourseName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [matchHandicapResults, setMatchHandicapResults] = useState<MatchHandicapResult[]>([]);
+  const [pmpResults, setPmpResults] = useState<Map<string, PlayerMatchPar[]>>(new Map());
+  const [refreshing, setRefreshing] = useState(false);
   
   useEffect(() => {
     if (!gameData || !players || players.length === 0) {
@@ -89,14 +97,27 @@ const GameSummary: React.FC = () => {
       }
       
       // Load hole information
-      const { data: holeData } = await supabase
+      console.log('Loading holes for course:', gameData.courseId);
+      const { data: holeData, error: holeError } = await supabase
         .from('holes')
         .select('hole_number, par, handicap_index')
         .eq('course_id', gameData.courseId)
         .order('hole_number');
         
-      if (holeData) {
-        setHoles(holeData);
+      console.log('Hole data result:', { holeData, holeError });
+      
+      if (holeData && holeData.length > 0) {
+        // Filter holes based on numberOfHoles if specified
+        const holesToUse = gameData.numberOfHoles 
+          ? holeData.slice(0, gameData.numberOfHoles)
+          : holeData;
+        
+        setHoles(holesToUse);
+        
+        // Calculate handicaps using engines with the filtered holes
+        await calculateHandicapsWithEngines(holesToUse);
+      } else {
+        console.warn('No holes found for course:', gameData.courseId);
       }
     } catch (error) {
       console.error('Error loading course data:', error);
@@ -105,13 +126,78 @@ const GameSummary: React.FC = () => {
     }
   };
   
-  const getStrokesForHole = (playerMatchHandicap: number, holeHandicapIndex: number): number => {
-    if (playerMatchHandicap <= 0) return 0;
+  const calculateHandicapsWithEngines = async (holeData: HoleInfo[]) => {
+    try {
+      // Convert players to engine format
+      const enginePlayers: EnginePlayer[] = players.map(p => ({
+        userId: p.userId,
+        fullName: p.fullName,
+        handicapIndex: p.handicapIndex,
+        courseHandicap: p.courseHandicap,
+        teeBoxId: p.teeBoxId
+      }));
+      
+      // Create context for engine
+      const context: HandicapContext = {
+        courseId: gameData.courseId,
+        teeBoxId: players[0]?.teeBoxId
+      };
+      
+      // Determine handicap type
+      let handicapType = gameData.handicapType;
+      if (!handicapType) {
+        handicapType = gameData.scoringMethod === 'match_play' ? 'match_play' : 'stroke_play';
+      }
+      
+      // Calculate match handicaps using engine
+      const matchResults = await MatchHandicapEngine.calculateMatchHandicap(
+        enginePlayers,
+        handicapType,
+        context
+      );
+      setMatchHandicapResults(matchResults);
+      
+      // Convert holes to engine format
+      const engineHoles: EngineHole[] = holeData.map(h => ({
+        holeNumber: h.hole_number,
+        par: h.par,
+        strokeIndex: h.handicap_index
+      }));
+      
+      // Calculate PMP using engine
+      const pmpMap = await PMPEngine.calculatePMP(
+        matchResults,
+        engineHoles,
+        handicapType,
+        new Map() // No ghost game IDs for GameSummary
+      );
+      setPmpResults(pmpMap);
+      
+    } catch (error) {
+      console.error('Error calculating handicaps with engines:', error);
+      // Fall back to using the original data from PlayerConfiguration
+    }
+  };
+  
+  const getStrokesForHole = (userId: string, holeNumber: number): number => {
+    const playerPMP = pmpResults.get(userId);
+    if (!playerPMP || !playerPMP.length) {
+      // Fallback to old method if PMP not available
+      const player = players.find(p => p.userId === userId);
+      if (!player) return 0;
+      
+      const hole = holes.find(h => h.hole_number === holeNumber);
+      if (!hole) return 0;
+      
+      return getStrokesForHoleOld(player.matchHandicap, hole.handicap_index);
+    }
     
-    // For 18 holes:
-    // If player has 1-18 strokes, they get 1 stroke on holes with HCP 1 through their match handicap
-    // If player has 19-36 strokes, they get 2 strokes on holes with HCP 1 through (match handicap - 18), and 1 stroke on the rest
-    // And so on...
+    const holePMP = playerPMP.find(pmp => pmp.holeNumber === holeNumber);
+    return holePMP ? holePMP.strokesReceived : 0;
+  };
+  
+  const getStrokesForHoleOld = (playerMatchHandicap: number, holeHandicapIndex: number): number => {
+    if (playerMatchHandicap <= 0) return 0;
     
     const fullRounds = Math.floor(playerMatchHandicap / 18);
     const remainingStrokes = playerMatchHandicap % 18;
@@ -120,6 +206,32 @@ const GameSummary: React.FC = () => {
       return fullRounds + 1;
     } else {
       return fullRounds;
+    }
+  };
+  
+  const getPlayerMatchHandicap = (userId: string): number => {
+    // Try to get from engine results first
+    const engineResult = matchHandicapResults.find(result => result.userId === userId);
+    if (engineResult) {
+      return engineResult.matchHandicap;
+    }
+    
+    // Fallback to original data from PlayerConfiguration
+    const player = players.find(p => p.userId === userId);
+    return player ? player.matchHandicap : 0;
+  };
+
+  const handleRefreshRandomization = async () => {
+    if (gameData?.handicapType !== 'random') return;
+    
+    setRefreshing(true);
+    try {
+      // Re-run the handicap calculation to get new random values
+      await calculateHandicapsWithEngines(holes);
+    } catch (error) {
+      console.error('Error refreshing randomization:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
   
@@ -135,14 +247,15 @@ const GameSummary: React.FC = () => {
         throw new Error('No authenticated user found. Please log in again.');
       }
       
-      // Create the game with the configured players
+      // Create the game with the configured players and engine-calculated handicaps
       const gameConfig: CreateGameData = {
         description: gameData.description || undefined,
         course_id: gameData.courseId,
         weather: gameData.weather as 'sunny' | 'partly_cloudy' | 'rainy' | 'windy',
         format: gameData.format,
         handicap_type: gameData.handicapType as 'none' | 'match_play' | 'stroke_play' | 'random' | undefined,
-        scoring_method: gameData.scoringMethod as 'net_score' | 'match_play' | 'stableford' | 'skins' | undefined,
+        scoring_method: gameData.scoringMethod as 'stroke_play' | 'match_play' | 'stableford' | 'skins' | undefined,
+        num_holes: gameData.numberOfHoles,
         participants: players.map(p => ({
           user_id: p.userId,
           full_name: p.fullName,
@@ -151,7 +264,13 @@ const GameSummary: React.FC = () => {
         }))
       };
       
-      const game = await gameService.createGame(gameConfig);
+      // Use new engine-aware game creation method
+      const game = await gameService.createGameWithEngines(
+        gameConfig, 
+        matchHandicapResults, 
+        pmpResults,
+        holes
+      );
       
       // Navigate to live game
       history.replace(`/game/live/${game.id}`);
@@ -228,7 +347,6 @@ Time: ${debugInfo.timestamp}
     );
   }
   
-  const lowestHandicap = Math.min(...players.map(p => p.playingHandicap));
   
   return (
     <IonPage>
@@ -238,6 +356,20 @@ Time: ${debugInfo.timestamp}
             <IonBackButton defaultHref="/game/configure-players" />
           </IonButtons>
           <IonTitle>Game Summary</IonTitle>
+          {gameData?.handicapType === 'random' && (
+            <IonButtons slot="end">
+              <IonButton 
+                onClick={handleRefreshRandomization}
+                disabled={refreshing}
+              >
+                {refreshing ? (
+                  <IonSpinner name="crescent" />
+                ) : (
+                  <IonIcon icon={refresh} />
+                )}
+              </IonButton>
+            </IonButtons>
+          )}
         </IonToolbar>
       </IonHeader>
       
@@ -255,15 +387,24 @@ Time: ${debugInfo.timestamp}
           <IonCardContent style={{ padding: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <div>
-                <IonNote>Format</IonNote>
+                <IonNote>Game Type</IonNote>
                 <IonLabel style={{ display: 'block', fontWeight: 'bold' }}>
-                  {gameData.format === 'match_play' ? 'Match Play' : 'Stroke Play'}
+                  {gameData.handicapType === 'match_play' ? 'Match Play' : 
+                   gameData.handicapType === 'stroke_play' ? 'Stroke Play' :
+                   gameData.handicapType === 'random' ? 'Lucky Draw' :
+                   gameData.handicapType === 'ghost' ? 'Ghost Mode' :
+                   gameData.handicapType === 'none' ? 'Scratch Golf' :
+                   'Match Play'}
                 </IonLabel>
               </div>
               <div>
-                <IonNote>Weather</IonNote>
-                <IonLabel style={{ display: 'block', fontWeight: 'bold', textTransform: 'capitalize' }}>
-                  {gameData.weather.replace('_', ' ')}
+                <IonNote>Scoring</IonNote>
+                <IonLabel style={{ display: 'block', fontWeight: 'bold' }}>
+                  {gameData.scoringMethod === 'match_play' ? 'Match Play' :
+                   gameData.scoringMethod === 'stroke_play' ? 'Stroke Play' :
+                   gameData.scoringMethod === 'stableford' ? 'Stableford' :
+                   gameData.scoringMethod === 'skins' ? 'Skins' :
+                   'Stroke Play'}
                 </IonLabel>
               </div>
             </div>
@@ -303,15 +444,17 @@ Time: ${debugInfo.timestamp}
               
               const teeValues = getTeeBoxValues(player.teeBox);
               
-              // Find best (lowest match HC) and worst (highest match HC) players
-              const lowestMatchHC = Math.min(...players.map(p => p.matchHandicap));
-              const highestMatchHC = Math.max(...players.map(p => p.matchHandicap));
+              // Find best (lowest match HC) and worst (highest match HC) players using engine results
+              const currentPlayerMatchHC = getPlayerMatchHandicap(player.userId);
+              const allMatchHCs = players.map(p => getPlayerMatchHandicap(p.userId));
+              const lowestMatchHC = Math.min(...allMatchHCs);
+              const highestMatchHC = Math.max(...allMatchHCs);
               
               // Determine background color
               let backgroundColor = 'transparent';
-              if (player.matchHandicap === lowestMatchHC) {
+              if (currentPlayerMatchHC === lowestMatchHC) {
                 backgroundColor = 'rgb(45 212 191 / 18%)'; // Light turquoise/teal
-              } else if (player.matchHandicap === highestMatchHC) {
+              } else if (currentPlayerMatchHC === highestMatchHC) {
                 backgroundColor = 'rgba(128, 128, 128, 0.1)'; // Light gray
               }
               
@@ -357,9 +500,9 @@ Time: ${debugInfo.timestamp}
                       <IonLabel style={{ 
                         fontSize: '24px', 
                         fontWeight: 'bold',
-                        color: player.matchHandicap === 0 ? 'var(--ion-color-success)' : 'var(--ion-color-primary)'
+                        color: currentPlayerMatchHC === 0 ? 'var(--ion-color-success)' : 'var(--ion-color-primary)'
                       }}>
-                        {player.matchHandicap}
+                        {currentPlayerMatchHC}
                       </IonLabel>
                     </div>
                   </div>
@@ -478,8 +621,14 @@ Time: ${debugInfo.timestamp}
           </IonCardContent>
         </IonCard>
         
-        {/* Stroke Distribution Table (Match Play Only) - Vertical Layout */}
-        {gameData.format === 'match_play' && holes.length > 0 && (
+        {/* Stroke Distribution Table - Show for all games except scratch */}
+        {console.log('Show hole table?', {
+          handicapType: gameData.handicapType,
+          scoringMethod: gameData.scoringMethod, 
+          holesLength: holes.length,
+          shouldShow: (gameData.handicapType !== 'none' || gameData.scoringMethod === 'match_play') && holes.length > 0
+        })}
+        {(gameData.handicapType !== 'none' || gameData.scoringMethod === 'match_play') && holes.length > 0 && (
           <>
             <div style={{ 
               padding: '16px', 
@@ -495,7 +644,8 @@ Time: ${debugInfo.timestamp}
               </IonNote>
             </div>
             
-            {/* Front Nine */}
+            {/* Front Nine - only show if we have holes */}
+            {holes.slice(0, 9).length > 0 && (
             <IonCard style={{
               margin: '0',
               borderRadius: '0',
@@ -506,7 +656,9 @@ Time: ${debugInfo.timestamp}
                 padding: '12px 16px',
                 borderTop: '1px solid var(--ion-color-light-shade)'
               }}>
-                <IonCardTitle style={{ fontSize: '14px' }}>Front Nine</IonCardTitle>
+                <IonCardTitle style={{ fontSize: '14px' }}>
+                  {holes.length <= 9 ? `Holes 1-${holes.length}` : 'Front Nine'}
+                </IonCardTitle>
               </IonCardHeader>
               <IonCardContent style={{ padding: '0' }}>
                 <table style={{
@@ -548,10 +700,12 @@ Time: ${debugInfo.timestamp}
                           {hole.par}
                         </td>
                         <td style={{ padding: '8px 4px', textAlign: 'center' }}>
-                          <IonNote>{hole.handicap_index}</IonNote>
+                          <span style={{ fontSize: '11px', color: 'var(--ion-color-medium)' }}>
+                            {hole.handicap_index}
+                          </span>
                         </td>
                         {players.map(player => {
-                          const strokes = getStrokesForHole(player.matchHandicap, hole.handicap_index);
+                          const strokes = getStrokesForHole(player.userId, hole.hole_number);
                           return (
                             <td 
                               key={player.userId}
@@ -560,10 +714,20 @@ Time: ${debugInfo.timestamp}
                                 textAlign: 'center',
                                 backgroundColor: strokes > 0 
                                   ? strokes === 1 
-                                    ? 'var(--ion-color-primary-tint)' 
-                                    : 'var(--ion-color-warning-tint)'
+                                    ? 'rgba(255, 69, 0, 0.15)' // Light orange-red for +1
+                                    : strokes === 2
+                                    ? 'rgba(220, 20, 60, 0.15)' // Light crimson for +2
+                                    : 'rgba(139, 0, 0, 0.15)' // Light maroon for +3
                                   : 'transparent',
-                                fontWeight: strokes > 0 ? 'bold' : 'normal'
+                                fontWeight: strokes > 0 ? 'bold' : 'normal',
+                                fontSize: strokes > 0 ? '13px' : '12px',
+                                color: strokes > 0 
+                                  ? strokes === 1 
+                                    ? 'rgba(255, 69, 0, 1)' // Orange-red text
+                                    : strokes === 2
+                                    ? 'rgba(220, 20, 60, 1)' // Crimson text
+                                    : 'rgba(139, 0, 0, 1)' // Maroon text
+                                  : 'inherit'
                               }}
                             >
                               {strokes > 0 ? `+${strokes}` : '-'}
@@ -585,13 +749,14 @@ Time: ${debugInfo.timestamp}
                       <td style={{ padding: '8px 4px', textAlign: 'center' }}>-</td>
                       {players.map(player => {
                         const frontStrokes = holes.slice(0, 9).reduce((sum, hole) => 
-                          sum + getStrokesForHole(player.matchHandicap, hole.handicap_index), 0
+                          sum + getStrokesForHole(player.userId, hole.hole_number), 0
                         );
                         return (
                           <td key={player.userId} style={{ 
                             padding: '8px 4px', 
                             textAlign: 'center',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            fontSize: '13px'
                           }}>
                             {frontStrokes > 0 ? `+${frontStrokes}` : '-'}
                           </td>
@@ -602,8 +767,10 @@ Time: ${debugInfo.timestamp}
                 </table>
               </IonCardContent>
             </IonCard>
+            )}
             
-            {/* Back Nine */}
+            {/* Back Nine - only show if we have more than 9 holes */}
+            {holes.slice(9, 18).length > 0 && (
             <IonCard style={{ 
               margin: '0',
               marginTop: '1px',
@@ -657,10 +824,12 @@ Time: ${debugInfo.timestamp}
                           {hole.par}
                         </td>
                         <td style={{ padding: '8px 4px', textAlign: 'center' }}>
-                          <IonNote>{hole.handicap_index}</IonNote>
+                          <span style={{ fontSize: '11px', color: 'var(--ion-color-medium)' }}>
+                            {hole.handicap_index}
+                          </span>
                         </td>
                         {players.map(player => {
-                          const strokes = getStrokesForHole(player.matchHandicap, hole.handicap_index);
+                          const strokes = getStrokesForHole(player.userId, hole.hole_number);
                           return (
                             <td 
                               key={player.userId}
@@ -669,10 +838,20 @@ Time: ${debugInfo.timestamp}
                                 textAlign: 'center',
                                 backgroundColor: strokes > 0 
                                   ? strokes === 1 
-                                    ? 'var(--ion-color-primary-tint)' 
-                                    : 'var(--ion-color-warning-tint)'
+                                    ? 'rgba(255, 69, 0, 0.15)' // Light orange-red for +1
+                                    : strokes === 2
+                                    ? 'rgba(220, 20, 60, 0.15)' // Light crimson for +2
+                                    : 'rgba(139, 0, 0, 0.15)' // Light maroon for +3
                                   : 'transparent',
-                                fontWeight: strokes > 0 ? 'bold' : 'normal'
+                                fontWeight: strokes > 0 ? 'bold' : 'normal',
+                                fontSize: strokes > 0 ? '13px' : '12px',
+                                color: strokes > 0 
+                                  ? strokes === 1 
+                                    ? 'rgba(255, 69, 0, 1)' // Orange-red text
+                                    : strokes === 2
+                                    ? 'rgba(220, 20, 60, 1)' // Crimson text
+                                    : 'rgba(139, 0, 0, 1)' // Maroon text
+                                  : 'inherit'
                               }}
                             >
                               {strokes > 0 ? `+${strokes}` : '-'}
@@ -694,13 +873,14 @@ Time: ${debugInfo.timestamp}
                       <td style={{ padding: '8px 4px', textAlign: 'center' }}>-</td>
                       {players.map(player => {
                         const backStrokes = holes.slice(9, 18).reduce((sum, hole) => 
-                          sum + getStrokesForHole(player.matchHandicap, hole.handicap_index), 0
+                          sum + getStrokesForHole(player.userId, hole.hole_number), 0
                         );
                         return (
                           <td key={player.userId} style={{ 
                             padding: '8px 4px', 
                             textAlign: 'center',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            fontSize: '13px'
                           }}>
                             {backStrokes > 0 ? `+${backStrokes}` : '-'}
                           </td>
@@ -720,14 +900,14 @@ Time: ${debugInfo.timestamp}
                       <td style={{ padding: '8px 4px', textAlign: 'center' }}>-</td>
                       {players.map(player => {
                         const totalStrokes = holes.reduce((sum, hole) => 
-                          sum + getStrokesForHole(player.matchHandicap, hole.handicap_index), 0
+                          sum + getStrokesForHole(player.userId, hole.hole_number), 0
                         );
                         return (
                           <td key={player.userId} style={{ 
                             padding: '8px 4px', 
                             textAlign: 'center',
                             fontWeight: 'bold',
-                            fontSize: '12px',
+                            fontSize: '14px',
                             color: 'var(--ion-color-primary)'
                           }}>
                             {totalStrokes > 0 ? `+${totalStrokes}` : '0'}
@@ -739,16 +919,18 @@ Time: ${debugInfo.timestamp}
                 </table>
               </IonCardContent>
             </IonCard>
+            )}
             
             {/* Legend */}
             <div style={{ padding: '16px', marginBottom: '80px' }}>
-              <IonNote style={{ display: 'flex', gap: '16px', fontSize: '12px', justifyContent: 'center' }}>
+              <IonNote style={{ display: 'flex', gap: '16px', fontSize: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <span>
                   <span style={{ 
                     display: 'inline-block', 
                     width: '12px', 
                     height: '12px', 
-                    backgroundColor: 'var(--ion-color-primary-tint)',
+                    backgroundColor: 'rgba(255, 69, 0, 0.15)',
+                    border: '1px solid rgba(255, 69, 0, 0.3)',
                     marginRight: '4px',
                     verticalAlign: 'middle'
                   }}></span>
@@ -759,11 +941,24 @@ Time: ${debugInfo.timestamp}
                     display: 'inline-block', 
                     width: '12px', 
                     height: '12px', 
-                    backgroundColor: 'var(--ion-color-warning-tint)',
+                    backgroundColor: 'rgba(220, 20, 60, 0.15)',
+                    border: '1px solid rgba(220, 20, 60, 0.3)',
                     marginRight: '4px',
                     verticalAlign: 'middle'
                   }}></span>
                   +2 strokes
+                </span>
+                <span>
+                  <span style={{ 
+                    display: 'inline-block', 
+                    width: '12px', 
+                    height: '12px', 
+                    backgroundColor: 'rgba(139, 0, 0, 0.15)',
+                    border: '1px solid rgba(139, 0, 0, 0.3)',
+                    marginRight: '4px',
+                    verticalAlign: 'middle'
+                  }}></span>
+                  +3 strokes
                 </span>
               </IonNote>
             </div>

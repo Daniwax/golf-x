@@ -5,8 +5,8 @@ export type ScoringFormat = 'match_play' | 'stroke_play'; // Legacy - kept for c
 export type GameStatus = 'setup' | 'active' | 'completed' | 'cancelled';
 
 // New multi-game types
-export type HandicapType = 'none' | 'match_play' | 'stroke_play' | 'random';
-export type ScoringMethod = 'net_score' | 'match_play' | 'stableford' | 'skins';
+export type HandicapType = 'none' | 'match_play' | 'stroke_play' | 'random' | 'ghost';
+export type ScoringMethod = 'stroke_play' | 'match_play' | 'stableford' | 'skins';
 
 export interface Game {
   id: string;

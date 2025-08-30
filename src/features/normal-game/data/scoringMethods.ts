@@ -91,12 +91,12 @@ Match Play scoring is a hole-by-hole competition where each hole is a separate c
 - **Competition Level**: All levels, from casual to championship`
   },
   
-  net_score: {
-    title: 'Net Score',
-    content: `# Net Score Scoring Method
+  stroke_play: {
+    title: 'Stroke Play',
+    content: `# Stroke Play Scoring Method
 
 ## Overview
-Net Score is the traditional stroke play scoring where the winner is determined by the lowest total net score after 18 holes. Each player's gross score is adjusted by their handicap strokes to calculate their net score.
+Stroke Play is the traditional scoring where the winner is determined by the lowest total net score after 18 holes. Each player's gross score is adjusted by their handicap strokes to calculate their net score.
 
 ---
 

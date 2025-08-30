@@ -16,6 +16,9 @@ export interface CompletedGame {
   clubName: string;
   gameDescription: string | null;
   scoringFormat: 'match_play' | 'stroke_play';
+  handicap_type?: string;
+  scoring_method?: string;
+  numHoles?: number;
   completedAt: string;
   totalStrokes: number | null;
   netScore: number | null;
@@ -146,6 +149,9 @@ export const profileGameService = {
             course_id,
             game_description,
             scoring_format,
+            handicap_type,
+            scoring_method,
+            num_holes,
             status,
             completed_at,
             golf_courses!inner (
@@ -250,6 +256,12 @@ export const profileGameService = {
             gameDescription: (gameData as any).game_description,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             scoringFormat: (gameData as any).scoring_format,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            handicap_type: (gameData as any).handicap_type,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            scoring_method: (gameData as any).scoring_method,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            numHoles: (gameData as any).num_holes,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             completedAt: (gameData as any).completed_at,
             totalStrokes: game.total_strokes,

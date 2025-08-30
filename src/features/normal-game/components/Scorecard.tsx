@@ -90,13 +90,33 @@ const Scorecard: React.FC<ScorecardProps> = ({
     return score?.strokes || null;
   };
 
-  const getScoreDisplay = (userId: string, holeNumber: number, par: number): string => {
+  const getHandicapStrokes = (userId: string, holeNumber: number): number => {
+    const score = scores.find(s => s.user_id === userId && s.hole_number === holeNumber);
+    return score?.hole_handicap_strokes || 0;
+  };
+
+  const getScoreDisplay = (userId: string, holeNumber: number, par: number): React.ReactNode => {
     const strokes = getScore(userId, holeNumber);
     if (strokes === null) return '-';
     
-    const diff = strokes - par;
-    if (diff === 0) return strokes.toString();
-    return `${strokes}`;
+    const handicapStrokes = getHandicapStrokes(userId, holeNumber);
+    
+    return (
+      <span>
+        {strokes}
+        {handicapStrokes > 0 && (
+          <sup style={{ 
+            fontSize: '6px', 
+            fontWeight: '300',
+            color: 'var(--ion-color-medium-shade)',
+            marginLeft: '0.5px',
+            opacity: 0.7
+          }}>
+            +{handicapStrokes}
+          </sup>
+        )}
+      </span>
+    );
   };
 
   const getScoreColor = (strokes: number | null, par: number): string => {

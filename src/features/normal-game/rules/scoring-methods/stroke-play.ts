@@ -1,10 +1,10 @@
-export const netScoreMethod = {
-  id: 'net_score',
-  title: 'Net Score',
+export const strokePlayMethod = {
+  id: 'stroke_play',
+  title: 'Stroke Play',
   subtitle: 'Total strokes minus handicap',
   content: `
 ## Overview
-Net Score is the most straightforward scoring method. Your total strokes minus your handicap strokes equals your net score. Lowest net score wins.
+Stroke Play is the most straightforward scoring method. Your total strokes minus your handicap strokes equals your net score. Lowest net score wins.
 
 ## How It Works
 - Count **every stroke** taken during the round

@@ -1,0 +1,515 @@
+/* ========================================
+   CHAMPIONSHIP SCORECARD DESIGN SYSTEM
+   Premium Golf Tournament Styling
+   ======================================== */
+
+/* Import Premium Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Cormorant+Garamond:wght@300;400;600;700&family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+/* Color Palette - Championship Edition */
+:root {
+  /* Primary Greens - Masters Inspired */
+  --champ-green-dark: #0f3e1f;
+  --champ-green: #1a5c33;
+  --champ-green-light: #2d7a48;
+  --champ-green-soft: rgba(26, 92, 51, 0.08);
+  
+  /* Metallic Accents */
+  --champ-gold: #d4af37;
+  --champ-gold-light: #f4e4bc;
+  --champ-gold-soft: rgba(212, 175, 55, 0.1);
+  --champ-silver: #c0c0c0;
+  --champ-bronze: #cd7f32;
+  
+  /* Neutrals */
+  --champ-cream: #fdfbf7;
+  --champ-ivory: #fffff0;
+  --champ-pearl: #f8f6f2;
+  --champ-charcoal: #2c2c2c;
+  --champ-gray: #696969;
+  --champ-gray-light: #a8a8a8;
+  
+  /* Status Colors */
+  --champ-eagle: #ffd700;
+  --champ-birdie: #4ade80;
+  --champ-par: #60a5fa;
+  --champ-bogey: #fb923c;
+  --champ-double: #f87171;
+}
+
+/* ========================================
+   TYPOGRAPHY
+   ======================================== */
+
+.champ-font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.champ-font-serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.champ-font-sans {
+  font-family: 'Montserrat', -apple-system, sans-serif;
+}
+
+.champ-font-impact {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+}
+
+/* ========================================
+   MAIN CHAMPIONSHIP CONTAINER
+   ======================================== */
+
+.championship-container {
+  background: linear-gradient(180deg, var(--champ-cream) 0%, var(--champ-pearl) 100%);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Championship Header */
+.championship-header {
+  background: linear-gradient(135deg, var(--champ-green-dark) 0%, var(--champ-green) 50%, var(--champ-green-light) 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 32px 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.championship-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
+    repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px);
+  pointer-events: none;
+}
+
+.championship-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--champ-gold), transparent);
+}
+
+/* ========================================
+   WINNER ANNOUNCEMENT CARD
+   ======================================== */
+
+.champion-announcement {
+  background: radial-gradient(ellipse at center, var(--champ-gold-soft) 0%, transparent 70%);
+  border: 2px solid var(--champ-gold);
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.champion-announcement::before {
+  content: '♔';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  font-size: 120px;
+  color: var(--champ-gold);
+  opacity: 0.1;
+  transform: rotate(15deg);
+}
+
+.champion-name {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 32px;
+  background: linear-gradient(135deg, var(--champ-gold) 0%, #f4e4bc 50%, var(--champ-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 16px 0;
+}
+
+/* ========================================
+   COMPACT SCORECARD DESIGN
+   ======================================== */
+
+.scorecard-elite {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  margin: 16px 0;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.scorecard-elite-header {
+  background: linear-gradient(90deg, var(--champ-green-dark) 0%, var(--champ-green) 100%);
+  padding: 12px 16px;
+  position: relative;
+}
+
+.scorecard-elite-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--champ-gold);
+}
+
+/* Compact Player Row */
+.player-row-elite {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  background: white;
+}
+
+.player-row-elite:hover {
+  background: var(--champ-cream);
+  transform: translateX(2px);
+}
+
+/* Position 1 - Champion */
+.player-row-elite.position-1 {
+  background: linear-gradient(90deg, var(--champ-gold-soft) 0%, transparent 100%);
+  border-left: 3px solid var(--champ-gold);
+}
+
+/* Position 2 - Runner Up */
+.player-row-elite.position-2 {
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, transparent 100%);
+  border-left: 3px solid var(--champ-silver);
+}
+
+/* Position 3 - Third Place */
+.player-row-elite.position-3 {
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, transparent 100%);
+  border-left: 3px solid var(--champ-bronze);
+}
+
+/* Position Badge */
+.position-badge {
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: var(--champ-green-dark);
+  margin-right: 12px;
+}
+
+.position-badge.gold {
+  background: radial-gradient(circle, var(--champ-gold) 0%, #d4af37 100%);
+  color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+}
+
+.position-badge.silver {
+  background: radial-gradient(circle, var(--champ-silver) 0%, #a8a8a8 100%);
+  color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
+}
+
+.position-badge.bronze {
+  background: radial-gradient(circle, var(--champ-bronze) 0%, #b8742a 100%);
+  color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
+}
+
+/* Player Info - Compact */
+.player-info-compact {
+  flex: 1;
+  min-width: 0; /* Allows text truncation */
+}
+
+.player-name-elite {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--champ-charcoal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.player-details-elite {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  color: var(--champ-gray);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Score Display - Compact but Prominent */
+.score-display-compact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.score-main {
+  text-align: center;
+  min-width: 45px;
+}
+
+.score-label-mini {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 9px;
+  color: var(--champ-gray-light);
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.score-value-large {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--champ-green-dark);
+}
+
+.score-relative {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Score coloring based on performance */
+.score-relative.eagle {
+  color: var(--champ-eagle);
+}
+
+.score-relative.birdie {
+  color: var(--champ-birdie);
+}
+
+.score-relative.par {
+  color: var(--champ-par);
+}
+
+.score-relative.bogey {
+  color: var(--champ-bogey);
+}
+
+.score-relative.double {
+  color: var(--champ-double);
+}
+
+/* Match Play Specific */
+.match-play-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.match-stat {
+  text-align: center;
+  min-width: 24px;
+}
+
+.match-stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.match-stat-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 8px;
+  color: var(--champ-gray-light);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* Stableford Points */
+.points-display {
+  background: var(--champ-gold-soft);
+  border: 1px solid var(--champ-gold);
+  border-radius: 8px;
+  padding: 4px 8px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.points-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--champ-gold);
+  line-height: 1;
+}
+
+.points-label {
+  font-size: 8px;
+  color: var(--champ-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ========================================
+   SIGNATURE SECTION
+   ======================================== */
+
+.signature-section-elite {
+  background: linear-gradient(180deg, var(--champ-pearl) 0%, white 100%);
+  padding: 24px 16px;
+  border-top: 2px solid var(--champ-gold);
+  margin-top: 32px;
+}
+
+.signature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.signature-box {
+  text-align: center;
+}
+
+.signature-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10px;
+  color: var(--champ-gray);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.signature-line {
+  border-bottom: 1px solid var(--champ-gray-light);
+  margin: 0 auto;
+  width: 100px;
+}
+
+.signature-role {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  color: var(--champ-gray);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* ========================================
+   TOURNAMENT INFO BADGE
+   ======================================== */
+
+.tournament-badge {
+  background: white;
+  border: 2px solid var(--champ-green);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tournament-badge-icon {
+  font-size: 24px;
+  color: var(--champ-gold);
+}
+
+.tournament-badge-text {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.tournament-badge-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--champ-green-dark);
+  margin-bottom: 2px;
+}
+
+.tournament-badge-subtitle {
+  font-size: 10px;
+  color: var(--champ-gray);
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 375px) {
+  .player-name-elite {
+    font-size: 13px;
+  }
+  
+  .score-value-large {
+    font-size: 22px;
+  }
+  
+  .score-display-compact {
+    gap: 8px;
+  }
+  
+  .champion-name {
+    font-size: 28px;
+  }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes goldShimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.champion-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--champ-gold) 0%,
+    var(--champ-gold-light) 25%,
+    var(--champ-gold) 50%,
+    var(--champ-gold-light) 75%,
+    var(--champ-gold) 100%
+  );
+  background-size: 200% auto;
+  animation: goldShimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Fade in animation */
+@keyframes championFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-championship {
+  animation: championFadeIn 0.6s ease-out;
+}

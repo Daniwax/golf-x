@@ -48,6 +48,73 @@ const LiveMatchCard: React.FC = () => {
     return null; // No live games to show
   }
 
+  // Show condensed view for 3+ games
+  const showCondensed = liveGames.length >= 3;
+
+  if (showCondensed) {
+    return (
+      <IonCard style={{ marginBottom: '16px' }}>
+        <IonCardHeader style={{ paddingBottom: '8px' }}>
+          <IonCardTitle style={{ fontSize: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <IonIcon icon={golfOutline} />
+              Active Games
+            </span>
+            <IonChip color="success" style={{ height: '24px', fontSize: '11px' }}>
+              <IonIcon icon={playOutline} style={{ fontSize: '12px', marginRight: '4px' }} />
+              {liveGames.length} Games
+            </IonChip>
+          </IonCardTitle>
+        </IonCardHeader>
+        
+        <IonCardContent>
+          {liveGames.map((liveGame, index) => (
+            <div key={liveGame.game.id} style={{ 
+              marginBottom: index < liveGames.length - 1 ? '12px' : '0',
+              paddingBottom: index < liveGames.length - 1 ? '12px' : '0',
+              borderBottom: index < liveGames.length - 1 ? '1px solid var(--ion-color-light)' : 'none'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '500', fontSize: '14px', marginBottom: '4px' }}>
+                    Game {index + 1}
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <IonNote style={{ fontSize: '12px' }}>
+                      <IonIcon icon={flagOutline} style={{ fontSize: '12px', marginRight: '2px' }} />
+                      Hole {liveGame.currentHole}/{liveGame.totalHoles}
+                    </IonNote>
+                    <IonNote style={{ fontSize: '12px' }}>
+                      <IonIcon icon={peopleOutline} style={{ fontSize: '12px', marginRight: '2px' }} />
+                      {liveGame.participants?.length || 0}
+                    </IonNote>
+                    <IonNote style={{ fontSize: '12px' }}>
+                      {Math.round((liveGame.holesCompleted / liveGame.totalHoles) * 100)}%
+                    </IonNote>
+                  </div>
+                </div>
+                <IonButton 
+                  size="small"
+                  onClick={() => handleContinueGame(liveGame.game.id)}
+                  style={{ 
+                    '--padding-start': '12px', 
+                    '--padding-end': '12px',
+                    '--background': '#2a5434',
+                    '--background-activated': '#3d7c47',
+                    '--background-hover': '#3d7c47'
+                  }}
+                >
+                  <IonIcon icon={playOutline} slot="icon-only" />
+                </IonButton>
+              </div>
+            </div>
+          ))}
+        </IonCardContent>
+      </IonCard>
+    );
+  }
+
+  // Show detailed view for 1-2 games
   return (
     <div style={{ marginBottom: '16px' }}>
       {liveGames.map((liveGame) => (
@@ -72,7 +139,7 @@ const LiveMatchCard: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <IonIcon icon={flagOutline} color="medium" style={{ fontSize: '14px' }} />
                     <IonNote style={{ fontSize: '13px' }}>
-                      Hole {liveGame.currentHole}/18
+                      Hole {liveGame.currentHole}/{liveGame.totalHoles}
                     </IonNote>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -98,7 +165,7 @@ const LiveMatchCard: React.FC = () => {
                 marginBottom: '8px'
               }}>
                 <div style={{
-                  width: `${(liveGame.holesCompleted / 18) * 100}%`,
+                  width: `${(liveGame.holesCompleted / liveGame.totalHoles) * 100}%`,
                   height: '100%',
                   backgroundColor: 'var(--ion-color-primary)',
                   transition: 'width 0.3s ease'
@@ -106,13 +173,18 @@ const LiveMatchCard: React.FC = () => {
               </div>
               
               <IonNote style={{ fontSize: '12px' }}>
-                {Math.round((liveGame.holesCompleted / 18) * 100)}% complete • {liveGame.game.scoring_format.replace('_', ' ')}
+                {Math.round((liveGame.holesCompleted / liveGame.totalHoles) * 100)}% complete • {liveGame.game.scoring_format.replace('_', ' ')}
               </IonNote>
             </div>
             
             <IonButton 
               expand="block" 
               onClick={() => handleContinueGame(liveGame.game.id)}
+              style={{
+                '--background': '#2a5434',
+                '--background-activated': '#3d7c47',
+                '--background-hover': '#3d7c47'
+              }}
             >
               <IonIcon icon={playOutline} slot="start" />
               Continue Game

@@ -262,12 +262,12 @@ const CreateGame: React.FC = () => {
               </IonLabel>
               <IonRadio slot="end" value="match_play" />
             </IonItem>
-            <IonItem lines="inset" button={true} detail={false} onClick={() => setScoringMethod('net_score')}>
+            <IonItem lines="inset" button={true} detail={false} onClick={() => setScoringMethod('stroke_play')}>
               <IonLabel>
-                <div>Net Score</div>
+                <div>Stroke Play</div>
                 <IonNote>Total strokes minus handicap</IonNote>
               </IonLabel>
-              <IonRadio slot="end" value="net_score" />
+              <IonRadio slot="end" value="stroke_play" />
             </IonItem>
             <IonItem lines="inset" button={true} detail={false} onClick={() => setScoringMethod('stableford')}>
               <IonLabel>

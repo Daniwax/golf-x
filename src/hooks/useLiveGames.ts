@@ -16,10 +16,12 @@ export interface LiveGame {
     scoring_format: string;
     created_at: string;
     current_hole?: number;
+    num_holes?: number; // Add total holes info
   };
   participants: any[];
   currentHole: number;
   holesCompleted: number;
+  totalHoles: number; // Add total holes for proper calculations
   courseName?: string;
 }
 
@@ -64,13 +66,15 @@ export function useLiveGames(): UseDataResult<LiveGame[]> {
             const scoresWithStrokes = gameDetails.scores.filter((s: any) => s.strokes);
             const holesPlayed = new Set(scoresWithStrokes.map((s: any) => s.hole_number));
             const holesCompleted = holesPlayed.size;
-            const currentHole = Math.min(Math.max(...Array.from(holesPlayed), 0) + 1, 18);
+            const totalHoles = gameDetails.game?.num_holes || 18;
+            const currentHole = Math.min(Math.max(...Array.from(holesPlayed), 0) + 1, totalHoles);
             
             return {
               game: gameDetails.game,
               participants: gameDetails.participants,
               currentHole,
-              holesCompleted
+              holesCompleted,
+              totalHoles
             };
           } catch (err) {
             console.error('Error loading game details:', err);

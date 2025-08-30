@@ -6,7 +6,7 @@ import { randomHandicap } from './handicap-types/random';
 import { ghostHandicap } from './handicap-types/ghost';
 
 // Scoring Methods
-import { netScoreMethod } from './scoring-methods/net-score';
+import { strokePlayMethod } from './scoring-methods/stroke-play';
 import { matchPlayMethod } from './scoring-methods/match-play';
 import { stablefordMethod } from './scoring-methods/stableford';
 import { skinsMethod } from './scoring-methods/skins';
@@ -20,7 +20,7 @@ export const handicapTypes = {
 };
 
 export const scoringMethods = {
-  net_score: netScoreMethod,
+  stroke_play: strokePlayMethod,
   match_play: matchPlayMethod,
   stableford: stablefordMethod,
   skins: skinsMethod

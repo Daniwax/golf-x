@@ -174,7 +174,6 @@ const AddParticipants: React.FC = () => {
                 <div style={{ fontSize: '10px', color: 'var(--ion-color-medium)', textTransform: 'uppercase', fontWeight: '600' }}>SCORING</div>
                 <div style={{ fontSize: '12px', fontWeight: '600', marginTop: '2px' }}>
                   {gameData.scoringMethod === 'match_play' ? 'Match' :
-                   gameData.scoringMethod === 'net_score' ? 'Net' :
                    gameData.scoringMethod === 'stroke_play' ? 'Stroke' :
                    gameData.scoringMethod === 'stableford' ? 'Stableford' :
                    gameData.scoringMethod === 'skins' ? 'Skins' : 'Match'}

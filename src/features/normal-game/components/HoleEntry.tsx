@@ -29,6 +29,7 @@ interface HoleEntryProps {
   participants: GameParticipant[];
   scores: GameHoleScore[];
   currentHole: number;
+  game: any; // Add game prop to match Scorecard and Leaderboard
   onHoleChange: (hole: number) => void;
   onScoreUpdate: () => void;
   onGameComplete?: () => void;
@@ -54,6 +55,7 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
   participants,
   scores,
   currentHole,
+  game,
   onHoleChange,
   onScoreUpdate,
   onGameComplete,
@@ -260,22 +262,18 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
       onScoreUpdate();
       
       // Handle completion or move to next hole
-      if (currentHole === 18) {
+      const maxHoles = game?.num_holes || 18;
+      if (currentHole === maxHoles) {
         // Complete the game
         await gameService.closeGame(gameId);
-        setToastMessage('Game completed! Great round!');
-        setShowToast(true);
         
-        // Call completion handler after a short delay
-        setTimeout(() => {
-          if (onGameComplete) {
-            onGameComplete();
-          }
-        }, 1500);
+        // Navigate to completed game view immediately
+        if (onGameComplete) {
+          onGameComplete();
+        }
       } else {
         // Move to next hole
-        setToastMessage('Scores saved successfully!');
-        setShowToast(true);
+        // Success feedback handled by parent component green dot
         setTimeout(() => {
           onHoleChange(currentHole + 1);
         }, 500);
@@ -296,8 +294,9 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
   );
   
   // Allow navigation to all holes, but track if current hole is playable
+  const maxHoles = game?.num_holes || 18;
   const canGoPrevious = currentHole > 1;
-  const canGoNext = currentHole < 18;
+  const canGoNext = currentHole < maxHoles;
   const isCurrentHolePlayable = !isLiveMatch || currentHole <= maxHolePlayed + 1;
 
   if (loading || !holeInfo) {
@@ -903,7 +902,7 @@ const HoleEntry: React.FC<HoleEntryProps> = ({
           ) : (
             <>
               <IonIcon icon={checkmarkOutline} slot="start" />
-              Save & {currentHole < 18 ? 'Next Hole' : 'Finish'}
+              Save & {currentHole < maxHoles ? 'Next Hole' : 'Finish'}
             </>
           )}
         </IonButton>

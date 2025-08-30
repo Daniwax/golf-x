@@ -59,9 +59,9 @@ const TournamentHub: React.FC = () => {
           }}>
             {/* Tournament crest/logo area */}
             <div style={{
-              width: '120px',
-              height: '120px',
-              margin: '0 auto 30px',
+              width: '100px',
+              height: '100px',
+              margin: '0 auto 25px',
               background: 'radial-gradient(circle, #f8f6f0 0%, #d4c4a0 100%)',
               borderRadius: '50%',
               display: 'flex',
@@ -73,7 +73,7 @@ const TournamentHub: React.FC = () => {
               <IonIcon 
                 icon={trophyOutline} 
                 style={{ 
-                  fontSize: '60px', 
+                  fontSize: '50px', 
                   color: '#2a5434'
                 }} 
               />
@@ -81,24 +81,24 @@ const TournamentHub: React.FC = () => {
 
             {/* Main title */}
             <h1 style={{
-              fontSize: '36px',
+              fontSize: '28px',
               color: '#f8f6f0',
               fontFamily: 'Georgia, serif',
               fontWeight: '400',
-              margin: '0 0 8px 0',
+              margin: '0 0 6px 0',
               textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-              letterSpacing: '3px',
+              letterSpacing: '2px',
               textTransform: 'uppercase'
             }}>
               Championship
             </h1>
             
             <div style={{
-              fontSize: '42px',
+              fontSize: '36px',
               color: '#b8860b',
               fontFamily: 'Georgia, serif',
               fontWeight: '700',
-              margin: '0 0 12px 0',
+              margin: '0 0 10px 0',
               textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
               letterSpacing: '2px'
             }}>
@@ -107,11 +107,11 @@ const TournamentHub: React.FC = () => {
 
             {/* Subtitle */}
             <p style={{
-              fontSize: '14px',
-              color: 'rgba(248, 246, 240, 0.8)',
+              fontSize: '13px',
+              color: 'rgba(248, 246, 240, 0.9)',
               fontFamily: 'serif',
               fontStyle: 'italic',
-              margin: '0 0 60px 0',
+              margin: '0 0 35px 0',
               letterSpacing: '1px'
             }}>
               Est. 2025 • Where Legends Are Made
@@ -129,45 +129,63 @@ const TournamentHub: React.FC = () => {
               <div 
                 onClick={() => history.push('/tournament/create')}
                 style={{
-                  background: 'rgba(248, 246, 240, 0.95)',
-                  borderRadius: '12px',
-                  padding: '30px',
+                  background: 'linear-gradient(135deg, rgba(42, 84, 52, 0.95) 0%, rgba(61, 124, 71, 0.95) 100%)',
+                  borderRadius: '16px',
+                  padding: '24px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  border: '2px solid #b8860b',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                  border: '2px solid rgba(184, 134, 11, 0.5)',
+                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.3)',
+                  backdropFilter: 'blur(10px)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.4)';
+                  e.currentTarget.style.border = '2px solid rgba(184, 134, 11, 0.8)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
+                  e.currentTarget.style.border = '2px solid rgba(184, 134, 11, 0.5)';
                 }}
               >
+                {/* Decorative corner accent */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: '60px',
+                  height: '60px',
+                  background: 'radial-gradient(circle at top right, rgba(184, 134, 11, 0.3) 0%, transparent 70%)',
+                  pointerEvents: 'none'
+                }} />
+                
                 <IonIcon 
                   icon={addCircleOutline} 
                   style={{ 
-                    fontSize: '48px', 
-                    color: '#2a5434',
-                    marginBottom: '12px'
+                    fontSize: '40px', 
+                    color: '#f8f6f0',
+                    marginBottom: '10px',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
                   }} 
                 />
                 <h3 style={{
                   fontSize: '18px',
-                  color: '#2a5434',
+                  color: '#f8f6f0',
                   fontFamily: 'Georgia, serif',
                   margin: '0 0 8px 0',
                   fontWeight: '600',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px'
+                  letterSpacing: '1.5px',
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.3)'
                 }}>
                   Host Championship
                 </h3>
                 <p style={{
                   fontSize: '12px',
-                  color: '#8b7355',
+                  color: 'rgba(248, 246, 240, 0.85)',
                   fontFamily: 'serif',
                   margin: 0,
                   lineHeight: '1.4'
@@ -180,29 +198,46 @@ const TournamentHub: React.FC = () => {
               <div 
                 onClick={() => history.push('/tournament/leaderboard')}
                 style={{
-                  background: 'rgba(248, 246, 240, 0.95)',
-                  borderRadius: '12px',
-                  padding: '30px',
+                  background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.95) 0%, rgba(212, 196, 160, 0.95) 100%)',
+                  borderRadius: '16px',
+                  padding: '24px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  border: '2px solid #b8860b',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                  border: '2px solid rgba(42, 84, 52, 0.5)',
+                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.3)',
+                  backdropFilter: 'blur(10px)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.4)';
+                  e.currentTarget.style.border = '2px solid rgba(42, 84, 52, 0.8)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
+                  e.currentTarget.style.border = '2px solid rgba(42, 84, 52, 0.5)';
                 }}
               >
+                {/* Decorative corner accent */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: '60px',
+                  height: '60px',
+                  background: 'radial-gradient(circle at top right, rgba(42, 84, 52, 0.3) 0%, transparent 70%)',
+                  pointerEvents: 'none'
+                }} />
+                
                 <IonIcon 
                   icon={peopleOutline} 
                   style={{ 
-                    fontSize: '48px', 
+                    fontSize: '40px', 
                     color: '#2a5434',
-                    marginBottom: '12px'
+                    marginBottom: '10px',
+                    filter: 'drop-shadow(0 2px 4px rgba(255, 255, 255, 0.5))'
                   }} 
                 />
                 <h3 style={{
@@ -212,72 +247,21 @@ const TournamentHub: React.FC = () => {
                   margin: '0 0 8px 0',
                   fontWeight: '600',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px'
+                  letterSpacing: '1.5px',
+                  textShadow: '1px 1px 2px rgba(255, 255, 255, 0.5)'
                 }}>
                   Join Championship
                 </h3>
                 <p style={{
                   fontSize: '12px',
-                  color: '#8b7355',
+                  color: 'rgba(42, 84, 52, 0.9)',
                   fontFamily: 'serif',
                   margin: 0,
-                  lineHeight: '1.4'
+                  lineHeight: '1.4',
+                  fontWeight: '500'
                 }}>
                   Enter active tournaments and compete for the coveted green jacket
                 </p>
-              </div>
-            </div>
-
-            {/* Recent champions section */}
-            <div style={{
-              marginTop: '60px',
-              padding: '20px',
-              background: 'rgba(0, 0, 0, 0.2)',
-              borderRadius: '12px',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <h4 style={{
-                fontSize: '12px',
-                color: '#b8860b',
-                fontFamily: 'serif',
-                textTransform: 'uppercase',
-                letterSpacing: '2px',
-                margin: '0 0 16px 0'
-              }}>
-                Recent Champions
-              </h4>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-around',
-                gap: '20px'
-              }}>
-                {['Masters Cup', 'Spring Classic', 'Club Championship'].map((tournament, index) => (
-                  <div key={index} style={{ textAlign: 'center' }}>
-                    <div style={{
-                      fontSize: '10px',
-                      color: 'rgba(248, 246, 240, 0.6)',
-                      fontFamily: 'serif',
-                      marginBottom: '4px'
-                    }}>
-                      {tournament}
-                    </div>
-                    <div style={{
-                      fontSize: '13px',
-                      color: '#f8f6f0',
-                      fontFamily: 'Georgia, serif',
-                      fontWeight: '600'
-                    }}>
-                      J. Smith
-                    </div>
-                    <div style={{
-                      fontSize: '11px',
-                      color: '#b8860b',
-                      fontFamily: 'serif'
-                    }}>
-                      -12
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

@@ -247,7 +247,7 @@ export class ScoringEngine {
     includeHandicap: boolean
   ): LeaderboardEntry[] {
     const entries: LeaderboardEntry[] = scorecards.map(card => {
-      let grossScore = card.totalStrokes;
+      const grossScore = card.totalStrokes;
       
       // Calculate total par (this might be adjusted par if using player match par)
       const totalPar = card.holes.reduce((sum, hole) => sum + hole.par, 0);
@@ -402,14 +402,17 @@ export class ScoringEngine {
     
     // Compare each hole with pairwise comparisons (true round robin)
     for (let holeIdx = 0; holeIdx < numHoles; holeIdx++) {
-      const holeScores: { userId: string; strokes: number; gross: number }[] = [];
+      const holeScores: { userId: string; strokes: number; gross: number; playerName?: string }[] = [];
       
       // Get each player's score for this hole
       scorecards.forEach(card => {
         const hole = card.holes[holeIdx];
+        if (!hole) return; // Skip if hole doesn't exist
+        
         let strokes = hole.strokes;
         
-        // Apply handicap strokes if included
+        // When par values are already adjusted (PMP), calculate score vs par
+        // Otherwise apply traditional handicap strokes
         if (includeHandicap && card.playingHandicap) {
           const strokesReceived = this.getHandicapStrokes(
             card.playingHandicap,
@@ -417,36 +420,54 @@ export class ScoringEngine {
             numHoles
           );
           strokes -= strokesReceived;
+        } else if (!includeHandicap && hole.par) {
+          // When not using traditional handicap, but par is adjusted (PMP)
+          // Convert to score vs par for fair comparison
+          // This ensures players with different PMP pars are compared fairly
+          strokes = hole.strokes - hole.par; // Score relative to PMP par
         }
         
         holeScores.push({
           userId: card.userId,
           strokes,
-          gross: hole.strokes
+          gross: hole.strokes,
+          playerName: card.playerName
         });
       });
       
+      // Skip holes where nobody has played yet (all strokes are 0)
+      const playersWhoPlayed = holeScores.filter(h => h.gross > 0);
+      if (playersWhoPlayed.length === 0) {
+        // Skip this hole - nobody has played it yet
+        continue;
+      }
+      
+      // Players who played this hole (removed console.log)
+      
       // First, determine overall hole results for tracking
-      const bestScore = Math.min(...holeScores.map(h => h.strokes));
-      const winners = holeScores.filter(h => h.strokes === bestScore);
+      const bestScore = Math.min(...holeScores.filter(h => h.gross > 0).map(h => h.strokes));
+      const winners = holeScores.filter(h => h.gross > 0 && h.strokes === bestScore);
       
       // Track hole results for each player
       holeScores.forEach(score => {
         const details = playerDetails.get(score.userId)!;
         
-        if (score.strokes === bestScore) {
-          if (winners.length === 1) {
-            // Won the hole outright
-            details.holesWon++;
-            details.holeResults.push('W');
+        // Only track results for players who have played this hole
+        if (score.gross > 0) {
+          if (score.strokes === bestScore) {
+            if (winners.length === 1) {
+              // Won the hole outright
+              details.holesWon++;
+              details.holeResults.push('W');
+            } else {
+              // Tied for best on the hole
+              details.holesTied++;
+              details.holeResults.push('T');
+            }
           } else {
-            // Tied for best on the hole
-            details.holesTied++;
-            details.holeResults.push('T');
+            // Lost the hole
+            details.holeResults.push('L');
           }
-        } else {
-          // Lost the hole
-          details.holeResults.push('L');
         }
       });
       
@@ -456,23 +477,33 @@ export class ScoringEngine {
           const player1 = holeScores[i];
           const player2 = holeScores[j];
           
+          // Only compare if both players have played this hole
+          if (player1.gross === 0 || player2.gross === 0) {
+            continue; // Skip comparison if either player hasn't played
+          }
+          
           const currentPoints1 = playerPoints.get(player1.userId)!;
           const currentPoints2 = playerPoints.get(player2.userId)!;
           
           if (player1.strokes < player2.strokes) {
             // Player 1 wins this head-to-head
             playerPoints.set(player1.userId, currentPoints1 + pointsForWin);
+            // Player 1 wins this head-to-head
           } else if (player2.strokes < player1.strokes) {
             // Player 2 wins this head-to-head
             playerPoints.set(player2.userId, currentPoints2 + pointsForWin);
+            // Player 2 wins this head-to-head
           } else {
             // Tied head-to-head
             playerPoints.set(player1.userId, currentPoints1 + pointsForTie);
             playerPoints.set(player2.userId, currentPoints2 + pointsForTie);
+            // Tied head-to-head
           }
         }
       }
     }
+    
+    // Calculate final points (removed console.log)
     
     // Create leaderboard entries
     const entries: LeaderboardEntry[] = scorecards.map(card => {
@@ -582,7 +613,7 @@ export class ScoringEngine {
       const holeScores = scorecards.map(card => {
         const hole = card.holes[holeIdx];
         let netStrokes = hole.strokes;
-        let personalPar = hole.par;
+        const personalPar = hole.par;
         
         // Apply handicap strokes to reduce net strokes (and effective personal par)
         if (includeHandicap && card.playingHandicap) {

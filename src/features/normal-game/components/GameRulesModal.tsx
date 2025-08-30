@@ -40,7 +40,7 @@ const GameRulesModal: React.FC<GameRulesModalProps> = ({
     if (mode === 'handicap') {
       return (initialSelection as HandicapTypeKey) || 'match_play';
     } else {
-      return (initialSelection as ScoringMethodKey) || 'net_score';
+      return (initialSelection as ScoringMethodKey) || 'stroke_play';
     }
   };
 
