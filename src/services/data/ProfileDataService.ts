@@ -7,7 +7,11 @@ import { CacheService } from '../cache/CacheService';
 import { getCacheKey, getTTL, getInvalidationPatterns } from '../../config/cache.config';
 
 export class ProfileDataService {
-  constructor(private cache: CacheService) {}
+  private cache: CacheService;
+  
+  constructor(cache: CacheService) {
+    this.cache = cache;
+  }
 
   /**
    * Get user profile with all columns
@@ -18,6 +22,8 @@ export class ProfileDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('profiles')
           .select(`
@@ -46,6 +52,8 @@ export class ProfileDataService {
    */
   async updateUserProfile(userId: string, updates: { full_name?: string; bio?: string; handicap?: number; avatar_url?: string }) {
     const { supabase } = await import('../../lib/supabase');
+    if (!supabase) throw new Error('Supabase client not initialized');
+    
     const { data, error } = await supabase
       .from('profiles')
       .upsert({
@@ -72,7 +80,7 @@ export class ProfileDataService {
       key,
       async () => {
         const { avatarService } = await import('../../features/profile/services/avatarService');
-        return avatarService.getAvatarUrl(userId);
+        return avatarService.getUserAvatars(userId);
       },
       getTTL('avatar')
     );
@@ -203,7 +211,7 @@ export class ProfileDataService {
         
         return finalCounts;
       },
-      getTTL('gamesPlayed')
+      getTTL('gameHistory')
     );
   }
 

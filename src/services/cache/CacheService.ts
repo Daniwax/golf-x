@@ -40,7 +40,7 @@ export class CacheService {
     const pending = this.pending.get(key);
     if (pending && !this.isPendingExpired(pending)) {
       console.log(`[Cache DEDUPE] ${key} - reusing pending request`);
-      return pending.promise;
+      return pending.promise as Promise<T>;
     }
 
     // 3. Fetch new data

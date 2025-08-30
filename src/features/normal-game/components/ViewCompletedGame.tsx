@@ -7,6 +7,7 @@ import {
   IonToolbar,
   IonButtons,
   IonButton,
+  IonBackButton,
   IonSegment,
   IonSegmentButton,
   IonLabel,
@@ -321,9 +322,9 @@ const ViewCompletedGame: React.FC = () => {
         const gameData = await gameService.getGameDetails(gameId);
         
         // Load hole and course information separately if needed
-        let holes = [];
+        let holes: any[] = [];
         let courseInfo = null;
-        if (gameData && gameData.game && gameData.game.course_id) {
+        if (gameData && gameData.game && gameData.game.course_id && supabase) {
           const [holesResult, courseResult] = await Promise.all([
             supabase
               .from('holes')
@@ -364,9 +365,7 @@ const ViewCompletedGame: React.FC = () => {
               tee_boxes: p.tee_boxes || { name: 'Default' }
             }));
             const participantsWithMatchPlay = calculateMatchPlayResults(
-              validParticipants,
-              safeData.scores,
-              safeData.holes
+              validParticipants
             );
             setGameData({
               ...safeData,

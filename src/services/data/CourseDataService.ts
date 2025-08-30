@@ -7,7 +7,11 @@ import { CacheService } from '../cache/CacheService';
 import { getCacheKey, getTTL } from '../../config/cache.config';
 
 export class CourseDataService {
-  constructor(private cache: CacheService) {}
+  private cache: CacheService;
+  
+  constructor(cache: CacheService) {
+    this.cache = cache;
+  }
 
   /**
    * Get all courses with full club information
@@ -19,6 +23,7 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         let query = supabase.from('golf_courses').select(`
           id,
           club_id,
@@ -98,6 +103,8 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('golf_courses')
           .select(`
@@ -173,6 +180,8 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('course_images')
           .select(`
@@ -211,6 +220,8 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('tee_boxes')
           .select(`
@@ -255,6 +266,8 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('tee_boxes')
           .select(`
@@ -300,6 +313,8 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('holes')
           .select(`
@@ -352,6 +367,8 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('club_amenities')
           .select(`
@@ -395,6 +412,7 @@ export class CourseDataService {
       key,
       async () => {
         const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         
         let query = supabase
           .from('game_participants')

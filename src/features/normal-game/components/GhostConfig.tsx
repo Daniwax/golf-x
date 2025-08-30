@@ -71,7 +71,7 @@ const GhostConfig: React.FC = () => {
   // Ghost configuration state
   const [ghostType, setGhostType] = useState<'personal_best' | 'friend_best' | 'course_record'>('personal_best');
   const [teeBoxId, setTeeBoxId] = useState<number | null>(null);
-  const [teeBoxes, setTeeBoxes] = useState<Array<{ id: number; name: string; color: string; slope: number; rating: number }>>([]);
+  const [teeBoxes, setTeeBoxes] = useState<Array<{ id: number; name: string; color: string; slope_rating: number; course_rating: number }>>([]);
   
   // User and friends
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -82,26 +82,7 @@ const GhostConfig: React.FC = () => {
   const [selectedMatch, setSelectedMatch] = useState<GameMatch | null>(null);
   const [isCurrentUserKing, setIsCurrentUserKing] = useState(false);
 
-  useEffect(() => {
-    if (!gameData) {
-      history.replace('/game/create-custom');
-      return;
-    }
-    loadInitialData();
-  }, [gameData, history, loadInitialData]);
-
-  useEffect(() => {
-    if (gameData?.courseId) {
-      loadTeeBoxes(gameData.courseId);
-    }
-  }, [gameData?.courseId, loadTeeBoxes]);
-
-  useEffect(() => {
-    if (teeBoxId && gameData?.courseId) {
-      loadMatchesForGhostType();
-    }
-  }, [ghostType, teeBoxId, selectedFriendId, gameData?.courseId, loadMatchesForGhostType]);
-
+  // Define callback functions before useEffects
   const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
@@ -206,6 +187,26 @@ const GhostConfig: React.FC = () => {
     }
   }, [gameData?.courseId, teeBoxId, ghostType, currentUserId, selectedFriendId, friends]);
 
+  useEffect(() => {
+    if (!gameData) {
+      history.replace('/game/create-custom');
+      return;
+    }
+    loadInitialData();
+  }, [gameData, history, loadInitialData]);
+
+  useEffect(() => {
+    if (gameData?.courseId) {
+      loadTeeBoxes(gameData.courseId);
+    }
+  }, [gameData?.courseId, loadTeeBoxes]);
+
+  useEffect(() => {
+    if (teeBoxId && gameData?.courseId) {
+      loadMatchesForGhostType();
+    }
+  }, [ghostType, teeBoxId, selectedFriendId, gameData?.courseId, loadMatchesForGhostType]);
+
   const handleNext = () => {
     if (!selectedMatch && !isCurrentUserKing) {
       setError('Please select a valid configuration');
@@ -291,7 +292,7 @@ const GhostConfig: React.FC = () => {
                       {(tee.name || tee.color || '').charAt(0).toUpperCase()}
                     </div>
                     <div className="golf-tee-box-details">
-                      {tee.yardage ? `${tee.yardage} yds` : `CR ${tee.course_rating}`}
+                      {`CR ${tee.rating}`}
                     </div>
                   </div>
                 ))}

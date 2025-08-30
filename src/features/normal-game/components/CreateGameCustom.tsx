@@ -107,7 +107,7 @@ const CreateGameCustom: React.FC = () => {
       // Load courses
       const coursesData = await dataService.courses.getAllCourses();
       if (coursesData && coursesData.length > 0) {
-        setCourses(coursesData);
+        // Just set the first course as default, no need to store all courses
         setCourseId(coursesData[0].id);
       }
     } catch (err) {
@@ -142,7 +142,7 @@ const CreateGameCustom: React.FC = () => {
           handicapType,
           scoringMethod,
           numberOfHoles: 18, // Ghost mode always uses 18 holes
-          includeHandicap: handicapType !== 'none',
+          includeHandicap: true, // Ghost mode always includes handicap
           isCustomGame: true
         }
       });
@@ -384,7 +384,7 @@ const CreateGameCustom: React.FC = () => {
               </IonNote>
             )}
           </div>
-          <IonRadioGroup value={scoringMethod} disabled={handicapType === 'ghost'}>
+          <IonRadioGroup value={scoringMethod}>
             {Object.entries(SCORING_METHODS).map(([key, info]) => (
               <IonItem 
                 key={key} 

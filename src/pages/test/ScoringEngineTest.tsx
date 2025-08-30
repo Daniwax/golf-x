@@ -83,6 +83,52 @@ const ScoringEngineTest: React.FC = () => {
     }
   }, [selectedGameId]);
 
+  // Define calculateLeaderboard before useEffect that uses it
+  const calculateLeaderboard = useCallback(() => {
+    if (scorecards.length === 0) {
+      setLeaderboard(null);
+      return;
+    }
+
+    console.log(`Calculating leaderboard for ${selectedScoringMethod} with ${scorecards.length} scorecards`);
+    
+    // Check if any scorecard has player match par (indicating handicap game)
+    const hasHandicap = scorecards.some(card => 
+      card.holes.some(h => h.playerMatchPar && h.playerMatchPar !== h.par)
+    );
+    
+    // Convert scorecards to ScoringEngine format
+    const engineScorecards: EngineScorecard[] = scorecards.map(card => {
+      // Update holes to use player match par when available
+      const adjustedHoles = card.holes.map(hole => ({
+        ...hole,
+        // If handicap game, replace standard par with player match par
+        par: hasHandicap && hole.playerMatchPar ? hole.playerMatchPar : hole.par
+      }));
+      
+      return {
+        gameId: card.gameId,
+        userId: card.userId,
+        playerName: card.playerName,
+        holes: adjustedHoles,
+        totalStrokes: card.totalStrokes,
+        totalPutts: card.totalPutts,
+        courseHandicap: 0, // Not needed as we're using player match par directly
+        playingHandicap: 0  // Not needed as we're using player match par directly
+      };
+    });
+    
+    // Calculate leaderboard using ScoringEngine
+    // When using player match par, handicap is already built into the par values
+    const leaderboardResult = ScoringEngine.calculateLeaderboard(
+      engineScorecards,
+      selectedScoringMethod as ScoringMethod,
+      false // Handicap is handled via player match par
+    );
+    
+    setLeaderboard(leaderboardResult);
+  }, [scorecards, selectedScoringMethod]);
+
   // Recalculate leaderboard when scoring method or scorecards change
   useEffect(() => {
     if (scorecards.length > 0) {
@@ -185,51 +231,6 @@ const ScoringEngineTest: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const calculateLeaderboard = useCallback(() => {
-    if (scorecards.length === 0) {
-      setLeaderboard(null);
-      return;
-    }
-
-    console.log(`Calculating leaderboard for ${selectedScoringMethod} with ${scorecards.length} scorecards`);
-    
-    // Check if any scorecard has player match par (indicating handicap game)
-    const hasHandicap = scorecards.some(card => 
-      card.holes.some(h => h.playerMatchPar && h.playerMatchPar !== h.par)
-    );
-    
-    // Convert scorecards to ScoringEngine format
-    const engineScorecards: EngineScorecard[] = scorecards.map(card => {
-      // Update holes to use player match par when available
-      const adjustedHoles = card.holes.map(hole => ({
-        ...hole,
-        // If handicap game, replace standard par with player match par
-        par: hasHandicap && hole.playerMatchPar ? hole.playerMatchPar : hole.par
-      }));
-      
-      return {
-        gameId: card.gameId,
-        userId: card.userId,
-        playerName: card.playerName,
-        holes: adjustedHoles,
-        totalStrokes: card.totalStrokes,
-        totalPutts: card.totalPutts,
-        courseHandicap: 0, // Not needed as we're using player match par directly
-        playingHandicap: 0  // Not needed as we're using player match par directly
-      };
-    });
-    
-    // Calculate leaderboard using ScoringEngine
-    // When using player match par, handicap is already built into the par values
-    const leaderboardResult = ScoringEngine.calculateLeaderboard(
-      engineScorecards,
-      selectedScoringMethod as ScoringMethod,
-      false // Handicap is handled via player match par
-    );
-    
-    setLeaderboard(leaderboardResult);
-  }, [scorecards, selectedScoringMethod]);
 
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace', backgroundColor: '#1a1a1a', color: '#e0e0e0', minHeight: '100vh' }}>

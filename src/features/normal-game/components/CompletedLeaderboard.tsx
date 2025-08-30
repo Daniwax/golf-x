@@ -16,21 +16,31 @@ import { ScoringEngine, type ScoringMethod, type LeaderboardResult } from '../en
 interface CompletedLeaderboardProps {
   participants: Array<{
     user_id: string;
+    game_id?: string;
     user_profile?: {
       id: string;
       full_name: string;
     };
+    profiles?: {
+      full_name: string;
+    };
+    course_handicap?: number;
+    playing_handicap?: number;
+    handicap_index?: number;
   }>;
   scores: Array<{
     user_id: string;
     hole_number: number;
     strokes: number;
     player_match_par?: number;
+    hole_par?: number;
+    putts?: number;
   }>;
   holes: Array<{
     hole_number: number;
     par: number;
     handicap: number;
+    handicap_index?: number;
   }>;
   gameFormat: string;
 }
@@ -65,7 +75,7 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
         const participantScores = scores.filter(s => s.user_id === participant.user_id);
         
         return {
-          gameId: participant.game_id,
+          gameId: participant.game_id || '',
           userId: participant.user_id,
           playerName: participant.profiles?.full_name || 'Unknown',
           holes: holes.map(hole => {
@@ -376,21 +386,30 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
                                   `${scoreDiff}`;
                 
                 // Get display score based on scoring method
-                let displayScore;
+                let displayScore: React.ReactNode;
                 if (gameFormat === 'stroke_play') {
                   // For stroke play, show the score vs par
-                  displayScore = entry.details?.scoreVsPar || scoreVsPar;
+                  const scoreVsParValue = (entry.details as any)?.scoreVsPar;
+                  displayScore = (scoreVsParValue !== undefined && scoreVsParValue !== null) ? scoreVsParValue : scoreVsPar;
                 } else if (gameFormat === 'stableford') {
                   // For stableford, show total points
-                  displayScore = entry.details?.totalPoints || entry.score;
+                  const totalPointsValue = (entry.details as any)?.totalPoints;
+                  displayScore = (totalPointsValue !== undefined && totalPointsValue !== null) ? totalPointsValue : entry.score;
                 } else if (gameFormat === 'match_play') {
                   // For match play, show total points
-                  displayScore = entry.details?.totalPoints || entry.score;
+                  const totalPointsValue = (entry.details as any)?.totalPoints;
+                  displayScore = (totalPointsValue !== undefined && totalPointsValue !== null) ? totalPointsValue : entry.score;
                 } else if (gameFormat === 'skins') {
                   // For skins, show skins won
-                  displayScore = entry.details?.skinsWon || entry.score;
+                  const skinsWonValue = (entry.details as any)?.skinsWon;
+                  displayScore = (skinsWonValue !== undefined && skinsWonValue !== null) ? skinsWonValue : entry.score;
                 } else {
                   displayScore = entry.score;
+                }
+                
+                // Ensure displayScore is renderable
+                if (typeof displayScore === 'object' && displayScore !== null && !React.isValidElement(displayScore)) {
+                  displayScore = String(displayScore);
                 }
 
                 return (
@@ -434,8 +453,8 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
                           )}
                           {gameFormat === 'skins' && entry.details && (
                             <>
-                              {entry.details.holesWon && entry.details.holesWon.length > 0 ? 
-                                `Won holes: ${entry.details.holesWon.join(', ')}` : 
+                              {entry.details.holesWon && Array.isArray(entry.details.holesWon) && entry.details.holesWon.length > 0 ? 
+                                `Won holes: ${(entry.details.holesWon as number[]).join(', ')}` : 
                                 'No holes won'
                               }
                             </>
@@ -461,7 +480,7 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
                       fontWeight: '600',
                       color: '#8b7355'
                     }}>
-                      {totalStrokes || entry.details?.grossScore || '-'}
+                      {totalStrokes || (entry.details?.grossScore as number) || '-'}
                     </td>
                     
                     {/* vs Par */}
@@ -516,32 +535,32 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
                       {/* Scoring method specific details */}
                       {gameFormat === 'stroke_play' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
-                          <div>Holes: {entry.details.holesPlayed}</div>
-                          <div>Net: {entry.details.netScore}</div>
+                          <div>Holes: {entry.details.holesPlayed as number}</div>
+                          <div>Net: {entry.details.netScore as number}</div>
                         </div>
                       )}
                       
                       {gameFormat === 'stableford' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
-                          <div>Holes: {entry.details.holesPlayed}</div>
-                          <div>Gross: {entry.details.grossScore}</div>
+                          <div>Holes: {entry.details.holesPlayed as number}</div>
+                          <div>Gross: {entry.details.grossScore as number}</div>
                         </div>
                       )}
                       
                       {gameFormat === 'match_play' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
                           {entry.details.record ? (
-                            <div>Record: {entry.details.record}</div>
+                            <div>Record: {entry.details.record as string}</div>
                           ) : (
-                            <div>W:{entry.details.holesWon} L:{entry.details.holesLost} T:{entry.details.holesTied}</div>
+                            <div>W:{entry.details.holesWon as number} L:{entry.details.holesLost as number} T:{entry.details.holesTied as number}</div>
                           )}
                         </div>
                       )}
                       
                       {gameFormat === 'skins' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
-                          {entry.details.holesWon?.length > 0 ? (
-                            <div>Won: {entry.details.holesWon.join(', ')}</div>
+                          {Array.isArray(entry.details.holesWon) && entry.details.holesWon.length > 0 ? (
+                            <div>Won: {(entry.details.holesWon as number[]).join(', ')}</div>
                           ) : (
                             <div>No holes won</div>
                           )}

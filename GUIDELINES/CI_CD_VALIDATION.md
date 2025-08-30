@@ -208,6 +208,7 @@ To automatically validate before push:
 echo 'npm run ci' > .git/hooks/pre-push
 chmod +x .git/hooks/pre-push
 ```
+*use Bash(cd /d/projects/repositories/golf-x && npm run build 2>&1 | head -100)* like
 
 ## Summary
 
