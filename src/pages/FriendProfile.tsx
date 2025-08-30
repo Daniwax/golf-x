@@ -66,12 +66,15 @@ interface RecentGame {
 }
 
 interface GameWithCourse {
-  games: {
-    golf_courses: {
-      name: string;
-    };
+  games: Array<{
+    id: any;
+    status?: any;
+    course_id: any;
     created_at: string;
-  };
+    golf_courses: Array<{
+      name: string;
+    }>;
+  }>;
 }
 
 const FriendProfile: React.FC = () => {
@@ -221,14 +224,14 @@ const FriendProfile: React.FC = () => {
       const coursesSet = new Set<string>();
       friendGames.forEach(g => {
         const gameData = g as GameWithCourse;
-        if (gameData.games?.golf_courses?.name) {
-          coursesSet.add(gameData.games.golf_courses.name);
+        if (gameData.games?.[0]?.golf_courses?.[0]?.name) {
+          coursesSet.add(gameData.games[0].golf_courses[0].name);
         }
       });
 
       // Get last played date
       const lastGame = friendGames
-        .sort((a, b) => new Date((b as GameWithCourse).games.created_at).getTime() - new Date((a as GameWithCourse).games.created_at).getTime())[0];
+        .sort((a, b) => new Date((b as GameWithCourse).games[0].created_at).getTime() - new Date((a as GameWithCourse).games[0].created_at).getTime())[0];
 
       // Get recent scores (last 5)
       const recentScores = scores.slice(-5);
@@ -238,7 +241,7 @@ const FriendProfile: React.FC = () => {
         gamesWithFriend: friendGames.length,
         bestScore,
         averageScore,
-        lastPlayed: (lastGame as GameWithCourse | undefined)?.games?.created_at || null,
+        lastPlayed: (lastGame as GameWithCourse | undefined)?.games?.[0]?.created_at || null,
         winRate,
         coursesPlayed: Array.from(coursesSet),
         recentScores
@@ -293,8 +296,8 @@ const FriendProfile: React.FC = () => {
           const userGameData = userGame as GameWithCourse;
           recent.push({
             id: userGame.game_id,
-            course_name: userGameData.games?.golf_courses?.name || 'Unknown Course',
-            played_at: userGameData.games?.created_at || '',
+            course_name: userGameData.games?.[0]?.golf_courses?.[0]?.name || 'Unknown Course',
+            played_at: userGameData.games?.[0]?.created_at || '',
             my_score: userGame.total_strokes,
             friend_score: friendGame.total_strokes,
             result

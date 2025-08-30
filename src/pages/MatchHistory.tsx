@@ -208,7 +208,7 @@ const MatchHistory: React.FC = () => {
                 const playerScores = holeScores.filter((hs: GameHoleScore) => hs.user_id === participant.user_id);
                 // Only include holes up to the game's num_holes limit
                 const gameHoleCount = game.numHoles || 18;
-                const playerHoles = (holes as DbHole[])
+                const playerHoles = (holes as unknown as DbHole[])
                   .filter((hole: DbHole) => hole.hole_number <= gameHoleCount)
                   .map((hole: DbHole) => {
                     const score = playerScores.find((ps: GameHoleScore) => ps.hole_number === hole.hole_number);
