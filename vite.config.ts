@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['apple-touch-icon.png', 'icon-192x192.png', 'icon-512x512.png', 'icon-72x72.png'],
       manifest: {
         name: 'Golf X - Track Your Game',
         short_name: 'Golf X',
@@ -21,14 +21,19 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'vite.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml'
+            src: 'icon-72x72.png',
+            sizes: '72x72',
+            type: 'image/png'
           },
           {
-            src: 'vite.svg',
+            src: 'icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'icon-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
+            type: 'image/png'
           }
         ],
         categories: ['sports', 'utilities']
