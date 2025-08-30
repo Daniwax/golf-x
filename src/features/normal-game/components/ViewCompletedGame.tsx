@@ -124,59 +124,60 @@ const ViewCompletedGame: React.FC = () => {
     const rules: Record<string, string[]> = {
       'random': [
         'Handicaps assigned randomly',
-        'Fair playing field for all levels', 
-        'Each player gets different handicap'
+        'Distribution changes each round',
+        'Unpredictable, fun competition'
       ],
       'none': [
-        'No handicap adjustments',
-        'Pure gross score competition',
-        'Skill-based advantage/disadvantage'
+        'No handicap strokes given',
+        'Scores are gross totals',
+        'Pure skill decides outcome'
       ],
       'ghost': [
-        'Play against virtual opponent',
-        'Ghost player has set score',
-        'Individual challenge format'
+        'Compete against fixed past scores',
+        'Ghost plays recorded card',
+        'Challenge or solo practice'
       ],
       'stroke_play': [
-        'Official handicap adjustments',
-        'Net score = Gross - Handicap',
-        'Fair competition across skill levels'
+        '95% of course handicap applied',
+        'Net = Gross – Handicap',
+        'Lowest net score wins'
       ],
       'match_play': [
-        'Handicap strokes on hardest holes',
-        'Get strokes where you need them most',
-        'Level the playing field per hole'
+        '100% handicap allowance',
+        'Strokes on hardest holes',
+        'Focus on winning holes'
       ]
     };
     return rules[handicapType] || rules['none'];
   };
-
+  
   // Helper function to get scoring method rules  
   const getScoringRules = (scoringMethod: string) => {
     const rules: Record<string, string[]> = {
       'stroke_play': [
-        'Lowest total score wins',
-        'Count every stroke taken',
-        'Ties broken by back 9 score'
+        'Count every stroke',
+        'Handicap adjusts gross score',
+        'Lowest net wins'
       ],
       'match_play': [
-        'Win = 1 point, Tie = ½ point',
-        'Most holes won takes match', 
-        'All Square = tied match'
+        'Hole-by-hole competition',
+        'Win = 2, Tie = 1',
+        'Match ends when decided'
       ],
       'stableford': [
-        'Eagle = 4 pts, Birdie = 3 pts',
-        'Par = 2 pts, Bogey = 1 pt',
-        'Double bogey+ = 0 pts'
+        'Double eagle=5, Eagle=4, Birdie=3',
+        'Par=2, Bogey=1, Double+=0',
+        'Highest total points wins'
       ],
       'skins': [
-        'Lowest score wins the hole',
-        'No winner = skin carries forward',
-        'Most skins won takes match'
+        'Each hole worth 1 skin',
+        'Ties carry over',
+        'Most skins wins match'
       ]
     };
     return rules[scoringMethod] || rules['stroke_play'];
   };
+  
 
   /* Legacy function for backward compatibility - currently unused
   const getGameRules = (format: string) => {

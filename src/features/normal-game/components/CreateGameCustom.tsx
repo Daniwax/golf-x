@@ -26,46 +26,46 @@ import GameRulesModal from './GameRulesModal';
 import { dataService } from '../../../services/data/DataService';
 import type { WeatherCondition } from '../types';
 
-// Game types from HandicapEngineTest
+// Game types from rules folder
 const GAME_TYPES = {
   match_play: {
     displayName: 'Match Play',
-    description: 'Classic match play with relative handicaps (100%, lowest plays off 0)'
+    description: 'Classic match play with relative handicaps - lowest player plays off scratch (0)'
   },
   stroke_play: {
     displayName: 'Stroke Play', 
-    description: 'Tournament format with 95% handicap allowance'
+    description: 'Tournament format using full handicap - every player uses complete handicap allowance'
   },
   none: {
     displayName: 'Scratch Golf',
-    description: 'No handicap - pure skill competition'
+    description: 'No handicap adjustments - all players compete with gross scores only'
   },
   random: {
     displayName: 'Lucky Draw',
-    description: 'Fair handicaps (95%) with controlled random distribution'
+    description: 'Strokes randomly assigned each round - adds excitement and unpredictability'
   },
   ghost: {
     displayName: 'Ghost Mode',
-    description: 'Compete against historical performances'
+    description: 'Compete against historical performances - your best rounds, friends, or course records'
   }
 };
 
 const SCORING_METHODS = {
   stroke_play: {
     displayName: 'Stroke Play',
-    description: 'Lowest total score wins'
+    description: 'Total strokes minus handicap - count every stroke, lowest net score wins'
   },
   match_play: {
     displayName: 'Match Play',
-    description: 'Points for winning each hole'
+    description: 'Points for each hole won - win hole = 1 point, most points wins match'
   },
   stableford: {
     displayName: 'Stableford',
-    description: 'Points based on score vs par'
+    description: 'Points based on score vs par - higher points better, bad holes limited damage'
   },
   skins: {
     displayName: 'Skins Game',
-    description: 'Winner takes all on each hole'
+    description: 'Winner takes all on each hole - must win outright, ties carry over skins'
   }
 };
 

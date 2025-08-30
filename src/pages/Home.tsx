@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   IonContent,
   IonPage,
@@ -6,10 +6,20 @@ import {
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import LiveMatchCard from '../features/normal-game/components/LiveMatchCard';
+import { useAuth } from '../lib/useAuth';
+import { sessionTracker } from '../services/sessionTrackingService';
 import '../styles/golf_style.css';
 
 const Home: React.FC = () => {
   const history = useHistory();
+  const { user } = useAuth();
+
+  // Track app entry when Home loads
+  useEffect(() => {
+    if (user?.id) {
+      sessionTracker.startSession(user.id, '/home');
+    }
+  }, [user?.id]);
 
   return (
     <IonPage>

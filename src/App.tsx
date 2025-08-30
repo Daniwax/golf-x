@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
   IonApp, 
   IonRouterOutlet, 
@@ -68,6 +69,24 @@ const AppWithTabs: React.FC = () => {
     location.pathname.startsWith('/game/view/') || 
     location.pathname.startsWith('/course') || 
     location.pathname === '/courses';
+
+  // Track page visits
+  React.useEffect(() => {
+    import('./services/sessionTrackingService').then(({ sessionTracker }) => {
+      sessionTracker.trackPageVisit(location.pathname);
+    });
+  }, [location.pathname]);
+
+  // End session on app close/refresh
+  React.useEffect(() => {
+    const handleBeforeUnload = async () => {
+      const { sessionTracker } = await import('./services/sessionTrackingService');
+      await sessionTracker.endSession();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   return (
     <IonTabs>

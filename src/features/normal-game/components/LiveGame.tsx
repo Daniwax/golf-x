@@ -41,6 +41,34 @@ interface LiveGameParams {
   gameId: string;
 }
 
+// Helper function to get proper game format descriptions
+const getGameFormatDescription = (handicapType: string, scoringFormat: string): string => {
+  const handicapDescriptions: Record<string, string> = {
+    'match_play': 'Match Play - Lowest handicap plays off scratch',
+    'stroke_play': 'Stroke Play - Full handicap allowance',
+    'none': 'Scratch Golf - No handicap adjustments',
+    'random': 'Lucky Draw - Random stroke distribution',
+    'ghost': 'Ghost Mode - vs Historical performance'
+  };
+
+  const scoringDescriptions: Record<string, string> = {
+    'stroke_play': 'Stroke Play scoring',
+    'match_play': 'Match Play scoring',
+    'stableford': 'Stableford points',
+    'skins': 'Skins game'
+  };
+
+  const handicapDesc = handicapDescriptions[handicapType] || handicapType.replace('_', ' ').toUpperCase();
+  const scoringDesc = scoringDescriptions[scoringFormat] || scoringFormat.replace('_', ' ').toUpperCase();
+
+  // If handicap and scoring are the same type, just show one
+  if (handicapType === scoringFormat) {
+    return handicapDesc;
+  }
+  
+  return `${handicapDesc} • ${scoringDesc}`;
+};
+
 const LiveGame: React.FC = () => {
   const { gameId } = useParams<LiveGameParams>();
   const history = useHistory();
@@ -390,7 +418,7 @@ const LiveGame: React.FC = () => {
               alignItems: 'center'
             }}>
               <IonNote style={{ fontSize: '12px' }}>
-                {game.game_description || game.scoring_format.replace('_', ' ').toUpperCase()}
+                {game.game_description || getGameFormatDescription(game.handicap_type || 'match_play', game.scoring_format || 'match_play')}
               </IonNote>
             </div>
             <div style={{ 

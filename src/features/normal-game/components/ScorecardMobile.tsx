@@ -241,34 +241,35 @@ const ScorecardMobile: React.FC<ScorecardProps> = ({
   const getHandicapSummary = (handicapType: string | undefined): string => {
     switch (handicapType) {
       case 'match_play':
-        return '• Lowest handicap player plays off scratch (0 strokes)\n• Other players get difference in strokes\n• Strokes given on hardest holes first (lowest handicap index)\n• Focus on winning holes, not total score';
+        return '• 100% handicap allowance\n• Lowest HC plays off scratch\n• Others get difference in strokes\n• Strokes on hardest holes first';
       case 'stroke_play':
-        return '• Players get 95% of their full course handicap\n• Strokes allocated based on hole difficulty index\n• Lowest total net score wins\n• Every stroke counts equally';
+        return '• 95% of course handicap\n• Strokes on hardest holes first\n• Net lowest total wins\n• Every stroke counts';
       case 'random':
-        return '• Handicaps randomly assigned each game\n• Creates unpredictable, fun competition\n• Distribution changes every round\n• Great for leveling the field';
+        return '• 95% handicap applied\n• Strokes distributed randomly\n• Capped per hole for fairness\n• Creates unpredictable rounds';
       case 'none':
-        return '• No handicap strokes given\n• Pure skill competition\n• Actual scores determine winner\n• Best for players of similar ability';
+        return '• No handicap applied\n• Pure skill competition\n• Scores are actual totals\n• Best for equal-level players';
       case 'ghost':
-        return '• Play against historical best scores\n• Compare with past performances\n• Challenge personal records\n• Great for solo practice rounds';
+        return '• Compete vs past or record scores\n• Real players get handicaps normally\n• Ghost uses actual historical card\n• Great for solo or challenge play';
       default:
         return '';
     }
   };
-
+  
   const getScoringMethodSummary = (scoringMethod: string | undefined): string => {
     switch (scoringMethod) {
       case 'stroke_play':
-        return '• Count every stroke taken\n• Subtract handicap strokes from gross score\n• Lowest net total wins\n• Traditional medal play format';
+        return '• Count every stroke vs par\n• Handicap strokes reduce gross\n• Lowest net score wins\n• Classic medal play';
       case 'match_play':
-        return '• Win individual holes, not total score\n• Concede putts and holes allowed\n• Match ends when mathematically decided\n• Head-to-head hole competition';
+        return '• Compare holes head-to-head\n• Win = 2 pts, Tie = 1 pt (default)\n• Match ends when decided\n• Focus on hole wins';
       case 'stableford':
-        return '• Points based on score vs par (plus handicap)\n• Double bogey = 0 pts, Bogey = 1 pt, Par = 2 pts\n• Birdie = 3 pts, Eagle = 4 pts\n• Highest point total wins';
+        return '• Points by score vs par (+HC)\n• Double eagle=5, Eagle=4, Birdie=3\n• Par=2, Bogey=1, Double+=0\n• Highest total points wins';
       case 'skins':
-        return '• Win money/points by winning holes outright\n• Tie = no winner, value carries to next hole\n• Last hole can be worth multiple skins\n• High risk, high reward format';
+        return '• Each hole worth 1 skin\n• Tie carries value to next hole\n• Outright winner takes skins\n• Most skins wins overall';
       default:
         return '';
     }
   };
+  
 
   // Get shortened player names (first name + last initial)
   const getShortName = (fullName: string | undefined, index: number): string => {
