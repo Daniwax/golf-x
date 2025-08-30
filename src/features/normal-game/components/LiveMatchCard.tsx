@@ -40,8 +40,8 @@ const LiveMatchCard: React.FC = () => {
     return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
-  if (loading) {
-    return null; // Silent loading for home page
+  if (loading && !liveGames) {
+    return null; // Silent loading for home page only on initial load
   }
 
   if (!liveGames || liveGames.length === 0) {

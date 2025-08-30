@@ -3,7 +3,7 @@
  * Used by LiveMatchCard component on Home page
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { dataService } from '../services/data/DataService';
 import { useAuth } from '../lib/useAuth';
 import type { UseDataResult } from '../services/data/types';
@@ -18,21 +18,43 @@ export interface LiveGame {
   courseName?: string;
 }
 
+// Cache for active games data
+const activeGamesCache = new Map<string, { data: LiveGame[]; timestamp: number }>();
+const CACHE_DURATION = 30000; // 30 seconds
+
 /**
- * Hook for fetching user's active/live games
+ * Hook for fetching user's active/live games with intelligent caching
  */
 export function useLiveGames(): UseDataResult<LiveGame[]> {
   const { user } = useAuth();
   const [data, setData] = useState<LiveGame[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const lastFetchRef = useRef<number>(0);
 
-  const fetchLiveGames = useCallback(async () => {
+  const fetchLiveGames = useCallback(async (forceRefresh = false) => {
     if (!user?.id) {
       setLoading(false);
       return;
     }
 
+    // Check cache first
+    const cacheKey = user.id;
+    const cached = activeGamesCache.get(cacheKey);
+    const now = Date.now();
+    
+    if (!forceRefresh && cached && (now - cached.timestamp < CACHE_DURATION)) {
+      setData(cached.data);
+      setLoading(false);
+      return;
+    }
+
+    // Avoid multiple simultaneous requests
+    if (!forceRefresh && (now - lastFetchRef.current < 1000)) {
+      return;
+    }
+    
+    lastFetchRef.current = now;
     setLoading(true);
     setError(null);
 
@@ -78,6 +100,9 @@ export function useLiveGames(): UseDataResult<LiveGame[]> {
 
       // Filter out any failed loads
       const validGames = liveGameData.filter((game): game is LiveGame => game !== null);
+      
+      // Cache the result
+      activeGamesCache.set(cacheKey, { data: validGames, timestamp: now });
       setData(validGames);
     } catch (err) {
       console.error('Error fetching live games:', err);
@@ -93,10 +118,11 @@ export function useLiveGames(): UseDataResult<LiveGame[]> {
   }, [fetchLiveGames]);
 
   const refresh = useCallback(async () => {
-    // Invalidate cache and refetch
+    // Invalidate cache and force refetch
     if (user?.id) {
+      activeGamesCache.delete(user.id);
       dataService.games.invalidateUserGames(user.id);
-      await fetchLiveGames();
+      await fetchLiveGames(true); // Force refresh
     }
   }, [user?.id, fetchLiveGames]);
 
@@ -109,18 +135,26 @@ interface IonicHistory {
 }
 
 /**
- * Hook that also listens to navigation for refreshing
- * Useful for Home page that needs to refresh when navigated back to
+ * Hook that also listens to navigation for smart refreshing
+ * Only refreshes if data is stale or user is returning from game completion
  */
 export function useLiveGamesWithNavigation(history: IonicHistory) {
   const liveGamesResult = useLiveGames();
+  const lastNavigationRef = useRef<number>(0);
 
   useEffect(() => {
     const unlistenHistory = history.listen((location: { pathname: string }) => {
       if (location.pathname === '/home') {
-        console.log('Navigated to home - refreshing live games');
-        // Small delay to ensure navigation is complete
-        setTimeout(() => liveGamesResult.refresh(), 100);
+        const now = Date.now();
+        // Only refresh if we haven't navigated to home recently (avoid rapid navigation refreshes)
+        if (now - lastNavigationRef.current > 2000) {
+          // Only refresh if cache is stale or no data exists
+          if (!liveGamesResult.data || liveGamesResult.data.length === 0) {
+            console.log('Navigated to home - no active games data, refreshing');
+            setTimeout(() => liveGamesResult.refresh(), 100);
+          }
+        }
+        lastNavigationRef.current = now;
       }
     });
 
