@@ -26,6 +26,40 @@ import { informationCircleOutline } from 'ionicons/icons';
 import { useParams } from 'react-router-dom';
 import { useCourseDetail } from '../../hooks/useCourses';
 import { holeStatsService, type HoleStatistic } from '../../features/normal-game/services/holeStatsService';
+
+// Extended types for CourseDetail to avoid 'any' usage
+interface HoleDistance {
+  id?: number;
+  hole_id?: number;
+  tee_box_id?: number;
+  yards?: number;
+  meters?: number;
+  yards_to_layup?: number;
+  yards_to_carry?: number;
+  created_at?: string;
+  tee_boxes?: {
+    id: number;
+    name: string;
+    color?: string;
+    color_hex?: string;
+  };
+}
+
+interface HoleWithDistances {
+  id?: number;
+  hole_number: number;
+  par: number;
+  handicap_index?: number;
+  yardage?: number;
+  hole_distances?: HoleDistance[];
+}
+
+interface RecentRound {
+  round: number;
+  strokes: number;
+  putts: number;
+  date: string;
+}
 import { useAuth } from '../../lib/useAuth';
 import { dataService } from '../../services/data/DataService';
 import { 
@@ -91,34 +125,12 @@ const CourseDetail: React.FC = () => {
 
   // Process course image
   const courseImage = React.useMemo(() => {
-    const defaultImage = courseImages.find(img => img.image_type === 'default');
-    if (!defaultImage?.image_data) return '';
+    const defaultImage = courseImages.find(img => img.is_primary);
+    if (!defaultImage?.image_url) return '';
     
     try {
-      let base64Image = '';
-      
-      if (defaultImage.image_data.startsWith('\\x')) {
-        // Hex-encoded bytea from PostgreSQL
-        const hexString = defaultImage.image_data.slice(2);
-        const hexMatches = hexString.match(/.{1,2}/g);
-        if (hexMatches && hexMatches.length < 500000) {
-          const bytes = new Uint8Array(hexMatches.map((byte: string) => parseInt(byte, 16)));
-          let binaryString = '';
-          const chunkSize = 8192;
-          for (let i = 0; i < bytes.length; i += chunkSize) {
-            const chunk = bytes.slice(i, i + chunkSize);
-            binaryString += String.fromCharCode(...chunk);
-          }
-          const base64String = btoa(binaryString);
-          base64Image = `data:${defaultImage.mime_type || 'image/jpeg'};base64,${base64String}`;
-        }
-      } else {
-        // Assume it's already base64
-        const cleanBase64 = defaultImage.image_data.replace(/[\s\n\r]/g, '');
-        base64Image = `data:${defaultImage.mime_type || 'image/jpeg'};base64,${cleanBase64}`;
-      }
-      
-      return base64Image;
+      // Use the image_url directly
+      return defaultImage.image_url;
     } catch (error) {
       console.error('Error processing course image:', error);
       return '';
@@ -140,7 +152,7 @@ const CourseDetail: React.FC = () => {
     // Calculate aggregate statistics
     const totalRounds = filteredStats.length;
     const scores = filteredStats
-      .map(s => s.total_strokes)
+      .map(s => s.best_score)
       .filter(s => s !== null && s !== undefined);
     
     const bestScore = scores.length > 0 ? Math.min(...scores) : null;
@@ -149,25 +161,14 @@ const CourseDetail: React.FC = () => {
       ? scores.reduce((a, b) => a + b, 0) / scores.length 
       : null;
     
-    const putts = filteredStats
-      .map(s => s.total_putts)
-      .filter(s => s !== null && s !== undefined);
+    const putts: number[] = []; // Remove - not available in current data structure
     
     const averagePutts = putts.length > 0
       ? putts.reduce((a, b) => a + b, 0) / putts.length
       : null;
     
-    // Get recent rounds for chart
-    const recentRounds = filteredStats
-      .sort((a, b) => new Date(b.games.created_at).getTime() - new Date(a.games.created_at).getTime())
-      .slice(0, 10)
-      .reverse()
-      .map((round, index) => ({
-        round: `R${index + 1}`,
-        strokes: round.total_strokes,
-        putts: round.total_putts,
-        date: new Date(round.games.created_at).toLocaleDateString()
-      }));
+    // Get recent rounds for chart - not available in current data structure
+    const recentRounds: RecentRound[] = [];
     
     return {
       totalRounds,
@@ -187,13 +188,14 @@ const CourseDetail: React.FC = () => {
     if (!selectedTeeData) return [];
     
     return holes.map(hole => {
-      const distance = hole.hole_distances?.find((d: { tee_box_id?: number }) => d.tee_box_id === selectedTee);
+      const holeWithDistances = hole as HoleWithDistances;
+      const distance = holeWithDistances.hole_distances?.find((d) => d.tee_box_id === selectedTee);
       return {
         hole: hole.hole_number,
         par: hole.par,
-        distance: distance?.meters || distance?.yards * 0.9144 || 0, // Convert yards to meters if needed
-        handicap: 19 - hole.handicap_index, // Inverted handicap (1=18, 18=1)
-        handicapIndex: hole.handicap_index
+        distance: distance?.meters || (distance?.yards ? distance.yards * 0.9144 : 0) || 0, // Convert yards to meters if needed
+        handicap: hole.handicap_index !== undefined ? 19 - hole.handicap_index : 0, // Inverted handicap (1=18, 18=1)
+        handicapIndex: hole.handicap_index !== undefined ? hole.handicap_index : 0
       };
     }).sort((a, b) => a.hole - b.hole);
   }, [holes, selectedTee, teeBoxes]);
@@ -247,7 +249,7 @@ const CourseDetail: React.FC = () => {
         try {
           const averages = await dataService.stats.getFriendsAverageForHoles(
             user.id,
-            course.id,
+            course.id.toString(),
             selectedTee,
             userHandicap
           );
@@ -395,7 +397,7 @@ const CourseDetail: React.FC = () => {
             <div className="info-item">
               <span className="info-label" style={{ fontWeight: '400', fontSize: '11px', opacity: 0.6 }}>Status</span>
               <span className={`info-value ${course.status === 'open' ? 'status-active' : ''}`} style={{ fontWeight: '400', fontSize: '15px' }}>
-                {course.status?.charAt(0).toUpperCase() + course.status?.slice(1)}
+                {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
               </span>
             </div>
           )}
@@ -771,7 +773,8 @@ const CourseDetail: React.FC = () => {
                   padding: '0'
                 }}>
                   {holes.map(hole => {
-                    const distance = hole.hole_distances?.find((d: { tee_box_id?: number }) => d.tee_box_id === selectedTee);
+                    const holeWithDistances = hole as HoleWithDistances;
+                    const distance = holeWithDistances.hole_distances?.find((d) => d.tee_box_id === selectedTee);
                     const holeStat = holeStats.find(stat => stat.holeNumber === hole.hole_number);
                     
                     // Calculate colors for Best, Avg, and Friends Avg columns
@@ -1073,12 +1076,12 @@ const CourseDetail: React.FC = () => {
               </div>
             </div>
             <div className="stat-card">
-              <Target className="stat-icon" size={24} style={{ color: processedStats.averageScore && processedStats.averageScore <= course.par ? '#4ade80' : '#ffd700' }} />
+              <Target className="stat-icon" size={24} style={{ color: processedStats.averageScore && course?.par && processedStats.averageScore <= course.par ? '#4ade80' : '#ffd700' }} />
               <div className="stat-info">
                 <span className="stat-value" style={{ 
-                  color: processedStats.averageScore && processedStats.averageScore <= course.par ? '#4ade80' : '#ffd700' 
+                  color: processedStats.averageScore && course?.par && processedStats.averageScore <= course.par ? '#4ade80' : '#ffd700' 
                 }}>
-                  {processedStats.averageScore 
+                  {processedStats.averageScore && course?.par
                     ? `${processedStats.averageScore > course.par ? '+' : ''}${(processedStats.averageScore - course.par).toFixed(1)}`
                     : '-'}
                 </span>

@@ -5,9 +5,14 @@
 
 import { CacheService } from '../cache/CacheService';
 import { getCacheKey, getTTL, getInvalidationPatterns } from '../../config/cache.config';
+import { supabase } from '../../lib/supabase';
 
 export class GameDataService {
-  constructor(private cache: CacheService) {}
+  private cache: CacheService;
+  
+  constructor(cache: CacheService) {
+    this.cache = cache;
+  }
 
   /**
    * Get user's completed games
@@ -34,7 +39,7 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data: games, error } = await supabase
           .from('games')
@@ -92,7 +97,7 @@ export class GameDataService {
         const { gameService } = await import('../../features/normal-game/services/gameService');
         return gameService.getGameDetails(gameId);
       },
-      getTTL('gameDetail')
+      getTTL('gameHistory')
     );
   }
 
@@ -104,7 +109,7 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         
         // First get participants
         const { data: participants, error: participantsError } = await supabase
@@ -149,7 +154,7 @@ export class GameDataService {
           profiles: profileMap.get(participant.user_id) || null
         }));
       },
-      getTTL('participants')
+      getTTL('profile')
     );
   }
 
@@ -167,7 +172,7 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         
         // Build query
         let query = supabase
@@ -238,7 +243,7 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         
         // Query for best scores across ALL users on this course/tee
         // Filter for standard rounds only (9 or 18 holes)
@@ -308,7 +313,7 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         
         // Query all completed games for this user on this course
         let query = supabase
@@ -372,7 +377,7 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
         
         const { data, error } = await supabase
           .from('game_hole_scores')
@@ -397,7 +402,7 @@ export class GameDataService {
         
         return scorecard;
       },
-      getTTL('holeScores')
+      getTTL('recentScores')
     );
   }
 
@@ -409,7 +414,8 @@ export class GameDataService {
     return this.cache.get(
       key,
       async () => {
-        const { supabase } = await import('../../lib/supabase');
+        if (!supabase) throw new Error('Supabase client not initialized');
+        
         const { data, error } = await supabase
           .from('game_hole_scores')
           .select(`
@@ -432,7 +438,7 @@ export class GameDataService {
         if (error) throw error;
         return data;
       },
-      getTTL('holeScores')
+      getTTL('recentScores')
     );
   }
 

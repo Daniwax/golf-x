@@ -255,6 +255,9 @@ class GameService {
         }
         
         // Get tee box data for handicap calculations
+        if (!supabase) {
+          throw new Error('Supabase client is not initialized');
+        }
         const { data: teeBox } = await supabase
           .from('tee_boxes')
           .select('slope_rating, course_rating')

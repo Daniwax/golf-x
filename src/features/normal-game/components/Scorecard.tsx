@@ -307,7 +307,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
                             : 'transparent'
                         }}
                       >
-                        {getScoreDisplay(participant.user_id, hole.hole_number, hole.par)}
+                        {getScoreDisplay(participant.user_id, hole.hole_number)}
                       </td>
                     );
                   })}
@@ -481,7 +481,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
                             : 'transparent'
                         }}
                       >
-                        {getScoreDisplay(participant.user_id, hole.hole_number, hole.par)}
+                        {getScoreDisplay(participant.user_id, hole.hole_number)}
                       </td>
                     );
                   })}

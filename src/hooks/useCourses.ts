@@ -7,6 +7,37 @@ import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '../services/data/DataService';
 import { useAuth } from '../lib/useAuth';
 
+// Internal types for data mapping
+interface StatsData {
+  games?: { course_id: number }[];
+  game_id?: number;
+  total_strokes?: number;
+}
+
+interface ImageData {
+  id: number;
+  course_id: number;
+  image_data?: string;
+  image_url?: string;
+  is_primary?: boolean;
+}
+
+interface CourseData {
+  id: number;
+  name: string;
+  par?: number;
+  holes?: number;
+  status?: string;
+  designer?: string;
+  designed_year?: number;
+  course_style?: string;
+  total_meters?: number;
+  city?: string;
+  state?: string;
+  country?: string;
+  golf_clubs?: { name: string; city?: string; state?: string; country?: string }[];
+}
+
 export interface UseCourseListResult {
   courses: Array<{ id: number; name: string; city?: string; state?: string; country?: string; par?: number; holes?: number }>;
   teeBoxes: Array<{ id: number; course_id: number; name: string; color?: string; slope?: number; rating?: number }>;
@@ -19,12 +50,59 @@ export interface UseCourseListResult {
 }
 
 export interface UseCourseDetailResult {
-  course: { id: number; name: string; city?: string; state?: string; country?: string; par?: number; holes?: number } | null;
-  teeBoxes: Array<{ id: number; course_id: number; name: string; color?: string; slope?: number; rating?: number }>;
-  holes: Array<{ hole_number: number; par: number; handicap_index?: number; yardage?: number }>;
+  course: { 
+    id: number; 
+    name: string; 
+    city?: string; 
+    state?: string; 
+    country?: string; 
+    par?: number; 
+    holes?: number;
+    status?: string;
+    designer?: string;
+    designed_year?: string;
+    course_style?: string;
+    total_meters?: number;
+    golf_clubs?: {
+      name: string;
+      city?: string;
+      address?: string;
+      phone?: string;
+      website?: string;
+    };
+  } | null;
+  teeBoxes: Array<{ 
+    id: number; 
+    course_id: number; 
+    name: string; 
+    color?: string; 
+    slope?: number; 
+    rating?: number;
+    total_meters?: number;
+    total_yards?: number;
+    course_rating?: number;
+    slope_rating?: number;
+    front_nine_rating?: number;
+    front_nine_slope?: number;
+    back_nine_rating?: number;
+    back_nine_slope?: number;
+  }>;
+  holes: Array<{ 
+    id?: number;
+    hole_number: number; 
+    par: number; 
+    handicap_index?: number; 
+    yardage?: number;
+  }>;
   amenities: Record<string, boolean> | null;
   courseImages: Array<{ id: number; course_id: number; image_url: string; is_primary?: boolean }>;
-  playerStats: Array<{ course_id: number; rounds_played: number; best_score?: number; average_score?: number }>;
+  playerStats: Array<{ 
+    course_id: number; 
+    rounds_played: number; 
+    best_score?: number; 
+    average_score?: number;
+    tee_box_id?: number;
+  }>;
   loading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
@@ -79,8 +157,22 @@ export function useCourseList(): UseCourseListResult {
       ]);
 
       setTeeBoxes(teeData || []);
-      setPlayerStats(statsData || []);
-      setCourseImages(imagesData || []);
+      // Map the stats data to the expected format
+      const mappedStats = (statsData || []).map((stat: StatsData) => ({
+        course_id: stat.games?.[0]?.course_id || stat.game_id || 0,
+        rounds_played: 1,
+        best_score: stat.total_strokes,
+        average_score: stat.total_strokes
+      }));
+      setPlayerStats(mappedStats);
+      // Map the images data to the expected format
+      const mappedImages = (imagesData || []).map((img: ImageData) => ({
+        id: img.id,
+        course_id: img.course_id,
+        image_url: img.image_data || img.image_url || '',
+        is_primary: img.is_primary
+      }));
+      setCourseImages(mappedImages);
     } catch (err) {
       console.error('Error loading courses:', err);
       setError(err as Error);
@@ -150,7 +242,30 @@ export function useCourseDetail(courseId: string): UseCourseDetailResult {
     try {
       // Load course details first - now with numeric ID
       const courseData = await dataService.courses.getCourseById(numericCourseId);
-      setCourse(courseData);
+      if (courseData) {
+        // Map to expected interface
+        setCourse({
+          id: courseData.id,
+          name: courseData.name,
+          city: (courseData as CourseData).city,
+          state: (courseData as CourseData).state,
+          country: (courseData as CourseData).country,
+          par: courseData.par,
+          holes: courseData.holes,
+          status: courseData.status,
+          designer: courseData.designer,
+          designed_year: courseData.designed_year,
+          course_style: courseData.course_style,
+          total_meters: courseData.total_meters,
+          golf_clubs: courseData.golf_clubs?.[0] ? {
+            name: courseData.golf_clubs[0].name,
+            city: courseData.golf_clubs[0].city,
+            address: courseData.golf_clubs[0].address,
+            phone: courseData.golf_clubs[0].phone,
+            website: courseData.golf_clubs[0].website
+          } : undefined
+        });
+      }
 
       if (!courseData) {
         throw new Error('Course not found');
@@ -177,8 +292,22 @@ export function useCourseDetail(courseId: string): UseCourseDetailResult {
       setTeeBoxes(teeData || []);
       setHoles(holesData || []);
       setAmenities(amenitiesData);
-      setCourseImages(imagesData || []);
-      setPlayerStats(statsData || []);
+      // Map the images data to the expected format
+      const mappedImages = (imagesData || []).map((img: ImageData) => ({
+        id: img.id,
+        course_id: img.course_id,
+        image_url: img.image_data || img.image_url || '',
+        is_primary: img.is_primary
+      }));
+      setCourseImages(mappedImages);
+      // Map the stats data to the expected format
+      const mappedStats = (statsData || []).map((stat: StatsData) => ({
+        course_id: stat.games?.[0]?.course_id || stat.game_id || 0,
+        rounds_played: 1,
+        best_score: stat.total_strokes,
+        average_score: stat.total_strokes
+      }));
+      setPlayerStats(mappedStats);
     } catch (err) {
       console.error('Error loading course detail:', err);
       setError(err as Error);

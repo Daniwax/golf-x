@@ -42,6 +42,33 @@ interface Scorecard {
   totalPutts: number;
 }
 
+// Details types for different scoring methods
+interface StrokePlayDetails {
+  grossScore: number;
+  netScore: number;
+  holesPlayed: number;
+}
+
+interface StablefordDetails {
+  grossScore: number;
+  holesPlayed: number;
+}
+
+interface MatchPlayDetails {
+  holesWon: number;
+  holesLost: number;
+  holesTied: number;
+  matchStatus: string;
+  record?: string;
+}
+
+interface SkinDetails {
+  holesWon: number[];
+  skinValues: Array<{ hole: number; value: number }>;
+  grossScore: number;
+}
+
+
 interface HoleScore {
   holeNumber: number;
   par: number;
@@ -82,6 +109,52 @@ const ScoringEngineTest: React.FC = () => {
       loadScorecards(selectedGameId);
     }
   }, [selectedGameId]);
+
+  // Define calculateLeaderboard before useEffect that uses it
+  const calculateLeaderboard = useCallback(() => {
+    if (scorecards.length === 0) {
+      setLeaderboard(null);
+      return;
+    }
+
+    console.log(`Calculating leaderboard for ${selectedScoringMethod} with ${scorecards.length} scorecards`);
+    
+    // Check if any scorecard has player match par (indicating handicap game)
+    const hasHandicap = scorecards.some(card => 
+      card.holes.some(h => h.playerMatchPar && h.playerMatchPar !== h.par)
+    );
+    
+    // Convert scorecards to ScoringEngine format
+    const engineScorecards: EngineScorecard[] = scorecards.map(card => {
+      // Update holes to use player match par when available
+      const adjustedHoles = card.holes.map(hole => ({
+        ...hole,
+        // If handicap game, replace standard par with player match par
+        par: hasHandicap && hole.playerMatchPar ? hole.playerMatchPar : hole.par
+      }));
+      
+      return {
+        gameId: card.gameId,
+        userId: card.userId,
+        playerName: card.playerName,
+        holes: adjustedHoles,
+        totalStrokes: card.totalStrokes,
+        totalPutts: card.totalPutts,
+        courseHandicap: 0, // Not needed as we're using player match par directly
+        playingHandicap: 0  // Not needed as we're using player match par directly
+      };
+    });
+    
+    // Calculate leaderboard using ScoringEngine
+    // When using player match par, handicap is already built into the par values
+    const leaderboardResult = ScoringEngine.calculateLeaderboard(
+      engineScorecards,
+      selectedScoringMethod as ScoringMethod,
+      false // Handicap is handled via player match par
+    );
+    
+    setLeaderboard(leaderboardResult);
+  }, [scorecards, selectedScoringMethod]);
 
   // Recalculate leaderboard when scoring method or scorecards change
   useEffect(() => {
@@ -185,51 +258,6 @@ const ScoringEngineTest: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const calculateLeaderboard = useCallback(() => {
-    if (scorecards.length === 0) {
-      setLeaderboard(null);
-      return;
-    }
-
-    console.log(`Calculating leaderboard for ${selectedScoringMethod} with ${scorecards.length} scorecards`);
-    
-    // Check if any scorecard has player match par (indicating handicap game)
-    const hasHandicap = scorecards.some(card => 
-      card.holes.some(h => h.playerMatchPar && h.playerMatchPar !== h.par)
-    );
-    
-    // Convert scorecards to ScoringEngine format
-    const engineScorecards: EngineScorecard[] = scorecards.map(card => {
-      // Update holes to use player match par when available
-      const adjustedHoles = card.holes.map(hole => ({
-        ...hole,
-        // If handicap game, replace standard par with player match par
-        par: hasHandicap && hole.playerMatchPar ? hole.playerMatchPar : hole.par
-      }));
-      
-      return {
-        gameId: card.gameId,
-        userId: card.userId,
-        playerName: card.playerName,
-        holes: adjustedHoles,
-        totalStrokes: card.totalStrokes,
-        totalPutts: card.totalPutts,
-        courseHandicap: 0, // Not needed as we're using player match par directly
-        playingHandicap: 0  // Not needed as we're using player match par directly
-      };
-    });
-    
-    // Calculate leaderboard using ScoringEngine
-    // When using player match par, handicap is already built into the par values
-    const leaderboardResult = ScoringEngine.calculateLeaderboard(
-      engineScorecards,
-      selectedScoringMethod as ScoringMethod,
-      false // Handicap is handled via player match par
-    );
-    
-    setLeaderboard(leaderboardResult);
-  }, [scorecards, selectedScoringMethod]);
 
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace', backgroundColor: '#1a1a1a', color: '#e0e0e0', minHeight: '100vh' }}>
@@ -645,7 +673,7 @@ const ScoringEngineTest: React.FC = () => {
                       fontSize: '16px',
                       color: '#e0e0e0'
                     }}>
-                      {scorecard?.totalStrokes || entry.details?.grossScore || '-'}
+                      {scorecard?.totalStrokes || (entry.details as unknown as StrokePlayDetails | StablefordDetails | SkinDetails)?.grossScore || '-'}
                     </td>
                     <td style={{ 
                       border: '1px solid #555', 
@@ -666,39 +694,39 @@ const ScoringEngineTest: React.FC = () => {
                     }}>
                       {selectedScoringMethod === 'stroke_play' && entry.details && (
                         <div>
-                          <div>{entry.details.holesPlayed} holes played</div>
+                          <div>{(entry.details as unknown as StrokePlayDetails).holesPlayed} holes played</div>
                           <div style={{ color: '#7f7', marginTop: '4px' }}>
                             Personal Par: {personalPar}
                           </div>
-                          {entry.details.netScore !== entry.details.grossScore && (
+                          {(entry.details as unknown as StrokePlayDetails).netScore !== (entry.details as unknown as StrokePlayDetails).grossScore && (
                             <div style={{ color: '#4a9eff', marginTop: '4px' }}>
-                              Net Score: {entry.details.netScore}
+                              Net Score: {(entry.details as unknown as StrokePlayDetails).netScore}
                             </div>
                           )}
                         </div>
                       )}
                     {selectedScoringMethod === 'stableford' && entry.details && (
                       <div>
-                        {entry.details.holesPlayed} holes played
+                        {(entry.details as unknown as StablefordDetails).holesPlayed} holes played
                         <div style={{ marginTop: '4px' }}>
-                          Gross: {entry.details.grossScore}
+                          Gross: {(entry.details as unknown as StablefordDetails).grossScore}
                         </div>
                       </div>
                     )}
                     {selectedScoringMethod === 'match_play' && entry.details && (
                       <div>
-                        {entry.details.record ? (
+                        {(entry.details as unknown as MatchPlayDetails).record ? (
                           <>
-                            Record: {entry.details.record}
+                            Record: {(entry.details as unknown as MatchPlayDetails).record}
                             <div style={{ marginTop: '4px', color: '#4a9eff' }}>
-                              Status: {entry.details.matchStatus || 'In Progress'}
+                              Status: {(entry.details as unknown as MatchPlayDetails).matchStatus || 'In Progress'}
                             </div>
                           </>
                         ) : (
                           <>
-                            <div>W:{entry.details.holesWon} L:{entry.details.holesLost} T:{entry.details.holesTied}</div>
+                            <div>W:{(entry.details as unknown as MatchPlayDetails).holesWon} L:{(entry.details as unknown as MatchPlayDetails).holesLost} T:{(entry.details as unknown as MatchPlayDetails).holesTied}</div>
                             <div style={{ marginTop: '4px', color: '#4a9eff' }}>
-                              {entry.details.matchStatus}
+                              {(entry.details as unknown as MatchPlayDetails).matchStatus}
                             </div>
                           </>
                         )}
@@ -706,14 +734,14 @@ const ScoringEngineTest: React.FC = () => {
                     )}
                     {selectedScoringMethod === 'skins' && entry.details && (
                       <div>
-                        {entry.details.holesWon?.length > 0 ? (
+                        {(entry.details as unknown as SkinDetails).holesWon?.length > 0 ? (
                           <>
-                            Won holes: {entry.details.holesWon.join(', ')}
-                            {entry.details.skinValues && entry.details.skinValues.some(sv => sv.value > 1) && (
+                            Won holes: {(entry.details as unknown as SkinDetails).holesWon.join(', ')}
+                            {(entry.details as unknown as SkinDetails).skinValues && (entry.details as unknown as SkinDetails).skinValues.some((sv) => sv.value > 1) && (
                               <div style={{ marginTop: '4px', color: '#ffd700' }}>
-                                Carryovers: {entry.details.skinValues
-                                  .filter(sv => sv.value > 1)
-                                  .map(sv => `#${sv.hole}(${sv.value})`)
+                                Carryovers: {(entry.details as unknown as SkinDetails).skinValues
+                                  .filter((sv) => sv.value > 1)
+                                  .map((sv) => `#${sv.hole}(${sv.value})`)
                                   .join(', ')}
                               </div>
                             )}

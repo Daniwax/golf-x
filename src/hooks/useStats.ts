@@ -32,7 +32,7 @@ export function useHoleStats(
     setError(null);
 
     try {
-      const stats = await dataService.stats.getHoleStats(targetUserId, holeNumber);
+      const stats = await dataService.stats.getUserHoleStats(targetUserId, holeNumber);
       setData(stats);
     } catch (err) {
       console.error('Error fetching hole stats:', err);
@@ -78,7 +78,7 @@ export function useParPerformance(userId?: string): UseDataResult<ParPerformance
     setError(null);
 
     try {
-      const performance = await dataService.stats.getParPerformance(targetUserId);
+      const performance = await dataService.stats.getUserParPerformance(targetUserId);
       setData(performance);
     } catch (err) {
       console.error('Error fetching par performance:', err);

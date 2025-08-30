@@ -25,8 +25,8 @@ import { gameService } from '../services/gameService';
 import type { TeeBox, CreateGameData } from '../types';
 import { MatchHandicapEngine } from '../engines/MatchHandicapEngine';
 import { PMPEngine } from '../engines/PMPEngine';
-import type { Player as EnginePlayer, HandicapContext, MatchHandicapResult } from '../engines/MatchHandicapEngine';
-import type { Hole as EngineHole, PlayerMatchPar } from '../engines/PMPEngine';
+import type { Player as EnginePlayer, HandicapContext, MatchHandicapResult, Hole as EngineHole } from '../engines/MatchHandicapEngine';
+import type { PlayerMatchPar } from '../engines/PMPEngine';
 
 interface LocationState {
   gameData: {
@@ -267,9 +267,7 @@ const GameSummary: React.FC = () => {
       // Use new engine-aware game creation method
       const game = await gameService.createGameWithEngines(
         gameConfig, 
-        matchHandicapResults, 
-        pmpResults,
-        holes
+        matchHandicapResults
       );
       
       // Navigate to live game
@@ -622,12 +620,6 @@ Time: ${debugInfo.timestamp}
         </IonCard>
         
         {/* Stroke Distribution Table - Show for all games except scratch */}
-        {console.log('Show hole table?', {
-          handicapType: gameData.handicapType,
-          scoringMethod: gameData.scoringMethod, 
-          holesLength: holes.length,
-          shouldShow: (gameData.handicapType !== 'none' || gameData.scoringMethod === 'match_play') && holes.length > 0
-        })}
         {(gameData.handicapType !== 'none' || gameData.scoringMethod === 'match_play') && holes.length > 0 && (
           <>
             <div style={{ 

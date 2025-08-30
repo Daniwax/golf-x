@@ -446,7 +446,6 @@ const LiveGame: React.FC = () => {
               participants={participants}
               scores={scores}
               game={game}
-              currentHole={currentHole}
             />
           )}
 
@@ -456,7 +455,12 @@ const LiveGame: React.FC = () => {
               participants={participants}
               scores={scores}
               currentHole={currentHole}
-              game={game}
+              game={{
+                id: game.id,
+                course_id: game.course_id.toString(),
+                status: game.status,
+                num_holes: game.num_holes
+              }}
               onHoleChange={setCurrentHole}
               onScoreUpdate={handleSaveSuccess}
               onGameComplete={() => {

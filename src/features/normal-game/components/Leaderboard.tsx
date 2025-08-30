@@ -246,19 +246,19 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                                   `${scoreDiff}`;
                 
                 // Get display score based on scoring method
-                let displayScore;
+                let displayScore: React.ReactNode;
                 if (game.scoring_method === 'stroke_play') {
                   // For stroke play, show the score vs par
-                  displayScore = entry.details?.scoreVsPar || scoreVsPar;
+                  displayScore = (entry.details?.scoreVsPar as string | number) || scoreVsPar;
                 } else if (game.scoring_method === 'stableford') {
                   // For stableford, show total points
-                  displayScore = entry.details?.totalPoints || entry.score;
+                  displayScore = (entry.details?.totalPoints as number) || entry.score;
                 } else if (game.scoring_method === 'match_play') {
                   // For match play, show total points
-                  displayScore = entry.details?.totalPoints || entry.score;
+                  displayScore = (entry.details?.totalPoints as number) || entry.score;
                 } else if (game.scoring_method === 'skins') {
                   // For skins, show skins won
-                  displayScore = entry.details?.skinsWon || entry.score;
+                  displayScore = (entry.details?.skinsWon as number) || entry.score;
                 } else {
                   displayScore = entry.score;
                 }
@@ -297,8 +297,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                           )}
                           {game.scoring_method === 'skins' && entry.details && (
                             <>
-                              {entry.details.holesWon && entry.details.holesWon.length > 0 ? 
-                                `Won holes: ${entry.details.holesWon.join(', ')}` : 
+                              {Array.isArray(entry.details.holesWon) && entry.details.holesWon.length > 0 ? 
+                                `Won holes: ${(entry.details.holesWon as number[]).join(', ')}` : 
                                 'No holes won yet'
                               }
                             </>
@@ -314,7 +314,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                     
                     {/* Strokes */}
                     <td style={{ ...tableStyles.td, fontSize: '14px', fontWeight: '600' }}>
-                      {totalStrokes || entry.details?.grossScore || '-'}
+                      {totalStrokes || (entry.details?.grossScore as number) || '-'}
                     </td>
                     
                     {/* vs Par */}
@@ -356,32 +356,32 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                       {/* Scoring method specific details */}
                       {game.scoring_method === 'stroke_play' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
-                          <div>Holes: {entry.details.holesPlayed}</div>
-                          <div>Net: {entry.details.netScore}</div>
+                          <div>Holes: {entry.details.holesPlayed as number}</div>
+                          <div>Net: {entry.details.netScore as number}</div>
                         </div>
                       )}
                       
                       {game.scoring_method === 'stableford' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
-                          <div>Holes: {entry.details.holesPlayed}</div>
-                          <div>Gross: {entry.details.grossScore}</div>
+                          <div>Holes: {entry.details.holesPlayed as number}</div>
+                          <div>Gross: {entry.details.grossScore as number}</div>
                         </div>
                       )}
                       
                       {game.scoring_method === 'match_play' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
                           {entry.details.record ? (
-                            <div>Record: {entry.details.record}</div>
+                            <div>Record: {entry.details.record as string}</div>
                           ) : (
-                            <div>W:{entry.details.holesWon} L:{entry.details.holesLost} T:{entry.details.holesTied}</div>
+                            <div>W:{entry.details.holesWon as number} L:{entry.details.holesLost as number} T:{entry.details.holesTied as number}</div>
                           )}
                         </div>
                       )}
                       
                       {game.scoring_method === 'skins' && entry.details && (
                         <div style={{ color: 'var(--ion-color-medium)' }}>
-                          {entry.details.holesWon?.length > 0 ? (
-                            <div>Won: {entry.details.holesWon.join(', ')}</div>
+                          {Array.isArray(entry.details.holesWon) && entry.details.holesWon.length > 0 ? (
+                            <div>Won: {(entry.details.holesWon as number[]).join(', ')}</div>
                           ) : (
                             <div>No holes won</div>
                           )}

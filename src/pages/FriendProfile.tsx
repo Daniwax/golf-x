@@ -65,6 +65,15 @@ interface RecentGame {
   result: 'won' | 'lost' | 'tied';
 }
 
+interface GameWithCourse {
+  games: {
+    golf_courses: {
+      name: string;
+    };
+    created_at: string;
+  };
+}
+
 const FriendProfile: React.FC = () => {
   const { id } = useParams<RouteParams>();
   const history = useHistory();
@@ -86,6 +95,7 @@ const FriendProfile: React.FC = () => {
     setLoading(true);
     try {
       // Get current user ID
+      if (!supabase) throw new Error('Supabase not initialized');
       const { data: { user } } = await supabase.auth.getUser();
 
       // Load friend profile
@@ -210,14 +220,15 @@ const FriendProfile: React.FC = () => {
       // Get unique courses
       const coursesSet = new Set<string>();
       friendGames.forEach(g => {
-        if (g.games?.golf_courses?.name) {
-          coursesSet.add(g.games.golf_courses.name);
+        const gameData = g as GameWithCourse;
+        if (gameData.games?.golf_courses?.name) {
+          coursesSet.add(gameData.games.golf_courses.name);
         }
       });
 
       // Get last played date
       const lastGame = friendGames
-        .sort((a, b) => new Date(b.games.created_at).getTime() - new Date(a.games.created_at).getTime())[0];
+        .sort((a, b) => new Date((b as GameWithCourse).games.created_at).getTime() - new Date((a as GameWithCourse).games.created_at).getTime())[0];
 
       // Get recent scores (last 5)
       const recentScores = scores.slice(-5);
@@ -227,7 +238,7 @@ const FriendProfile: React.FC = () => {
         gamesWithFriend: friendGames.length,
         bestScore,
         averageScore,
-        lastPlayed: lastGame?.games.created_at || null,
+        lastPlayed: (lastGame as GameWithCourse | undefined)?.games?.created_at || null,
         winRate,
         coursesPlayed: Array.from(coursesSet),
         recentScores
@@ -279,10 +290,11 @@ const FriendProfile: React.FC = () => {
           if (userGame.total_strokes < friendGame.total_strokes) result = 'won';
           else if (userGame.total_strokes > friendGame.total_strokes) result = 'lost';
 
+          const userGameData = userGame as GameWithCourse;
           recent.push({
             id: userGame.game_id,
-            course_name: userGame.games?.golf_courses?.name || 'Unknown Course',
-            played_at: userGame.games?.created_at || '',
+            course_name: userGameData.games?.golf_courses?.name || 'Unknown Course',
+            played_at: userGameData.games?.created_at || '',
             my_score: userGame.total_strokes,
             friend_score: friendGame.total_strokes,
             result
@@ -418,7 +430,7 @@ const FriendProfile: React.FC = () => {
             <IonAvatar className="profile-avatar">
               {(friend.custom_avatar_url || friend.avatar_url) ? (
                 <img 
-                  src={friend.custom_avatar_url || friend.avatar_url} 
+                  src={friend.custom_avatar_url || friend.avatar_url || undefined} 
                   alt={friend.full_name || 'Friend'}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';

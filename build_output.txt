@@ -1,0 +1,60 @@
+
+> golf-app@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v7.1.3 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 3268 modules transformed.
+rendering chunks...
+[33m[plugin vite:reporter] 
+(!) D:/projects/repositories/golf-x/src/lib/supabase.ts is dynamically imported by D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts, D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts but also statically imported by D:/projects/repositories/golf-x/src/App.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/GameSummary.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/HoleEntry.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/Leaderboard.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/PlayerConfiguration.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/ScorecardMobile.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/ViewCompletedGame.tsx, D:/projects/repositories/golf-x/src/features/normal-game/services/gameService.ts, D:/projects/repositories/golf-x/src/features/normal-game/services/holeStatsService.ts, D:/projects/repositories/golf-x/src/features/normal-game/services/profileGameService.ts, D:/projects/repositories/golf-x/src/features/profile/services/avatarService.ts, D:/projects/repositories/golf-x/src/lib/friends.ts, D:/projects/repositories/golf-x/src/lib/useAuth.ts, D:/projects/repositories/golf-x/src/pages/FriendProfile.tsx, D:/projects/repositories/golf-x/src/services/data/CourseDataService.ts, D:/projects/repositories/golf-x/src/services/data/GameDataService.ts, D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts, D:/projects/repositories/golf-x/src/services/data/StatsDataService.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) D:/projects/repositories/golf-x/src/services/data/DataService.ts is dynamically imported by D:/projects/repositories/golf-x/src/features/normal-game/engines/PMPEngine.ts but also statically imported by D:/projects/repositories/golf-x/src/features/normal-game/components/CreateGameCustom.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/GhostConfig.tsx, D:/projects/repositories/golf-x/src/features/normal-game/engines/MatchHandicapEngine.ts, D:/projects/repositories/golf-x/src/hooks/useCourses.ts, D:/projects/repositories/golf-x/src/hooks/useFriends.ts, D:/projects/repositories/golf-x/src/hooks/useHoleStats.ts, D:/projects/repositories/golf-x/src/hooks/useLiveGames.ts, D:/projects/repositories/golf-x/src/hooks/useProfile.ts, D:/projects/repositories/golf-x/src/pages/MatchHistory.tsx, D:/projects/repositories/golf-x/src/pages/courses/CourseDetail.tsx, D:/projects/repositories/golf-x/src/pages/test/HandicapEngineTest.tsx, D:/projects/repositories/golf-x/src/pages/test/ScoringEngineTest.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) D:/projects/repositories/golf-x/src/features/profile/services/avatarService.ts is dynamically imported by D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts but also statically imported by D:/projects/repositories/golf-x/src/features/profile/components/AvatarUpload.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) D:/projects/repositories/golf-x/src/lib/friends.ts is dynamically imported by D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts, D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts, D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts, D:/projects/repositories/golf-x/src/services/data/ProfileDataService.ts but also statically imported by D:/projects/repositories/golf-x/src/features/normal-game/components/AddParticipants.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/GhostConfig.tsx, D:/projects/repositories/golf-x/src/pages/FriendProfile.tsx, D:/projects/repositories/golf-x/src/pages/Friends.tsx, D:/projects/repositories/golf-x/src/pages/test/HandicapEngineTest.tsx, D:/projects/repositories/golf-x/src/pages/test/ScoringEngineTest.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) D:/projects/repositories/golf-x/src/features/normal-game/services/gameService.ts is dynamically imported by D:/projects/repositories/golf-x/src/hooks/useLiveGames.ts, D:/projects/repositories/golf-x/src/services/data/GameDataService.ts but also statically imported by D:/projects/repositories/golf-x/src/features/normal-game/components/CourseSelector.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/GameSummary.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/HoleEntry.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/LiveGame.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/TeeSelector.tsx, D:/projects/repositories/golf-x/src/features/normal-game/components/ViewCompletedGame.tsx, dynamic import will not move module into another chunk.
+[39m
+computing gzip size...
+[2mdist/[22m[32mregisterSW.js                          [39m[1m[2m    0.13 kB[22m[1m[22m
+[2mdist/[22m[32mmanifest.webmanifest                   [39m[1m[2m    0.42 kB[22m[1m[22m
+[2mdist/[22m[32mindex.html                             [39m[1m[2m    1.02 kB[22m[1m[22m[2m │ gzip:   0.48 kB[22m
+[2mdist/[22m[35massets/index-D4r-ee7J.css              [39m[1m[2m   81.70 kB[22m[1m[22m[2m │ gzip:  14.01 kB[22m
+[2mdist/[22m[36massets/status-tap-ayengMBM.js          [39m[1m[2m    0.48 kB[22m[1m[22m[2m │ gzip:   0.34 kB[22m
+[2mdist/[22m[36massets/swipe-back-ytR6Q0Uo.js          [39m[1m[2m    0.68 kB[22m[1m[22m[2m │ gzip:   0.48 kB[22m
+[2mdist/[22m[36massets/focus-visible-supuXXMI.js       [39m[1m[2m    0.99 kB[22m[1m[22m[2m │ gzip:   0.51 kB[22m
+[2mdist/[22m[36massets/md.transition-BnQLMiUp.js       [39m[1m[2m    1.02 kB[22m[1m[22m[2m │ gzip:   0.56 kB[22m
+[2mdist/[22m[36massets/index7-aE2lcB7G.js              [39m[1m[2m    1.63 kB[22m[1m[22m[2m │ gzip:   0.84 kB[22m
+[2mdist/[22m[36massets/input-shims-CumZWCZR.js         [39m[1m[2m    4.97 kB[22m[1m[22m[2m │ gzip:   2.13 kB[22m
+[2mdist/[22m[36massets/profileGameService-CX6kiDiX.js  [39m[1m[2m    6.74 kB[22m[1m[22m[2m │ gzip:   1.81 kB[22m
+[2mdist/[22m[36massets/ios.transition-BLmTfAYX.js      [39m[1m[2m   10.45 kB[22m[1m[22m[2m │ gzip:   3.07 kB[22m
+[2mdist/[22m[36massets/index-BBD-0ApF.js               [39m[1m[33m2,180.71 kB[39m[22m[2m │ gzip: 543.57 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 4.42s[39m
+[31merror during build:
+Error: 
+  Configure "workbox.maximumFileSizeToCacheInBytes" to change the limit: the default value is 2 MiB.
+  Check https://vite-pwa-org.netlify.app/guide/faq.html#missing-assets-from-sw-precache-manifest for more information.
+  Assets exceeding the limit:
+  - assets/index-BBD-0ApF.js is 2.18 MB, and won't be precached.
+
+    at logWorkboxResult (file:///D:/projects/repositories/golf-x/node_modules/vite-plugin-pwa/dist/chunk-G4TAN34B.js:44:13)
+    at generateServiceWorker (file:///D:/projects/repositories/golf-x/node_modules/vite-plugin-pwa/dist/index.js:209:3)
+    at async _generateSW (file:///D:/projects/repositories/golf-x/node_modules/vite-plugin-pwa/dist/index.js:234:5)
+    at async Object.handler (file:///D:/projects/repositories/golf-x/node_modules/vite-plugin-pwa/dist/index.js:425:13)
+    at async PluginDriver.hookParallel (file:///D:/projects/repositories/golf-x/node_modules/rollup/dist/es/shared/node-entry.js:22299:17)
+    at async Object.close (file:///D:/projects/repositories/golf-x/node_modules/rollup/dist/es/shared/node-entry.js:23315:13)
+    at async buildEnvironment (file:///D:/projects/repositories/golf-x/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:34148:15)
+    at async Object.build (file:///D:/projects/repositories/golf-x/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:34504:19)
+    at async Object.buildApp (file:///D:/projects/repositories/golf-x/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:34501:153)
+    at async CAC.<anonymous> (file:///D:/projects/repositories/golf-x/node_modules/vite/dist/node/cli.js:649:3)[39m

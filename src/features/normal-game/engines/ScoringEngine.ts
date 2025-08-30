@@ -43,6 +43,24 @@ export interface LeaderboardEntry {
 
 export type ScoringMethod = 'stroke_play' | 'stableford' | 'match_play' | 'skins';
 
+interface SkinHoleDetail {
+  hole: number;
+  carryOverBefore: number;
+  skinValue: number;
+  par: number;
+  scores: Array<{
+    player: string;
+    strokes: number;
+    netStrokes: number;
+    scoreVsPar: number;
+    display: string;
+  }>;
+  bestScoreVsPar: number;
+  winnersCount: number;
+  result: string;
+  carryOverAfter: number;
+}
+
 export class ScoringEngine {
   /**
    * Main entry point - calculates leaderboard based on scoring method
@@ -87,7 +105,13 @@ export class ScoringEngine {
   /**
    * Get metadata for a scoring method
    */
-  private static getScoringMetadata(scoringMethod: ScoringMethod) {
+  private static getScoringMetadata(scoringMethod: ScoringMethod): {
+    scoringMethod: ScoringMethod;
+    scoringName: string;
+    sortDirection: 'asc' | 'desc';
+    sortDescription: string;
+    scoringDetails: string;
+  } {
     switch (scoringMethod) {
       case 'stroke_play':
         return {
@@ -348,7 +372,6 @@ export class ScoringEngine {
         holeDetails.push({
           hole: hole.holeNumber,
           strokes: hole.strokes,
-          netStrokes: strokes,
           par: hole.par,
           points
         });
@@ -566,7 +589,7 @@ export class ScoringEngine {
       if (pointsDiff !== 0) return pointsDiff;
       
       // Tiebreaker 1: Most outright holes won (not shared)
-      const holesDiff = (b.details.holesWon || 0) - (a.details.holesWon || 0);
+      const holesDiff = ((b.details?.holesWon as number) || 0) - ((a.details?.holesWon as number) || 0);
       if (holesDiff !== 0) return holesDiff;
       
       // Tiebreaker 2: Fewest total strokes
@@ -594,7 +617,7 @@ export class ScoringEngine {
   ): LeaderboardEntry[] {
     const skinWins = new Map<string, number[]>();
     const skinValues = new Map<number, number>(); // Hole number -> skin value
-    const holeDetails: Array<{ hole: number; winner: string | null; strokes: Map<string, number>; value: number }> = []; // Track each hole's calculation for debugging
+    const holeDetails: SkinHoleDetail[] = []; // Track each hole's calculation for debugging
     
     // Initialize
     scorecards.forEach(card => {
@@ -686,7 +709,7 @@ export class ScoringEngine {
         holeDetail.carryOverAfter = carryOver;
       }
       
-      holeDetails.push(holeDetail);
+      holeDetails.push(holeDetail); // Properly typed hole detail structure
       console.log(`[Skins] Hole ${holeNumber}: ${holeDetail.result} (carryover: ${holeDetail.carryOverBefore} → ${holeDetail.carryOverAfter})`);
     }
     
