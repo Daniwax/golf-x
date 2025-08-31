@@ -122,7 +122,7 @@ const PlayerConfiguration: React.FC = () => {
           .eq('course_id', gameData.courseId)
           .order('display_order'),
         supabase.from('profiles')
-          .select('id, full_name, email, avatar_url, handicap')
+          .select('id, full_name, email, avatar_url, custom_avatar_url, handicap')
           .in('id', participants)
       ]);
       
@@ -161,7 +161,7 @@ const PlayerConfiguration: React.FC = () => {
           userId: profile.id,
           fullName: profile.full_name || 'Player',
           email: profile.email,
-          avatarUrl: profile.avatar_url,
+          avatarUrl: profile.custom_avatar_url || profile.avatar_url,
           handicapIndex,
           teeBoxId: defaultTee.id,
           teeBox: {
@@ -1044,44 +1044,74 @@ const PlayerConfiguration: React.FC = () => {
             maxWidth: '360px'
           }}>
             {!isFirstPlayer && (
-              <IonButton
-                expand="block"
-                fill="outline"
+              <button
+                className="golf-button-secondary"
                 onClick={handlePreviousPlayer}
                 style={{ 
                   flex: 1,
-                  height: '42px'
+                  height: '48px',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  border: '1px solid #2a5434',
+                  backgroundColor: 'transparent',
+                  color: '#2a5434',
+                  borderRadius: '8px',
+                  padding: '0 16px',
+                  cursor: 'pointer'
                 }}
               >
-                <IonIcon icon={chevronBackOutline} slot="start" />
+                <IonIcon icon={chevronBackOutline} style={{ fontSize: '18px' }} />
                 Previous
-              </IonButton>
+              </button>
             )}
             
             {!isLastPlayer ? (
-              <IonButton
-                expand="block"
+              <button
+                className="golf-button-primary"
                 onClick={handleNextPlayer}
                 style={{ 
                   flex: 1,
-                  height: '42px'
+                  height: '48px',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  backgroundColor: '#2a5434',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '0 16px',
+                  cursor: 'pointer',
+                  border: 'none'
                 }}
               >
                 Next Player
-                <IonIcon icon={chevronForwardOutline} slot="end" />
-              </IonButton>
+                <IonIcon icon={chevronForwardOutline} style={{ fontSize: '18px' }} />
+              </button>
             ) : (
-              <IonButton
-                expand="block"
+              <button
+                className="golf-button-primary"
                 onClick={handleProceedToSummary}
                 style={{ 
                   flex: 1,
-                  height: '42px'
+                  height: '48px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  letterSpacing: '0.5px',
+                  backgroundColor: '#2a5434',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '0 16px',
+                  cursor: 'pointer',
+                  border: 'none',
+                  textTransform: 'uppercase'
                 }}
-                color="success"
               >
                 Review & Start Game
-              </IonButton>
+              </button>
             )}
           </div>
         </div>

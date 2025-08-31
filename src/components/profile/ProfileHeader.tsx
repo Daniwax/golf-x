@@ -62,23 +62,33 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   };
 
   return (
-    <IonCard style={{ 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      borderRadius: '0px',
-      margin: '0 0 16px 0',
-      boxShadow: 'none',
-      position: 'relative',
-      overflow: 'hidden'
+    <div className="golf-letter-card" style={{ 
+      margin: '16px',
+      position: 'relative'
     }}>
-      <IonCardContent style={{ 
+      {/* Green Header Bar */}
+      <div className="golf-header-bar"></div>
+      
+      {/* Date in corner */}
+      <div className="golf-date-corner">
+        Est. {new Date().getFullYear()}
+      </div>
+      
+      <div style={{ 
         textAlign: 'center', 
         paddingTop: '20px', 
         paddingBottom: '16px',
-        paddingLeft: '20px',
-        paddingRight: '20px',
         position: 'relative'
       }}>
+        {/* Golf X Card Title */}
+        <h2 className="golf-letter-heading" style={{ marginBottom: '4px' }}>
+          GOLF X
+        </h2>
+        <div className="golf-signature-line"></div>
+        <p className="golf-subheading" style={{ marginBottom: '20px' }}>
+          Official Member Card
+        </p>
+
         {/* Edit/Cancel Button */}
         {!isEditing ? (
           <IonButton
@@ -86,13 +96,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             onClick={() => onEditToggle(true)}
             style={{ 
               position: 'absolute',
-              top: '12px',
-              right: '12px',
-              '--color': 'rgba(255,255,255,0.9)',
-              zIndex: 10
+              top: '40px',
+              right: '20px',
+              '--color': 'var(--golf-green)',
+              zIndex: 10,
+              fontSize: '12px'
             }}
           >
-            <IonIcon icon={createOutline} />
+            <IonIcon icon={createOutline} style={{ fontSize: '18px' }} />
           </IonButton>
         ) : (
           <IonButton
@@ -100,35 +111,16 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             onClick={() => onEditToggle(false)}
             style={{ 
               position: 'absolute',
-              top: '12px',
-              right: '12px',
-              '--color': 'rgba(255,255,255,0.8)',
-              zIndex: 10
+              top: '40px',
+              right: '20px',
+              '--color': 'var(--golf-brown)',
+              zIndex: 10,
+              fontSize: '12px'
             }}
           >
             Cancel
           </IonButton>
         )}
-
-        {/* Decorative elements */}
-        <div style={{
-          position: 'absolute',
-          top: '-20px',
-          right: '-20px',
-          width: '80px',
-          height: '80px',
-          background: 'rgba(255,255,255,0.08)',
-          borderRadius: '50%'
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '-15px',
-          left: '-15px',
-          width: '50px',
-          height: '50px',
-          background: 'rgba(255,255,255,0.06)',
-          borderRadius: '50%'
-        }} />
 
         {/* Avatar */}
         <div style={{ 
@@ -170,10 +162,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             handicap={handicap}
             gameStats={gameStats}
             statsLoading={statsLoading}
+            profile={profile}
           />
         )}
-      </IonCardContent>
-    </IonCard>
+      </div>
+    </div>
   );
 };
 
@@ -188,28 +181,24 @@ const EditForm: React.FC<{
   onSave: () => void;
   loading: boolean;
 }> = ({ nickname, bio, handicap, onNicknameChange, onBioChange, onHandicapChange, onSave, loading }) => (
-  <div style={{ 
-    background: 'rgba(255,255,255,0.95)', 
-    borderRadius: '12px', 
-    padding: '20px',
+  <div className="golf-card" style={{ 
     marginTop: '16px',
-    backdropFilter: 'blur(10px)',
-    color: '#333'
+    border: '1px solid var(--golf-tan-border)'
   }}>
     <IonItem style={{ '--background': 'transparent', '--border-style': 'none', '--padding-start': '0', '--padding-end': '0', marginBottom: '12px' }}>
-      <IonLabel position="stacked" style={{ color: '#333', fontWeight: '600', marginBottom: '8px', fontSize: '16px' }}>
+      <IonLabel position="stacked" className="golf-section-header" style={{ marginBottom: '8px' }}>
         Nickname
       </IonLabel>
       <IonInput
         value={nickname}
         placeholder="What should we call you?"
         onIonInput={(e) => onNicknameChange(e.detail.value!)}
-        style={{ '--color': '#333', '--placeholder-color': '#999', fontSize: '18px' }}
+        style={{ '--color': 'var(--golf-green)', '--placeholder-color': 'var(--golf-brown)', fontSize: '18px', fontFamily: 'Georgia, serif' }}
       />
     </IonItem>
     
     <IonItem style={{ '--background': 'transparent', '--border-style': 'none', '--padding-start': '0', '--padding-end': '0', marginBottom: '12px' }}>
-      <IonLabel position="stacked" style={{ color: '#333', fontWeight: '600', marginBottom: '8px', fontSize: '16px' }}>
+      <IonLabel position="stacked" className="golf-section-header" style={{ marginBottom: '8px' }}>
         Description
       </IonLabel>
       <IonTextarea
@@ -218,20 +207,22 @@ const EditForm: React.FC<{
         rows={3}
         onIonInput={(e) => onBioChange(e.detail.value!)}
         style={{ 
-          '--color': '#333', 
-          '--placeholder-color': '#999',
+          '--color': 'var(--golf-green)', 
+          '--placeholder-color': 'var(--golf-brown)',
           minHeight: '80px',
-          background: 'rgba(0,0,0,0.05)',
+          background: 'var(--golf-cream)',
           borderRadius: '8px',
           padding: '10px',
-          fontSize: '16px'
+          fontSize: '14px',
+          fontFamily: 'serif',
+          border: '1px solid var(--golf-tan-border)'
         }}
       />
     </IonItem>
     
     <IonItem style={{ '--background': 'transparent', '--border-style': 'none', '--padding-start': '0', '--padding-end': '0', marginBottom: '20px' }}>
-      <IonLabel position="stacked" style={{ color: '#333', fontWeight: '700', fontSize: '18px', marginBottom: '12px' }}>
-        Current Handicap: <span style={{ fontSize: '28px', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#667eea' }}>
+      <IonLabel position="stacked" className="golf-section-header" style={{ marginBottom: '12px' }}>
+        Current Handicap: <span className="golf-score-net" style={{ fontSize: '28px' }}>
           {handicap.toFixed(1)}
         </span>
       </IonLabel>
@@ -243,26 +234,22 @@ const EditForm: React.FC<{
         snaps={true}
         pin={true}
         onIonInput={(e) => onHandicapChange(e.detail.value as number)}
-        style={{ '--bar-background': 'rgba(0,0,0,0.1)', '--bar-background-active': '#667eea', '--pin-background': '#667eea', '--knob-background': '#667eea' }}
+        style={{ '--bar-background': 'var(--golf-tan-border)', '--bar-background-active': 'var(--golf-green)', '--pin-background': 'var(--golf-green)', '--knob-background': 'var(--golf-green)' }}
       />
     </IonItem>
     
-    <IonButton
-      expand="block"
-      fill="solid"
+    <button
+      className="golf-button-primary"
       onClick={onSave}
       disabled={loading}
       style={{ 
-        '--background': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        '--color': 'white',
-        '--border-radius': '12px',
-        fontWeight: '600',
-        height: '52px',
-        fontSize: '18px'
+        width: '100%',
+        height: '48px',
+        fontSize: '14px'
       }}
     >
-      {loading ? <IonSpinner name="crescent" /> : 'Save Profile'}
-    </IonButton>
+      {loading ? <IonSpinner name="crescent" /> : 'SAVE PROFILE'}
+    </button>
   </div>
 );
 
@@ -274,66 +261,69 @@ const ProfileDisplay: React.FC<{
   handicap: number;
   gameStats: GameStats;
   statsLoading: boolean;
-}> = ({ nickname, email, bio, handicap, gameStats, statsLoading }) => (
+  profile: Profile | null;
+}> = ({ nickname, email, bio, handicap, gameStats, statsLoading, profile }) => (
   <>
-    <h1 style={{ 
-      margin: '0 0 8px 0', 
-      fontSize: '28px',
-      fontWeight: '700',
-      letterSpacing: '-0.5px'
+    {/* Signature Name */}
+    <div className="golf-signature" style={{ 
+      fontSize: '32px',
+      marginBottom: '8px',
+      color: 'var(--golf-green)'
     }}>
       {nickname || 'Golf Enthusiast'}
-    </h1>
-    <IonNote style={{ 
-      color: 'rgba(255,255,255,0.7)', 
-      fontSize: '14px',
+    </div>
+    <div className="golf-signature-line" style={{ marginBottom: '12px' }}></div>
+    
+    <IonNote className="golf-text-detail" style={{ 
       display: 'block',
-      marginBottom: '16px'
+      marginBottom: '16px',
+      fontSize: '11px'
     }}>
       {email}
     </IonNote>
-    <p style={{ 
+    
+    <p className="golf-text-detail" style={{ 
       margin: '0 0 20px 0', 
-      color: 'rgba(255,255,255,0.9)',
       lineHeight: '1.5',
-      fontSize: '15px'
+      fontSize: '13px',
+      fontStyle: 'italic'
     }}>
       {bio}
     </p>
 
-    {/* Golf Stats in Header */}
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-around',
-      background: 'rgba(255,255,255,0.15)',
-      borderRadius: '16px',
-      padding: '16px',
-      backdropFilter: 'blur(10px)'
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>
+    {/* Golf Stats in Professional Card Style */}
+    <div className="golf-divider-horizontal" style={{ margin: '20px 0' }}></div>
+    
+    <div className="golf-scores-container">
+      <div className="golf-score-block">
+        <div className="golf-score-label">Games Played</div>
+        <div className="golf-score-gross">
           {statsLoading ? '...' : (gameStats.totalGamesPlayed || 0)}
         </div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Rounds</div>
       </div>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>
+      
+      <div className="golf-divider-vertical"></div>
+      
+      <div className="golf-score-block">
+        <div className="golf-score-label">Handicap</div>
+        <div className="golf-score-net">
           {handicap.toFixed(1)}
         </div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Handicap</div>
       </div>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>
-          {statsLoading ? '...' : (gameStats.bestScore !== null ? gameStats.bestScore : '-')}
-        </div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Best</div>
-      </div>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>
-          {statsLoading ? '...' : (gameStats.averageScore !== null ? gameStats.averageScore.toFixed(1) : '-')}
-        </div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Average</div>
-      </div>
+    </div>
+    
+    {/* Signature Section */}
+    <div className="golf-signature-section" style={{ marginTop: '20px' }}>
+      <p className="golf-text-small" style={{ marginBottom: '8px' }}>Member Since</p>
+      <p className="golf-date">
+        {profile?.created_at ? 
+          new Date(profile.created_at).toLocaleDateString('en-US', { 
+            month: 'long', 
+            year: 'numeric' 
+          }) : 
+          `January ${new Date().getFullYear()}`
+        }
+      </p>
     </div>
   </>
 );

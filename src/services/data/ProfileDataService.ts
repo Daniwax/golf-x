@@ -33,6 +33,7 @@ export class ProfileDataService {
             bio,
             handicap,
             avatar_url,
+            custom_avatar_url,
             home_course,
             created_at,
             updated_at

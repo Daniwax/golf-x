@@ -221,7 +221,7 @@ const GhostConfig: React.FC = () => {
 
   useEffect(() => {
     if (!gameData) {
-      history.replace('/game/create-custom');
+      history.replace('/game/create');
       return;
     }
     loadInitialData();
@@ -271,7 +271,7 @@ const GhostConfig: React.FC = () => {
       <IonHeader>
         <IonToolbar style={{ '--background': '#f8f6f0', '--border-color': '#d4c4a0' }}>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/game/create-custom" style={{ color: '#2a5434' }} />
+            <IonBackButton defaultHref="/game/create" style={{ color: '#2a5434' }} />
           </IonButtons>
           <IonTitle style={{ color: '#2a5434', fontFamily: 'serif' }}>Ghost Challenge</IonTitle>
         </IonToolbar>
@@ -345,7 +345,7 @@ const GhostConfig: React.FC = () => {
                   >
                     <img 
                       className="golf-friend-avatar"
-                      src={friend.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.full_name || friend.email || 'Friend')}&background=2a5434&color=fff`} 
+                      src={friend.custom_avatar_url || friend.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.full_name || friend.email || 'Friend')}&background=2a5434&color=fff`} 
                       alt={friend.full_name || 'Friend'} 
                     />
                     <div className="golf-friend-name">
@@ -499,15 +499,17 @@ const GhostConfig: React.FC = () => {
           <button
             className="golf-button-primary"
             onClick={handleNext}
-            disabled={loading || (!selectedMatch && !isCurrentUserKing)}
+            disabled={true}  // Temporarily disabled
             style={{ 
               width: '100%',
               maxWidth: '400px',
               height: '56px',
-              fontSize: '14px'
+              fontSize: '14px',
+              opacity: '0.5',
+              cursor: 'not-allowed'
             }}
           >
-            {loading ? <IonSpinner name="crescent" /> : 'PROCEED TO CHALLENGE'}
+            {loading ? <IonSpinner name="crescent" /> : 'COMING SOON'}
           </button>
         </div>
       </IonContent>

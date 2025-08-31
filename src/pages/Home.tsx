@@ -2,8 +2,11 @@ import React, { useEffect } from 'react';
 import {
   IonContent,
   IonPage,
-  IonButton
+  IonButton,
+  IonRefresher,
+  IonRefresherContent
 } from '@ionic/react';
+import type { RefresherEventDetail } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import LiveMatchCard from '../features/normal-game/components/LiveMatchCard';
 import { useAuth } from '../lib/useAuth';
@@ -23,9 +26,38 @@ const Home: React.FC = () => {
     }
   }, [user?.id]);
 
+  const handleRefresh = (event: CustomEvent<RefresherEventDetail>) => {
+    // Reload the entire page to refresh all data
+    setTimeout(() => {
+      window.location.reload();
+      event.detail.complete();
+    }, 1000);
+  };
+
   return (
     <IonPage>
       <IonContent fullscreen>
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent
+            pullingIcon="chevron-down-circle-outline"
+            pullingText="Pull down to refresh"
+            refreshingSpinner="crescent"
+            refreshingText="Loading fresh data..."
+            style={{
+              '--ion-color-primary': '#2a5434',
+              '--ion-color-step-200': '#2a5434',
+              '--ion-color-step-250': '#2a5434',
+              '--ion-color-step-300': '#2a5434',
+              '--ion-color-step-350': '#2a5434',
+              '--ion-color-step-400': '#2a5434',
+              '--ion-color-step-450': '#2a5434',
+              '--ion-color-step-500': '#2a5434',
+              '--ion-color-step-550': '#2a5434',
+              '--ion-color-step-600': '#2a5434',
+              '--ion-text-color': '#2a5434'
+            }}
+          />
+        </IonRefresher>
         <div style={{
           height: '100%',
           display: 'flex',
@@ -56,7 +88,7 @@ const Home: React.FC = () => {
               <IonButton
                 expand="block"
                 size="default"
-                onClick={() => history.push('/game/create-custom')}
+                onClick={() => history.push('/game/create')}
                 style={{
                   height: '50px',
                   fontSize: '16px',

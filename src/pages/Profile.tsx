@@ -317,27 +317,6 @@ const Profile: React.FC = () => {
     <IonPage>
       <IonContent fullscreen>
         <div style={{ padding: '0' }}>
-          {/* Version indicator - small + in top corner */}
-          <div style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            backgroundColor: 'rgba(102, 126, 234, 0.9)',
-            color: 'white',
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            zIndex: 9999,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-          }}>
-            +
-          </div>
-          
           {/* Profile Header - Now a clean component */}
           <ProfileHeader
             profile={profile}

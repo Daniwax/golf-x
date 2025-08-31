@@ -83,7 +83,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           return {
             gameId: game.id,
             userId: participant.user_id,
-            playerName: participant.profiles?.full_name || 'Unknown',
+            playerName: participant.profiles?.full_name || 'Player',
             holes: holesToUse.map(hole => {
               const holeScore = participantScores.find(s => s.hole_number === hole.hole_number);
               // If handicap game, use player match par as the par for this player

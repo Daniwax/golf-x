@@ -77,7 +77,10 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
         return {
           gameId: participant.game_id || '',
           userId: participant.user_id,
-          playerName: participant.user_profile?.full_name || participant.profiles?.full_name || 'Unknown',
+          playerName: participant.user_profile?.full_name || 
+                     participant.profiles?.full_name || 
+                     (participant as any).profile?.full_name ||
+                     'Player',
           holes: holes.map(hole => {
             const holeScore = participantScores.find(s => s.hole_number === hole.hole_number);
             // If handicap game, use player match par as the par for this player

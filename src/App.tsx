@@ -31,7 +31,6 @@ import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
 
 // Import Normal Game components
-import CreateGame from './features/normal-game/components/CreateGame';
 import CreateGameCustom from './features/normal-game/components/CreateGameCustom';
 import GhostConfig from './features/normal-game/components/GhostConfig';
 import AddParticipants from './features/normal-game/components/AddParticipants';
@@ -103,8 +102,7 @@ const AppWithTabs: React.FC = () => {
         <Route exact path="/friend/:id" component={FriendProfile} />
         
         {/* Normal Game Routes */}
-        <Route exact path="/game/create" component={CreateGame} />
-        <Route exact path="/game/create-custom" component={CreateGameCustom} />
+        <Route exact path="/game/create" component={CreateGameCustom} />
         <Route exact path="/game/ghost-config" component={GhostConfig} />
         <Route exact path="/game/add-participants" component={AddParticipants} />
         <Route exact path="/game/configure-players" component={PlayerConfiguration} />

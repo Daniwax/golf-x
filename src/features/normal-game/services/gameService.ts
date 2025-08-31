@@ -519,7 +519,7 @@ class GameService {
         const [profileResult, teeBoxResult] = await Promise.all([
           supabase
             .from('profiles')
-            .select('full_name')
+            .select('id, full_name, email')
             .eq('id', participant.user_id)
             .single(),
           participant.tee_box_id ? supabase
@@ -529,9 +529,19 @@ class GameService {
             .single() : Promise.resolve({ data: null })
         ]);
         
+        // Log for debugging
+        if (!profileResult.data || !profileResult.data.full_name) {
+          console.warn(`Profile not found or missing name for user ${participant.user_id}:`, profileResult);
+        }
+        
         return {
           ...participant,
-          profiles: profileResult.data ? { full_name: profileResult.data.full_name } : { full_name: 'Unknown' },
+          profiles: profileResult.data ? { 
+            id: profileResult.data.id,
+            full_name: profileResult.data.full_name || profileResult.data.email?.split('@')[0] || 'Player' 
+          } : { 
+            full_name: 'Player' 
+          },
           tee_boxes: teeBoxResult.data ? { name: teeBoxResult.data.name } : null
         };
       })

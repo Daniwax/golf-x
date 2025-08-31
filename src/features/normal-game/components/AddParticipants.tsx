@@ -303,8 +303,8 @@ const AddParticipants: React.FC = () => {
                   disabled={selectedFriends.size >= 5 && !selectedFriends.has(friend.friend_id)}
                 />
                 <IonAvatar slot="start" style={{ marginLeft: '12px' }}>
-                  {friend.avatar_url ? (
-                    <img src={friend.avatar_url} alt={friend.full_name || ''} />
+                  {(friend.custom_avatar_url || friend.avatar_url) ? (
+                    <img src={friend.custom_avatar_url || friend.avatar_url || ''} alt={friend.full_name || ''} />
                   ) : (
                     <div style={{
                       width: '100%',
