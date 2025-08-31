@@ -24,6 +24,9 @@ interface CompletedLeaderboardProps {
     profiles?: {
       full_name: string;
     };
+    profile?: {
+      full_name: string;
+    };
     course_handicap?: number;
     playing_handicap?: number;
     handicap_index?: number;
@@ -79,7 +82,7 @@ const CompletedLeaderboard: React.FC<CompletedLeaderboardProps> = ({
           userId: participant.user_id,
           playerName: participant.user_profile?.full_name || 
                      participant.profiles?.full_name || 
-                     (participant as any).profile?.full_name ||
+                     participant.profile?.full_name ||
                      'Player',
           holes: holes.map(hole => {
             const holeScore = participantScores.find(s => s.hole_number === hole.hole_number);

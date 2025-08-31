@@ -5,8 +5,6 @@
 
 import React from 'react';
 import {
-  IonCard,
-  IonCardContent,
   IonButton,
   IonIcon,
   IonNote,
